@@ -19,6 +19,7 @@
 - **课时账本**：一对一课时按总课时、已确认、待确认、剩余分开记账，学生可自行确认，也可在下课后自动确认，自动确认可在后台开关。
 - **教学服务**：班课点名、面谈与面试预约、文书批改、打印计费、通知公告、资料下载。
 - **权限分工**：按职务分配权限，数据范围可设为本人、本校区或全部；薪资审核范围可以按审核人单独配置。
+- **学生课表**：学生端「我的课表」把教务排的班课和一对一课程放在同一个周 / 月日历里，可查看教室、老师、出勤和课堂记录，上完的一对一课程可直接确认课时。
 - **双端 + 多语言 + 手机端**：教职工后台与学生端入口分开，页面适配手机，界面支持 8 种语言。
 - **部署灵活**：支持 SQLite、MySQL / MariaDB、PostgreSQL；首次安装在浏览器中完成。SMTP 邮件支持站内提醒同步发邮件和找回密码。
 
@@ -48,11 +49,17 @@
 |---|---|
 | ![学员详情](docs/screenshots/student-detail.png) | ![订单记录](docs/screenshots/orders.png) |
 
-| 学生端首页 | 多语言（英语 / 日语） |
+| 学生端：我的课表（班课 + 一对一） | 学生端首页 |
 |---|---|
-| ![学生端](docs/screenshots/portal-home.png) | ![English](docs/screenshots/en-grades-stats.png) |
+| ![我的课表](docs/screenshots/portal-timetable.png) | ![学生端](docs/screenshots/portal-home.png) |
+
+| 多语言（英语） | 多语言（日语） |
+|---|---|
+| ![English](docs/screenshots/en-grades-stats.png) | ![日本語](docs/screenshots/ja-settings-presets.png) |
 
 <p align="center">
+  <img src="docs/screenshots/mobile-portal-timetable.png" alt="手机端：我的课表" width="260" />
+  &nbsp;&nbsp;
   <img src="docs/screenshots/mobile-portal-grades.png" alt="手机端：我的成绩" width="260" />
   &nbsp;&nbsp;
   <img src="docs/screenshots/mobile-board.png" alt="手机端：教室预约" width="260" />
@@ -70,7 +77,7 @@
 | 教学服务 | 出勤管理、面谈预约、面试预约、面谈&面试记录、文书修改、资料打印、通知公告、资料管理 |
 | 人事管理 | 薪资申请管理、按人汇总、Excel 导出、薪资审核范围 |
 | 系统设置 | 站点设置（名称 / Logo / 登录页文案 / 主题色）、业务规则与下拉选项、**成绩与档案设置**（行业模板 / 考试类型 / 成绩模板 / 档案字段）、邮件、工号、职务权限、校区、教授课程、操作日志 |
-| 学生端 | 首页、**我的成绩**、我的课时、面谈／面试预约、文书修改、资料打印、通知公告、资料下载 |
+| 学生端 | 首页、**我的课表**（班课 + 一对一，周 / 月视图）、**我的成绩**、我的课时、面谈／面试预约、文书修改、资料打印、通知公告、资料下载 |
 
 菜单和操作按账号权限显示。业务规则和已知限制见[功能介绍](docs/功能介绍.md)。
 

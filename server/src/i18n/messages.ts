@@ -1134,3 +1134,7 @@ add('{0} 的等级「{1}」不在可选范围内', '{0}: level “{1}” is not 
   '{0}: уровня «{1}» нет среди доступных вариантов', '{0}: o nível “{1}” não está entre as opções disponíveis', '{0}: Die Stufe „{1}“ gehört nicht zu den verfügbaren Optionen')
 add('{0} 总分应在 0–{1} 之间', '{0}: total score must be between 0 and {1}', '{0} の合計点は 0～{1} の範囲で入力してください', '{0} : le total doit être compris entre 0 et {1}',
   '{0}: el total debe estar entre 0 y {1}', '{0}: общий балл должен быть от 0 до {1}', '{0}: a nota total deve estar entre 0 e {1}', '{0}: Die Gesamtpunktzahl muss zwischen 0 und {1} liegen')
+
+// 学生端：我的课表
+add('查询范围最长 62 天', 'The date range can be at most 62 days', '検索期間は最長 62 日です', 'La période ne peut pas dépasser 62 jours',
+  'El intervalo no puede superar los 62 días', 'Период не может превышать 62 дня', 'O período pode ter no máximo 62 dias', 'Der Zeitraum darf höchstens 62 Tage umfassen')

@@ -264,7 +264,25 @@ export interface PortalPackage {
   teachers: Ref[]
   sessions: PortalSession[]
 }
+/** 学生端「我的课表」中的一节课 */
+export interface TimetableItem {
+  id: number
+  kind: 'CLASS' | 'VIP'
+  title: string
+  startAt: string
+  endAt: string
+  status: string
+  hours: number
+  room: { id: number; name: string; building: string | null } | null
+  teacher: Ref | null
+  classGroup: Ref | null
+  vipPackage: Ref | null
+  attendance: string | null
+  record: { content: string; homework: string | null; performance: string | null } | null
+  canConfirm: boolean
+}
 export const portalApi = {
+  timetable: (from: string, to: string) => api.get<TimetableItem[]>('/schedule/portal/timetable', { from, to }),
   vip: () => api.get<{ autoConfirmEnabled: boolean; autoConfirmHours: number; studentCanConfirm: boolean; packages: PortalPackage[] }>('/schedule/portal/vip'),
   confirm: (id: number) => api.post(`/schedule/portal/sessions/${id}/confirm`, {}),
 }

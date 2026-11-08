@@ -19,6 +19,7 @@ Differences between industries are handled by **industry presets**. Exam types, 
 - **Lesson-hour ledger.** One-to-one hours are tracked as total, confirmed, pending, and remaining. Students can confirm lessons themselves, and optional auto-confirmation runs after each lesson.
 - **Student services.** Attendance, consultation and interview booking, document review, printing quotes, notices, and shared files.
 - **Role-based access.** Permissions work together with own / campus / all data scopes, and payroll review scopes can be set per reviewer.
+- **Student timetable.** The student portal shows group classes and one-to-one lessons together in a week / month calendar, with room, teacher, attendance and lesson notes; finished one-to-one lessons can be confirmed right there.
 - **Two portals, eight languages, mobile ready.** Staff and students have separate portals, with responsive layouts and eight interface languages.
 - **Flexible deployment.** Runs on SQLite, MySQL / MariaDB, or PostgreSQL, with a browser-based first-run installer. SMTP email covers notification emails and password recovery.
 
@@ -36,11 +37,13 @@ Differences between industries are handled by **industry presets**. Exam types, 
 |---|---|
 | ![Presets](docs/screenshots/ja-settings-presets.png) | ![Exam types](docs/screenshots/settings-exams.png) |
 
-| CRM | Student portal |
+| CRM | Student timetable (group + one-to-one) |
 |---|---|
-| ![CRM](docs/screenshots/crm-customers.png) | ![Portal](docs/screenshots/portal-home.png) |
+| ![CRM](docs/screenshots/crm-customers.png) | ![Timetable](docs/screenshots/portal-timetable.png) |
 
 <p align="center">
+  <img src="docs/screenshots/mobile-portal-timetable.png" alt="Mobile: my timetable" width="260" />
+  &nbsp;&nbsp;
   <img src="docs/screenshots/mobile-portal-grades.png" alt="Mobile: my grades" width="260" />
   &nbsp;&nbsp;
   <img src="docs/screenshots/mobile-board.png" alt="Mobile: room board" width="260" />
@@ -58,7 +61,7 @@ Differences between industries are handled by **industry presets**. Exam types, 
 | Teaching services | Attendance, consultation and interview bookings and records, document review, printing, notices, shared files |
 | HR | Wage claim review, per-person summaries, Excel export, reviewer scopes |
 | System settings | Site branding and texts, business rules and dropdowns, **grades & profile settings** (presets / exam types / grade templates / profile fields), email, staff accounts, roles, campuses, subjects, audit log |
-| Student portal | Home, **my grades**, lesson hours, bookings, document review, printing, notices, downloads |
+| Student portal | Home, **my timetable** (group + one-to-one, week / month), **my grades**, lesson hours, bookings, document review, printing, notices, downloads |
 
 ## Industry presets
 
