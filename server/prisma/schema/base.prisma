@@ -1,0 +1,200 @@
+// ============================================================
+// 系统基础：校区 / 教职工 / 角色权限 / 科目 / 日志 / 站内通知
+// 约定：枚举一律用 String，取值见 server/src/dict.ts；软删除用 deletedAt
+// ============================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../src/generated/prisma"
+}
+
+// 连接地址在 prisma.config.ts（CLI）与 src/lib/prisma.ts（运行时，驱动适配器）中配置
+datasource db {
+  provider = "sqlite"
+}
+
+model Campus {
+  id        Int       @id @default(autoincrement())
+  code      String    @unique
+  name      String
+  address   String?
+  timezone  String    @default("Asia/Tokyo")
+  sort      Int       @default(50)
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  users              User[]
+  customers          Customer[]
+  organizations      Organization[]
+  students           Student[]
+  products           CourseProduct[]
+  orders             Order[]
+  rooms              Room[]
+  classGroups        ClassGroup[]
+  sessions           Session[]
+  interviewSlots     InterviewSlot[]
+  notices            Notice[]
+  sharedFiles        SharedFile[]
+  wageReviewCampuses WageReviewCampus[]
+  assessments        Assessment[]
+}
+
+/// 教职工账号（工号）。identity 区分 教师 / 职工
+model User {
+  id           Int       @id @default(autoincrement())
+  staffNo      String    @unique /// 工号，登录名
+  name         String
+  phone        String?
+  email        String?
+  passwordHash String
+  identity     String    @default("STAFF") /// TEACHER | STAFF | OTHER
+  status       String    @default("ACTIVE") /// ACTIVE | LOCKED
+  campusId     Int?
+  campus       Campus?   @relation(fields: [campusId], references: [id])
+  hourlyWage   Int? /// 默认时薪（日元）
+  transportFee Int? /// 默认单程交通费
+  bankName     String?
+  bankBranch   String?
+  bankAccount  String?
+  bankHolder   String?
+  note         String?
+  sort         Int       @default(50)
+  lastLoginAt  DateTime?
+  lastLoginIp  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime? /// 软删除，可恢复（角色、科目保留）
+
+  roles    UserRole[]
+  subjects UserSubject[]
+
+  operationLogs             OperationLog[]
+  notifications             Notification[]
+  customersOwned            Customer[]          @relation("CustomerOwner")
+  followUps                 FollowUp[]
+  orgsManaged               Organization[]      @relation("OrgOwner")
+  orgFollowUps              OrgFollowUp[]
+  dailyReports              DailyReport[]       @relation("DailyAuthor")
+  studentsAsSales           Student[]           @relation("StudentSales")
+  studentsAsMainTeacher     Student[]           @relation("StudentMainTeacher")
+  studentsAsContractTeacher Student[]           @relation("StudentContractTeacher")
+  ordersAsSales             Order[]             @relation("OrderSales")
+  paymentsReceived          Payment[]           @relation("PaymentPayee")
+  refundsOperated           Refund[]            @relation("RefundOperator")
+  assessmentsCreated        Assessment[]        @relation("AssessmentCreator")
+  classGroups               ClassGroup[]
+  vipTeacherLinks           VipPackageTeacher[]
+  sessionsTaught            Session[]           @relation("SessionTeacher")
+  lessonRecords             LessonRecord[]
+  interviewSlots            InterviewSlot[]
+  interviewRecords          InterviewRecord[]
+  documentsAssigned         DocumentRequest[]   @relation("DocAssignee")
+  notices                   Notice[]
+  sharedFiles               SharedFile[]
+  wageClaims                WageClaim[]         @relation("WageClaimant")
+  wageReviews               WageClaim[]         @relation("WageReviewer")
+  wageReviewScope           WageReviewScope?    @relation("WageScopeOwner")
+  wageReviewTargets         WageReviewUser[]    @relation("WageScopeTarget")
+
+  @@index([identity])
+}
+
+/// 职务角色。权限点见 server/src/permissions.ts；"*" 代表全部权限
+model Role {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  description String?
+  dataScope   String           @default("SELF") /// SELF | CAMPUS | ALL（数据可见范围）
+  sort        Int              @default(50)
+  isSystem    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  permissions RolePermission[]
+  users       UserRole[]
+}
+
+model RolePermission {
+  roleId Int
+  code   String
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, code])
+}
+
+model UserRole {
+  userId Int
+  roleId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+/// 教授课程（科目标签），取消价格
+model TeachingSubject {
+  id       Int           @id @default(autoincrement())
+  name     String        @unique
+  category String /// EJU / 语言 / TA / 大学院 / 美术
+  sort     Int           @default(50)
+  active   Boolean       @default(true)
+  users    UserSubject[]
+}
+
+model UserSubject {
+  userId    Int
+  subjectId Int
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   TeachingSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@id([userId, subjectId])
+}
+
+model OperationLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String /// create | update | delete | restore | login | confirm | ...
+  entity    String /// 实体名，如 Session / Student
+  entityId  String?
+  detail    String? /// JSON 或文字描述
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+/// 站内通知（待批改文书、待确认课时等提醒）。userId / studentId 二选一
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studentId Int?
+  student   Student?  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title     String
+  content   String?
+  link      String? /// 前端路由路径
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([studentId, readAt])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+/// 找回密码令牌：只保存令牌的 SHA-256 摘要，一次性、限时
+model PasswordReset {
+  id        Int       @id @default(autoincrement())
+  type      String /// staff | student
+  accountId Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  ip        String?
+  createdAt DateTime  @default(now())
+
+  @@index([type, accountId])
+}

@@ -1,0 +1,111 @@
+// ============================================================
+// 学员：档案 / 成绩（EJU 可多回）/ 合格信息（≤5 校）
+// ============================================================
+
+model Student {
+  id                Int       @id @default(autoincrement())
+  campusId          Int
+  campus            Campus    @relation(fields: [campusId], references: [id])
+  studentNo         String    @unique /// 学号，学生端登录名
+  name              String
+  nameAlt           String? /// 罗马字 / 日文名
+  gender            String? /// M | F
+  birthday          DateTime?
+  phone             String?
+  phoneCn           String? /// 国内电话
+  wechat            String?
+  qq                String?
+  email             String?
+  address           String?
+  emergencyName     String?
+  emergencyRelation String?
+  emergencyPhone    String?
+  visaStatus        String?
+  arrivedAt         DateTime? /// 来日时间
+  enrollTerm        String? /// 入学学期，如 2026年4月
+  status            String    @default("ENROLLED") /// ENROLLED | SUSPENDED | GRADUATED | LEFT
+  enrolledAt        DateTime  @default(now())
+  leftAt            DateTime?
+
+  // ---- 院校信息 ----
+  education        String? /// 最终学历 dict.educations（是否必填见「档案字段」设置）
+  graduatedSchool  String?
+  graduatedMajor   String?
+  graduatedAt      DateTime?
+  languageSchool   String? /// 语言学校 / 就读学校（是否必填见「档案字段」设置）
+  subjectCategory  String? /// 学科分类 dict.subjectCategories
+  targetUniversity String?
+  targetMajor      String?
+  targetDegree     String? /// 学部 | 修士 | 博士 | 研究生
+  researchTheme    String?
+
+  // ---- 负责人 ----
+  salesId           Int?
+  sales             User?         @relation("StudentSales", fields: [salesId], references: [id])
+  mainTeacherId     Int? /// 担当老师（identity=TEACHER）
+  mainTeacher       User?         @relation("StudentMainTeacher", fields: [mainTeacherId], references: [id])
+  contractTeacherId Int? /// 签约老师（identity=TEACHER）
+  contractTeacher   User?         @relation("StudentContractTeacher", fields: [contractTeacherId], references: [id])
+  channelId         Int?
+  channel           Channel?      @relation(fields: [channelId], references: [id])
+  organizationId    Int?
+  organization      Organization? @relation(fields: [organizationId], references: [id])
+  customer          Customer?     @relation("CustomerStudent")
+
+  portalPasswordHash String?
+  portalEnabled      Boolean   @default(true)
+  note               String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  exams            StudentExam[]
+  admissions       StudentAdmission[]
+  orders           Order[]
+  classLinks       ClassGroupStudent[]
+  vipPackages      VipPackage[]
+  attendances      Attendance[]
+  interviewSlots   InterviewSlot[]
+  interviewRecords InterviewRecord[]
+  documents        DocumentRequest[]
+  prints           PrintRequest[]
+  notifications    Notification[]
+  assessmentScores AssessmentScore[]
+
+  @@index([status])
+  @@index([mainTeacherId])
+  @@index([salesId])
+}
+
+/// 考试 / 证书成绩。examType 取自「成绩设置 → 考试类型」；多回考试用 attempt 区分；分科成绩存 scores（JSON：{ 科目key: 分数 }）
+model StudentExam {
+  id           Int       @id @default(autoincrement())
+  studentId    Int
+  student      Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  examType     String /// 考试类型代码（成绩设置中配置，如 JLPT / EJU / TOEFL）
+  examDate     DateTime?
+  attempt      Int? /// 第几回（多回考试）
+  level        String? /// 如 JLPT N1
+  score        Float? /// 总分（有分科时 = 各科之和）
+  scores       String? /// 分科成绩 JSON
+  note         String?
+  createdAt    DateTime  @default(now())
+
+  @@index([studentId])
+}
+
+/// 合格信息，每个学生最多 5 条
+model StudentAdmission {
+  id         Int       @id @default(autoincrement())
+  studentId  Int
+  student    Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  sort       Int       @default(1)
+  university String /// 合格院校
+  faculty    String? /// 学部 / 研究科
+  department String? /// 学科
+  major      String? /// 专攻
+  admittedAt DateTime?
+  note       String?
+
+  @@index([studentId])
+}

@@ -1,0 +1,200 @@
+// ============================================================
+// 教学服务：面谈/面试时间段与记录、文书修改、资料打印、通知公告、资料下载、工资申报
+// ============================================================
+
+/// 面谈 / 面试预约时间段：后台发布，每段 1 人
+model InterviewSlot {
+  id          Int              @id @default(autoincrement())
+  campusId    Int?
+  campus      Campus?          @relation(fields: [campusId], references: [id])
+  kind        String /// CONSULT 面谈预约 | EXAM 面试预约
+  title       String
+  hostId      Int
+  host        User             @relation(fields: [hostId], references: [id])
+  startAt     DateTime
+  endAt       DateTime
+  location    String?
+  online      Boolean          @default(false)
+  studentId   Int?
+  student     Student?         @relation(fields: [studentId], references: [id])
+  bookedAt    DateTime?
+  bookingNote String?
+  status      String           @default("OPEN") /// OPEN | BOOKED | DONE | CANCELLED
+  createdAt   DateTime         @default(now())
+  deletedAt   DateTime?
+  record      InterviewRecord?
+
+  @@index([startAt])
+  @@index([hostId])
+}
+
+/// 面谈 / 面试记录（结构化）
+model InterviewRecord {
+  id            Int            @id @default(autoincrement())
+  slotId        Int?           @unique
+  slot          InterviewSlot? @relation(fields: [slotId], references: [id])
+  studentId     Int
+  student       Student        @relation(fields: [studentId], references: [id])
+  teacherId     Int
+  teacher       User           @relation(fields: [teacherId], references: [id])
+  kind          String /// CONSULT | EXAM
+  heldAt        DateTime
+  durationMin   Int? /// 面试时长（分钟）
+  japanese      String? /// 日语
+  english       String? /// 英语
+  liberalArts   String? /// 文综
+  math          String? /// 数学
+  targetSchools String? /// 志望校和专业
+  guidance      String? /// 进学指导建议
+  content       String? /// 其他记录
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([studentId])
+}
+
+/// 文书修改申请：仅 txt；提交后 24h 内可修改一次；一周内返还
+model DocumentRequest {
+  id                Int       @id @default(autoincrement())
+  studentId         Int
+  student           Student   @relation(fields: [studentId], references: [id])
+  title             String
+  docType           String? /// dict.docTypes
+  fileUrl           String
+  fileName          String
+  note              String?
+  submittedAt       DateTime  @default(now())
+  editCount         Int       @default(0)
+  lockAt            DateTime /// submittedAt + 24h，之后不可修改
+  dueAt             DateTime /// submittedAt + 7d，返还期限
+  assignedTeacherId Int?
+  assignedTeacher   User?     @relation("DocAssignee", fields: [assignedTeacherId], references: [id])
+  assignedAt        DateTime?
+  status            String    @default("SUBMITTED") /// SUBMITTED | ASSIGNED | RETURNED
+  returnFileUrl     String?
+  returnFileName    String?
+  returnNote        String?
+  returnedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime? /// 可恢复
+
+  @@index([studentId])
+  @@index([assignedTeacherId, status])
+}
+
+/// 资料打印：仅 PDF / JPG；黑白 10 日元/张，彩色 50 日元/张
+model PrintRequest {
+  id          Int       @id @default(autoincrement())
+  studentId   Int
+  student     Student   @relation(fields: [studentId], references: [id])
+  fileUrl     String
+  fileName    String
+  colorMode   String /// BW | COLOR
+  pages       Int
+  copies      Int       @default(1)
+  fee         Int /// pages * copies * 单价
+  note        String?
+  status      String    @default("PENDING") /// PENDING | PRINTED | PICKED_UP | CANCELLED
+  readyAt     DateTime /// 12:00 前提交 → 当天 17:00；之后 → 次日 17:00（校区时区）
+  submittedAt DateTime  @default(now())
+  handledById Int?
+  handledAt   DateTime?
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+
+  @@index([status])
+}
+
+model Notice {
+  id          Int       @id @default(autoincrement())
+  campusId    Int? /// 为空 = 全部校区
+  campus      Campus?   @relation(fields: [campusId], references: [id])
+  title       String
+  content     String /// HTML
+  audience    String    @default("STAFF") /// STAFF | STUDENT | ALL
+  pinned      Boolean   @default(false)
+  authorId    Int?
+  author      User?     @relation(fields: [authorId], references: [id])
+  publishedAt DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+}
+
+model SharedFile {
+  id           Int       @id @default(autoincrement())
+  campusId     Int?
+  campus       Campus?   @relation(fields: [campusId], references: [id])
+  title        String
+  description  String?
+  fileUrl      String
+  fileName     String
+  fileSize     Int?
+  audience     String    @default("STAFF") /// STAFF | STUDENT | ALL
+  uploadedById Int?
+  uploadedBy   User?     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+}
+
+/// 工资申报
+model WageClaim {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  user         User      @relation("WageClaimant", fields: [userId], references: [id])
+  workDate     DateTime
+  startAt      DateTime?
+  endAt        DateTime?
+  category     String    @default("授课") /// 授课 | 办公 | 面谈 | 文书 | 其他
+  hours        Float
+  hourlyRate   Int
+  amount       Int /// hours * hourlyRate（四舍五入）
+  transportFee Int       @default(0)
+  fromStation  String?
+  toStation    String?
+  content      String
+  sessionId    Int?
+  session      Session?  @relation(fields: [sessionId], references: [id])
+  status       String    @default("PENDING") /// PENDING | APPROVED | REJECTED
+  reviewerId   Int?
+  reviewer     User?     @relation("WageReviewer", fields: [reviewerId], references: [id])
+  reviewedAt   DateTime?
+  reviewNote   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@index([userId, workDate])
+  @@index([status])
+}
+
+/// 薪资审核范围：按审核人单独配置。未配置时按其角色的数据范围（ALL=全部，其他=本校区）
+model WageReviewScope {
+  reviewerId Int                @id
+  reviewer   User               @relation("WageScopeOwner", fields: [reviewerId], references: [id], onDelete: Cascade)
+  mode       String             @default("CAMPUS") /// ALL 全部员工 | CAMPUS 本校区 | CUSTOM 自定义（下列校区 + 指定员工）
+  updatedAt  DateTime           @updatedAt
+  campuses   WageReviewCampus[]
+  users      WageReviewUser[]
+}
+
+/// 自定义范围：整个校区的员工
+model WageReviewCampus {
+  reviewerId Int
+  campusId   Int
+  scope      WageReviewScope @relation(fields: [reviewerId], references: [reviewerId], onDelete: Cascade)
+  campus     Campus          @relation(fields: [campusId], references: [id], onDelete: Cascade)
+
+  @@id([reviewerId, campusId])
+}
+
+/// 自定义范围：单独指定的员工
+model WageReviewUser {
+  reviewerId Int
+  userId     Int
+  scope      WageReviewScope @relation(fields: [reviewerId], references: [reviewerId], onDelete: Cascade)
+  user       User            @relation("WageScopeTarget", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([reviewerId, userId])
+}

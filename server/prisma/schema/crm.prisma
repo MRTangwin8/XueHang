@@ -1,0 +1,137 @@
+// ============================================================
+// 客户管理 CRM：渠道 / 合作机构 / 客户 / 跟进 / 日报
+// ============================================================
+
+model Channel {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  sort      Int        @default(50)
+  active    Boolean    @default(true)
+  customers Customer[]
+  students  Student[]
+}
+
+/// 合作机构（国内日语学校、中介等），含返点信息
+model Organization {
+  id              Int       @id @default(autoincrement())
+  campusId        Int?
+  campus          Campus?   @relation(fields: [campusId], references: [id])
+  name            String
+  type            String? /// 日语学校 | 留学中介 | 高校 | 个人 | 其他
+  province        String?
+  city            String?
+  address         String?
+  contactName     String?
+  contactPhone    String?
+  wechat          String?
+  rebateRule      String? /// 返点说明，如「一对一15% 班课20%」
+  rebateRateClass Float? /// 班课返点比例 0~1
+  rebateRateVip   Float? /// VIP 返点比例 0~1
+  bankName        String?
+  bankAccount     String?
+  bankHolder      String?
+  status          String    @default("ACTIVE") /// POTENTIAL | ACTIVE | PAUSED
+  signedAt        DateTime?
+  ownerId         Int?
+  owner           User?     @relation("OrgOwner", fields: [ownerId], references: [id])
+  note            String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  customers Customer[]
+  students  Student[]
+  followUps OrgFollowUp[]
+}
+
+model OrgFollowUp {
+  id             Int          @id @default(autoincrement())
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         Int
+  user           User         @relation(fields: [userId], references: [id])
+  method         String
+  content        String
+  followAt       DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+}
+
+/// 潜在客户。ownerId 为空 = 公海客户
+model Customer {
+  id              Int           @id @default(autoincrement())
+  campusId        Int
+  campus          Campus        @relation(fields: [campusId], references: [id])
+  name            String
+  gender          String? /// M | F
+  phone           String?
+  wechat          String?
+  qq              String?
+  email           String?
+  province        String?
+  city            String?
+  education       String? /// 最终学历
+  currentSchool   String?
+  subjectCategory String? /// 学科分类
+  targetSchool    String?
+  intentLevel     String        @default("C") /// A | B | C | D
+  status          String        @default("NEW") /// NEW | FOLLOWING | SIGNED | LOST
+  source          String? /// 咨询方式：线上咨询 | 到访 | 电话 | 转介绍 | 说明会 | 其他
+  channelId       Int?
+  channel         Channel?      @relation(fields: [channelId], references: [id])
+  organizationId  Int?
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  ownerId         Int?
+  owner           User?         @relation("CustomerOwner", fields: [ownerId], references: [id])
+  assignedAt      DateTime?
+  lastFollowAt    DateTime?
+  nextFollowAt    DateTime?
+  studentId       Int?          @unique /// 已转化的学员
+  student         Student?      @relation("CustomerStudent", fields: [studentId], references: [id])
+  note            String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  followUps FollowUp[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model FollowUp {
+  id           Int       @id @default(autoincrement())
+  customerId   Int
+  customer     Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId       Int
+  user         User      @relation(fields: [userId], references: [id])
+  method       String /// 见 dict.followMethods
+  content      String
+  intentLevel  String?
+  isVisit      Boolean   @default(false) /// 是否到访
+  nextFollowAt DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([customerId])
+}
+
+/// 员工日报，每人每天一条
+model DailyReport {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  user         User      @relation("DailyAuthor", fields: [userId], references: [id])
+  reportDate   DateTime /// 当天 00:00（校区时区）对应的 UTC 时间
+  works        String /// 今日工作
+  unfinished   String? /// 未完成事项
+  contacts     String? /// 客户联络情况
+  newCustomers Int       @default(0)
+  visits       Int       @default(0)
+  issues       String? /// 疑问
+  proposal     String? /// 建议
+  selfReview   String? /// 自我评价
+  readById     Int?
+  readAt       DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([userId, reportDate])
+}

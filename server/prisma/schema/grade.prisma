@@ -1,0 +1,45 @@
+// ============================================================
+// 成绩管理：校内考试 / 测验 / 模拟考，按科目录入、统计、排名
+// ============================================================
+
+/// 一次考试（测验 / 模拟考 / 期中期末等）
+model Assessment {
+  id           Int         @id @default(autoincrement())
+  campusId     Int
+  campus       Campus      @relation(fields: [campusId], references: [id])
+  name         String
+  kind         String /// dict.assessmentKinds（后台可维护）
+  examDate     DateTime
+  classGroupId Int? /// 关联班课（可选，用于按班导入名单）
+  classGroup   ClassGroup? @relation(fields: [classGroupId], references: [id])
+  subjects     String /// 科目 JSON：[{ key, name, max, pass? }]
+  published    Boolean     @default(false) /// 学生端可见
+  note         String?
+  createdById  Int
+  createdBy    User        @relation("AssessmentCreator", fields: [createdById], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+
+  scores AssessmentScore[]
+
+  @@index([campusId, examDate])
+  @@index([classGroupId])
+}
+
+/// 学生在某次考试中的成绩
+model AssessmentScore {
+  id           Int        @id @default(autoincrement())
+  assessmentId Int
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  studentId    Int
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  scores       String? /// 分科成绩 JSON：{ 科目key: 分数 }
+  total        Float? /// 总分（缺考或未录入为空）
+  absent       Boolean    @default(false) /// 缺考
+  comment      String? /// 教师评语
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([assessmentId, studentId])
+  @@index([studentId])
+}

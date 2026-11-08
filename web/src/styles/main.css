@@ -1,0 +1,157 @@
+/* ============================================================
+   学航 · 设计体系
+   主色 靛蓝 #4f46e5，辅色 青绿 #14b8a6；浅灰底 + 白卡片 + 柔和阴影
+   ============================================================ */
+:root {
+  --xh-primary: #4f46e5;
+  --xh-primary-soft: #eef2ff;
+  --xh-teal: #14b8a6;
+  --xh-bg: #f4f6fb;
+  --xh-card: #ffffff;
+  --xh-border: #e6e9f2;
+  --xh-text: #1f2937;
+  --xh-text-2: #64748b;
+  --xh-sidebar-bg: #ffffff;
+  --xh-sidebar-w: 232px;
+  --xh-radius: 12px;
+  --xh-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.05);
+
+  /* 课次类型配色（日历 / 课表统一使用） */
+  --xh-kind-class: #4f46e5;
+  --xh-kind-class-bg: #eef2ff;
+  --xh-kind-vip: #d97706;
+  --xh-kind-vip-bg: #fef3c7;
+  --xh-kind-other: #64748b;
+  --xh-kind-other-bg: #f1f5f9;
+
+  /* Element Plus 主色覆盖 */
+  --el-color-primary: #4f46e5;
+  --el-color-primary-light-3: #847ded;
+  --el-color-primary-light-5: #a7a3f2;
+  --el-color-primary-light-7: #cac8f7;
+  --el-color-primary-light-8: #dcdafa;
+  --el-color-primary-light-9: #ededfc;
+  --el-color-primary-dark-2: #3f38b7;
+  --el-border-radius-base: 8px;
+  --el-border-color-lighter: #edf0f6;
+  --el-fill-color-light: #f7f8fc;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { margin: 0; height: 100%; }
+body {
+  font-family: Inter, -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--xh-bg);
+  color: var(--xh-text);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- 页面骨架：模块页面最外层 <div class="page"> ---- */
+.page { padding: 20px 24px; }
+.page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.page-head h2 { margin: 0; font-size: 20px; font-weight: 650; }
+.page-head .spacer { flex: 1; }
+.page-card {
+  background: var(--xh-card);
+  border: 1px solid var(--xh-border);
+  border-radius: var(--xh-radius);
+  box-shadow: var(--xh-shadow);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.page-title { font-size: 15px; font-weight: 650; margin: 0 0 14px; color: var(--xh-text); display: flex; align-items: center; gap: 8px; }
+.page-title::before { content: ''; width: 4px; height: 15px; border-radius: 2px; background: linear-gradient(var(--xh-primary), var(--xh-teal)); }
+
+/* 统计卡片：<div class="stat-grid"><div class="stat"><div class="stat-label">…</div><div class="stat-value">…</div></div></div> */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+@media (max-width: 767px) {
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .stat { padding: 10px 12px; }
+}
+.stat { background: var(--xh-card); border: 1px solid var(--xh-border); border-radius: var(--xh-radius); padding: 14px 16px; box-shadow: var(--xh-shadow); }
+.stat-label { color: var(--xh-text-2); font-size: 12px; }
+.stat-value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+
+/* 筛选栏 / 工具栏 */
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.toolbar .spacer { flex: 1; }
+.toolbar .el-input, .toolbar .el-select { width: 180px; }
+
+.pager { display: flex; justify-content: flex-end; margin-top: 14px; }
+.muted { color: var(--xh-text-2); font-size: 12px; }
+.text-danger { color: var(--el-color-danger); }
+.text-success { color: var(--el-color-success); }
+.nowrap { white-space: nowrap; }
+
+/* Element Plus 细节 */
+.el-table { --el-table-header-bg-color: #f7f8fc; --el-table-header-text-color: #475569; border-radius: 8px; }
+.el-table th.el-table__cell { font-weight: 600; }
+.el-dialog { border-radius: 14px; }
+.el-card { border-radius: var(--xh-radius); border-color: var(--xh-border); }
+.el-button { font-weight: 500; }
+
+@media (max-width: 767px) {
+  html, body { width: 100%; overflow-x: hidden; }
+  .page { padding: 12px; }
+  .page-card { padding: 14px; border-radius: 10px; }
+  .page-head { align-items: stretch; }
+  .page-head .spacer { display: none; }
+  .page-head > .el-button, .page-head > .el-button-group { flex: 1 1 auto; }
+  .toolbar .el-input, .toolbar .el-select, .toolbar .el-date-editor { width: 100% !important; }
+  .toolbar > * { flex: 1 1 100%; }
+  .pager .el-pagination { flex-wrap: wrap; }
+  .el-form--inline .el-form-item { margin-right: 0; width: 100%; }
+  .el-form:not(.el-form--inline) .el-form-item { display: block; }
+  .el-form:not(.el-form--inline) .el-form-item__label { justify-content: flex-start; width: auto !important; }
+  .el-form:not(.el-form--inline) .el-form-item__content { margin-left: 0 !important; }
+
+  .el-overlay-dialog { overflow: hidden; }
+  .el-dialog,
+  .el-dialog.is-fullscreen {
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  .el-dialog__header { flex: none; min-height: 56px; margin: 0; padding: 16px 52px 14px 16px; border-bottom: 1px solid var(--xh-border); }
+  .el-dialog__headerbtn { top: 8px; right: 8px; width: 40px; height: 40px; }
+  .el-dialog__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px; }
+  .el-dialog__footer {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--xh-border);
+  }
+  .el-dialog__footer .el-button { margin-left: 0; }
+  .el-drawer { width: 100% !important; max-width: none !important; }
+  .el-drawer__header { flex: none; margin-bottom: 0; padding: 16px; border-bottom: 1px solid var(--xh-border); }
+  .el-drawer__body { min-width: 0; overflow-x: hidden; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+  .el-message-box { width: 92% !important; max-width: 92% !important; }
+
+  .el-input, .el-select, .el-date-editor, .el-input-number { max-width: 100%; }
+  .el-input__wrapper, .el-select__wrapper, .el-date-editor.el-input__wrapper, .el-date-editor .el-range-input,
+  .el-input-number .el-input__wrapper { min-height: 40px; font-size: 16px; }
+  .el-textarea__inner { font-size: 16px; }
+  .el-button { min-height: 40px; }
+  .el-radio-group, .el-checkbox-group { flex-wrap: wrap; }
+  .el-radio-button { margin-bottom: 4px; }
+  .el-radio-button__inner { min-height: 40px; display: inline-flex; align-items: center; }
+  .el-form-item { margin-bottom: 20px; }
+
+  .el-table { width: 100%; }
+  .el-table__inner-wrapper { overflow-x: auto; overscroll-behavior-x: contain; }
+  .el-table__fixed-right { right: 0; }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .page { padding: 0; }
+}

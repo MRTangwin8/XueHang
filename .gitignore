@@ -1,0 +1,22 @@
+node_modules/
+dist/
+*.db
+*.db-journal
+server/.env
+server/uploads/
+.codex-logs/
+.server.log
+功能参考*/
+server/uploads/
+server/src/generated/
+.pgtest/
+server/.install-token
+server/prisma/data.db*
+.installtest/
+
+# 本地工具配置 / 截图临时文件
+.claude/
+web/dist/
+# 内部开发笔记（不公开）
+docs/规划.md
+docs/tasks/

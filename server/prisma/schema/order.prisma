@@ -1,0 +1,116 @@
+// ============================================================
+// 课程产品（单期 / 套餐）、订单、缴费、退费
+// 金额一律 Int，单位为对应币种的主单位（日元 / 人民币元）
+// ============================================================
+
+model CourseProduct {
+  id            Int       @id @default(autoincrement())
+  campusId      Int?
+  campus        Campus?   @relation(fields: [campusId], references: [id])
+  type          String /// SINGLE 单期课程 | PACKAGE 私塾套餐
+  name          String
+  category      String? /// 学科分类
+  price         Int       @default(0)
+  originalPrice Int?
+  vipHours      Float? /// 含 VIP 课时
+  description   String?
+  active        Boolean   @default(true)
+  sort          Int       @default(50)
+  createdAt     DateTime  @default(now())
+  deletedAt     DateTime?
+
+  packageItems PackageItem[] @relation("PackageParent") /// 套餐包含的单期课程
+  includedIn   PackageItem[] @relation("PackageChild")
+  orders       Order[]
+  orderItems   OrderItem[]
+  classGroups  ClassGroup[]
+}
+
+model PackageItem {
+  packageId Int
+  productId Int
+  package   CourseProduct @relation("PackageParent", fields: [packageId], references: [id], onDelete: Cascade)
+  product   CourseProduct @relation("PackageChild", fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([packageId, productId])
+}
+
+model Order {
+  id             Int            @id @default(autoincrement())
+  orderNo        String         @unique
+  studentId      Int
+  student        Student        @relation(fields: [studentId], references: [id])
+  campusId       Int
+  campus         Campus         @relation(fields: [campusId], references: [id])
+  salesId        Int?
+  sales          User?          @relation("OrderSales", fields: [salesId], references: [id])
+  packageId      Int? /// 私塾套餐（报名时必填）
+  package        CourseProduct? @relation(fields: [packageId], references: [id])
+  classMode      String         @default("CLASS") /// CLASS 班课 | VIP | BOTH 班课+VIP
+  vipHours       Float? /// classMode 含 VIP 时必填
+  vipContent     String?
+  currency       String         @default("JPY") /// JPY | CNY
+  listAmount     Int            @default(0) /// 原价合计
+  discountAmount Int            @default(0)
+  discountReason String? /// dict.discountReasons
+  payableAmount  Int            @default(0) /// 应收
+  paidAmount     Int            @default(0) /// 已收（由 Payment 汇总维护）
+  refundedAmount Int            @default(0)
+  status         String         @default("UNPAID") /// UNPAID | PARTIAL | PAID | REFUNDED | CANCELLED
+  signedAt       DateTime       @default(now())
+  expireAt       DateTime?
+  note           String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+
+  items       OrderItem[]
+  payments    Payment[]
+  refunds     Refund[]
+  vipPackages VipPackage[]
+
+  @@index([studentId])
+}
+
+model OrderItem {
+  id        Int            @id @default(autoincrement())
+  orderId   Int
+  order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int?
+  product   CourseProduct? @relation(fields: [productId], references: [id])
+  name      String
+  price     Int
+  quantity  Int            @default(1)
+}
+
+model Payment {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  kind       String   @default("报名缴费") /// dict.paymentKinds
+  amount     Int
+  currency   String   @default("JPY")
+  method     String /// dict.paymentMethods
+  paidAt     DateTime
+  payeeId    Int?
+  payee      User?    @relation("PaymentPayee", fields: [payeeId], references: [id])
+  receiptUrl String?
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model Refund {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount     Int
+  currency   String   @default("JPY")
+  method     String?
+  refundedAt DateTime
+  reason     String?
+  operatorId Int?
+  operator   User?    @relation("RefundOperator", fields: [operatorId], references: [id])
+  createdAt  DateTime @default(now())
+}

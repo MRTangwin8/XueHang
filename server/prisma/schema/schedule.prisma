@@ -1,0 +1,181 @@
+// ============================================================
+// 教务排课：教室 / 班课 / VIP 课时包 / 统一课次 Session / 出勤 / 课堂记录
+//
+// 关键设计：班课与 VIP 共用 Session 表 → 教室占用、冲突检测、日历视图只查一处。
+// VIP 课时账本：remaining = totalHours - usedHours - pendingHours
+//   约课(SCHEDULED)      : pendingHours += hours
+//   确认(CONFIRMED)      : pendingHours -= hours, usedHours += hours   （学生确认 / 下课48h自动 / 教务）
+//   取消(CANCELLED)      : 从 pending 或 used 退回
+// ============================================================
+
+model Room {
+  id        Int       @id @default(autoincrement())
+  campusId  Int
+  campus    Campus    @relation(fields: [campusId], references: [id])
+  name      String
+  building  String? /// 楼栋 / 线上
+  capacity  Int       @default(1)
+  kind      String    @default("CLASS") /// CLASS 班课教室 | VIP | ONLINE | STUDIO 画室
+  allowVip  Boolean   @default(true)
+  sort      Int       @default(50)
+  active    Boolean   @default(true)
+  note      String?
+  createdAt DateTime  @default(now())
+  sessions  Session[]
+
+  @@unique([campusId, name])
+}
+
+/// 班课（班级）
+model ClassGroup {
+  id            Int            @id @default(autoincrement())
+  campusId      Int
+  campus        Campus         @relation(fields: [campusId], references: [id])
+  name          String
+  subject       String?
+  productId     Int? /// 对应的单期课程
+  product       CourseProduct? @relation(fields: [productId], references: [id])
+  teacherId     Int? /// 默认任课老师
+  teacher       User?          @relation(fields: [teacherId], references: [id])
+  defaultRoomId Int?
+  startDate     DateTime?
+  endDate       DateTime?
+  status        String         @default("ACTIVE") /// ACTIVE | FINISHED
+  color         String?
+  note          String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+
+  students    ClassGroupStudent[]
+  sessions    Session[]
+  assessments Assessment[]
+}
+
+model ClassGroupStudent {
+  classGroupId Int
+  studentId    Int
+  joinedAt     DateTime   @default(now())
+  classGroup   ClassGroup @relation(fields: [classGroupId], references: [id], onDelete: Cascade)
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([classGroupId, studentId])
+}
+
+/// VIP 班级（课时包）
+model VipPackage {
+  id           Int       @id @default(autoincrement())
+  studentId    Int
+  student      Student   @relation(fields: [studentId], references: [id])
+  orderId      Int?
+  order        Order?    @relation(fields: [orderId], references: [id])
+  name         String
+  subject      String?
+  totalHours   Float
+  usedHours    Float     @default(0) /// 已确认
+  pendingHours Float     @default(0) /// 待确认
+  status       String    @default("ACTIVE") /// ACTIVE | FINISHED（结业）
+  expireAt     DateTime?
+  note         String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  teachers VipPackageTeacher[]
+  sessions Session[]
+
+  @@index([studentId])
+}
+
+model VipPackageTeacher {
+  vipPackageId Int
+  teacherId    Int
+  vipPackage   VipPackage @relation(fields: [vipPackageId], references: [id], onDelete: Cascade)
+  teacher      User       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@id([vipPackageId, teacherId])
+}
+
+/// 批量排课批次：起止日期 + 星期 + 时间段
+model SessionSeries {
+  id          Int       @id @default(autoincrement())
+  startDate   String /// YYYY-MM-DD（校区时区）
+  endDate     String /// YYYY-MM-DD
+  weekdays    String /// "1,3,5"，1=周一 … 7=周日；"1,2,3,4,5,6,7" = 每天
+  startTime   String /// HH:mm
+  endTime     String /// HH:mm
+  timezone    String    @default("Asia/Tokyo")
+  createdById Int?
+  createdAt   DateTime  @default(now())
+  sessions    Session[]
+}
+
+/// 统一课次：班课 / VIP / 其他占用（会议、活动）
+model Session {
+  id           Int            @id @default(autoincrement())
+  campusId     Int
+  campus       Campus         @relation(fields: [campusId], references: [id])
+  kind         String /// CLASS | VIP | OTHER
+  title        String
+  roomId       Int?
+  room         Room?          @relation(fields: [roomId], references: [id])
+  teacherId    Int?
+  teacher      User?          @relation("SessionTeacher", fields: [teacherId], references: [id])
+  classGroupId Int?
+  classGroup   ClassGroup?    @relation(fields: [classGroupId], references: [id])
+  vipPackageId Int?
+  vipPackage   VipPackage?    @relation(fields: [vipPackageId], references: [id])
+  seriesId     Int?
+  series       SessionSeries? @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  startAt      DateTime
+  endAt        DateTime
+  hours        Float          @default(0) /// VIP 扣除课时
+  status       String         @default("SCHEDULED") /// SCHEDULED | CONFIRMED | CANCELLED
+  confirmedAt  DateTime?
+  confirmedBy  String? /// STUDENT | AUTO | STAFF
+  note         String?
+  createdById  Int?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  attendances  Attendance[]
+  lessonRecord LessonRecord?
+  wageClaims   WageClaim[]
+
+  @@index([roomId, startAt])
+  @@index([teacherId, startAt])
+  @@index([startAt])
+  @@index([vipPackageId])
+  @@index([classGroupId])
+}
+
+/// 课堂记录（班课 / VIP 通用）
+model LessonRecord {
+  id             Int      @id @default(autoincrement())
+  sessionId      Int      @unique
+  session        Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  teacherId      Int?
+  teacher        User?    @relation(fields: [teacherId], references: [id])
+  content        String /// 授课内容
+  homework       String?
+  performance    String? /// 课堂表现
+  studentVisible Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+/// 出勤：每个课次每个学生一条
+model Attendance {
+  id           Int      @id @default(autoincrement())
+  sessionId    Int
+  session      Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId    Int
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status       String /// PRESENT 出勤 | ABSENT 缺席 | LEAVE 请假 | LATE 迟到 | EARLY_LEAVE 早退
+  note         String? /// 教师备注
+  recordedById Int?
+  recordedAt   DateTime @default(now())
+
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+}

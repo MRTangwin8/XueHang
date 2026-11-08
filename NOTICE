@@ -1,0 +1,13 @@
+学航 · 教学管理平台 (Xuehang Education Management Platform)
+Copyright 2026 MRTangwin8
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product depends on third-party open source packages that are installed
+through npm and are distributed under their own licenses (mainly MIT, ISC,
+Apache-2.0, BSD and MIT-0). See docs/第三方许可.md for the license audit and
+scripts/check-licenses.mjs to re-run it.
+
+Optional component: when MySQL / MariaDB is selected during installation, the
+"mariadb" driver (LGPL-2.1-or-later) is installed on demand as a separate,
+unmodified npm package. It is not part of this source distribution.
