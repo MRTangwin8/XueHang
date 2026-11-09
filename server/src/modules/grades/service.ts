@@ -30,7 +30,7 @@ const teaches = (me: StaffPrincipal): Prisma.ClassGroupWhereInput => ({ OR: [{ t
 export function assessmentScope(me: StaffPrincipal): Prisma.AssessmentWhereInput {
   const lim = campusLimit(me)
   if (lim == null) return {}
-  if (me.dataScope === 'CAMPUS') return { campusId: lim }
+  if (me.dataScope === 'CAMPUS') return { campusId: { in: lim } }
   return {
     OR: [
       { createdById: me.id },
@@ -44,7 +44,7 @@ export function assessmentScope(me: StaffPrincipal): Prisma.AssessmentWhereInput
 export function classScope(me: StaffPrincipal): Prisma.ClassGroupWhereInput {
   const lim = campusLimit(me)
   if (lim == null) return {}
-  if (me.dataScope === 'CAMPUS') return { campusId: lim }
+  if (me.dataScope === 'CAMPUS') return { campusId: { in: lim } }
   return teaches(me)
 }
 
@@ -52,7 +52,7 @@ export function classScope(me: StaffPrincipal): Prisma.ClassGroupWhereInput {
 export function studentScope(me: StaffPrincipal): Prisma.StudentWhereInput {
   const lim = campusLimit(me)
   if (lim == null) return {}
-  if (me.dataScope === 'CAMPUS') return { campusId: lim }
+  if (me.dataScope === 'CAMPUS') return { campusId: { in: lim } }
   return {
     OR: [
       { mainTeacherId: me.id },
@@ -67,7 +67,7 @@ export function studentScope(me: StaffPrincipal): Prisma.StudentWhereInput {
 /** 校验考试的校区、关联班课与学员都在当前账号的数据范围内 */
 export async function assertTargets(me: StaffPrincipal, t: { campusId?: number; classGroupId?: number | null; studentIds?: number[] }) {
   const lim = campusLimit(me)
-  if (t.campusId != null && lim != null && t.campusId !== lim) throw forbidden('只能为本校区创建或修改考试')
+  if (t.campusId != null && lim != null && !lim.includes(t.campusId)) throw forbidden('只能为本校区创建或修改考试')
   if (t.classGroupId) {
     const cg = await prisma.classGroup.findFirst({ where: { id: t.classGroupId, deletedAt: null, AND: [classScope(me)] }, select: { campusId: true } })
     if (!cg) throw badRequest('班课不存在，或不在您的数据范围内')

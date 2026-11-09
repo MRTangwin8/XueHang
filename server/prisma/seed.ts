@@ -65,16 +65,17 @@ async function main() {
     'daily.write', 'wage.claim', 'teacher.students', 'student.view', 'student.all', 'student.edit',
     'schedule.view', 'schedule.edit', 'room.manage', 'class.manage', 'vip.manage', 'vip.delete_confirmed', 'attendance.manage',
     'interview.manage', 'document.manage', 'document.review', 'print.manage', 'notice.manage', 'file.manage',
+    'grade.view', 'grade.manage',
   ])
   const rSales = await mkRole('市场销售', 'SELF', [
     'daily.write', 'crm.customer.view', 'crm.pool', 'crm.channel', 'student.enroll', 'student.view', 'student.edit',
     'order.view', 'order.pay', 'schedule.view', 'interview.manage',
   ])
   const rTeacher = await mkRole('教师', 'SELF', [
-    'daily.write', 'wage.claim', 'teacher.students', 'schedule.view', 'schedule.own', 'attendance.manage', 'interview.manage', 'document.review',
+    'daily.write', 'wage.claim', 'teacher.students', 'schedule.view', 'schedule.own', 'attendance.manage', 'interview.manage', 'document.review', 'grade.enter',
   ])
   const rClerk = await mkRole('事务', 'CAMPUS', [
-    'daily.write', 'student.all', 'order.all', 'order.pay', 'order.refund', 'product.manage', 'print.manage', 'notice.manage', 'file.manage', 'wage.review', 'schedule.view',
+    'daily.write', 'student.all', 'order.all', 'order.pay', 'order.refund', 'product.manage', 'print.manage', 'notice.manage', 'file.manage', 'wage.review', 'schedule.view', 'grade.view',
   ])
   void ALL_PERMISSION_CODES
 

@@ -31,6 +31,8 @@ const width = useDialogWidth('820px')
 const isMobile = useIsMobile()
 const canEditAll = computed(() => auth.can('schedule.edit'))
 const ownOnly = computed(() => !canEditAll.value && auth.can('schedule.own'))
+/** 班课由教务排；教师需要「为本人任课的班级排班课」权限 */
+const canClass = computed(() => canEditAll.value || auth.can('schedule.class_own'))
 
 const form = reactive({
   kind: 'CLASS' as SessionKind,
@@ -68,7 +70,7 @@ watch(visible, async (v) => {
   initializing = true
   const p = props.preset ?? {}
   Object.assign(form, {
-    kind: p.kind ?? (p.vipPackageId ? 'VIP' : 'CLASS'), campusId: p.campusId ?? auth.me?.campusId ?? null,
+    kind: p.kind ?? (p.vipPackageId || !canClass.value ? 'VIP' : 'CLASS'), campusId: p.campusId ?? auth.me?.campusId ?? null,
     classGroupId: p.classGroupId ?? null, vipPackageId: p.vipPackageId ?? null, title: p.title ?? '',
     roomId: p.roomId ?? null, teacherId: ownOnly.value ? auth.me!.id : p.teacherId ?? null,
     range: [p.date ?? today(), dayjs(p.date ?? today()).add(4, 'week').subtract(1, 'day').format('YYYY-MM-DD')],
@@ -187,7 +189,7 @@ async function submit(force = false) {
         <el-col :xs="24" :sm="12">
           <el-form-item :label="t('schedule.type')">
             <el-radio-group v-model="form.kind">
-              <el-radio-button value="CLASS">{{ t('schedule.groupClass') }}</el-radio-button>
+              <el-radio-button v-if="canClass || form.kind === 'CLASS'" value="CLASS" :disabled="!canClass">{{ t('schedule.groupClass') }}</el-radio-button>
               <el-radio-button value="VIP">VIP</el-radio-button>
               <el-radio-button value="OTHER">{{ t('schedule.other') }}</el-radio-button>
             </el-radio-group>

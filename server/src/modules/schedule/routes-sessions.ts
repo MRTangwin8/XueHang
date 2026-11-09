@@ -80,6 +80,8 @@ async function resolveInput(tx: Tx, me: StaffPrincipal, b: SessionBase, duration
     const cg = await tx.classGroup.findFirst({ where: { id: b.classGroupId, deletedAt: null } })
     if (!cg) throw badRequest('班课不存在')
     if (cg.status !== 'ACTIVE') throw badRequest('该班课已结课，不能再排课')
+    // 班课默认只能由教务排；教师需要「为本人任课的班级排班课」权限
+    if (isOwnOnly(me) && !hasPerm(me, 'schedule.class_own')) throw forbidden('没有排班课的权限，班课请由教务安排')
     // 教师只能给自己任课的班级排课（否则可借此取得其他班级的点名、成绩等访问权）
     if (isOwnOnly(me) && cg.teacherId !== me.id && !(await tx.session.count({ where: { classGroupId: cg.id, teacherId: me.id } })))
       throw forbidden('只能为本人任课的班级排课')

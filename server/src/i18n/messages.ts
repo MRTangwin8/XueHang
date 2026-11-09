@@ -1218,3 +1218,17 @@ add('只有超级管理员可以修改超级管理员账号', 'Only super admini
   'Seuls les super administrateurs peuvent modifier les comptes de super administrateur', 'Solo los superadministradores pueden modificar cuentas de superadministrador',
   'Изменять учётные записи суперадминистраторов могут только суперадминистраторы', 'Somente superadministradores podem editar contas de superadministrador',
   'Nur Superadministratoren können Superadministrator-Konten bearbeiten')
+
+// 可管理校区 / 细分权限
+add('没有排班课的权限，班课请由教务安排', 'You are not allowed to schedule group lessons; please ask the academic office', '集団授業を登録する権限がありません。教務に依頼してください',
+  'Vous n’êtes pas autorisé à planifier des cours collectifs ; adressez-vous à l’administration', 'No tiene permiso para programar clases grupales; solicítelo a coordinación',
+  'Нет прав на назначение групповых занятий; обратитесь в учебную часть', 'Você não tem permissão para agendar aulas em grupo; peça à secretaria',
+  'Keine Berechtigung, Gruppenunterricht zu planen; bitte an die Verwaltung wenden')
+add('可管理校区中包含不存在的校区', 'The managed campuses include one that does not exist', '管理できる校舎に存在しない校舎が含まれています',
+  'Les sites gérés contiennent un site inexistant', 'Las sedes gestionadas incluyen una que no existe',
+  'Среди управляемых филиалов есть несуществующий', 'As unidades gerenciadas incluem uma que não existe',
+  'Unter den verwalteten Standorten ist einer, der nicht existiert')
+add('只能指定自己可管理范围内的校区', 'You can only assign campuses that you manage yourself', '自分が管理できる範囲の校舎のみ指定できます',
+  'Vous ne pouvez attribuer que des sites que vous gérez vous-même', 'Solo puede asignar sedes que usted mismo gestiona',
+  'Можно назначать только филиалы, которыми вы управляете сами', 'Você só pode atribuir unidades que você mesmo gerencia',
+  'Sie können nur Standorte zuweisen, die Sie selbst verwalten')

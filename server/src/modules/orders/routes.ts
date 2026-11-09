@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs'
 import { prisma } from '../../lib/prisma'
 import { parse, pageQuery, pageArgs, paged, zIdParam, zId, zOptStr } from '../../lib/http'
 import { badRequest, forbidden, notFound } from '../../lib/errors'
-import { andCampus, perm, staff, staffOnly, hasPerm, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
+import { andCampus, inCampus, perm, staff, staffOnly, hasPerm, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
 import { audit } from '../../lib/audit'
 import { dayjs, DEFAULT_TZ, fmtZoned, startOfZonedDay } from '../../lib/time'
 import { DICTS } from '../../dict'
@@ -531,8 +531,7 @@ export default async function (app: FastifyInstance) {
 
   /** 退费权限的校区范围：order.refund 按角色数据范围（SELF 退化为本校区） */
   function refundScopeOk(me: StaffPrincipal, campusId: number) {
-    const w = scopeWhere(me) as { campusId?: number }
-    return w.campusId == null || w.campusId === campusId
+    return inCampus(me, campusId)
   }
 
   app.put('/:id', { preHandler: perm('order.all', 'order.pay', 'student.enroll') }, async (req) => {

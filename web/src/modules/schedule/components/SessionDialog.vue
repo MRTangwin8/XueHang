@@ -33,6 +33,8 @@ const auth = useAuth()
 const width = useDialogWidth('620px')
 const canEditAll = computed(() => auth.can('schedule.edit'))
 const ownOnly = computed(() => !canEditAll.value && auth.can('schedule.own'))
+/** 班课由教务排；教师需要「为本人任课的班级排班课」权限 */
+const canClass = computed(() => canEditAll.value || auth.can('schedule.class_own'))
 const editing = computed(() => !!props.session)
 const confirmed = computed(() => props.session?.status === 'CONFIRMED')
 const canFixConfirmedHours = computed(() => confirmed.value && props.session?.kind === 'VIP' && auth.can('vip.delete_confirmed'))
@@ -78,7 +80,7 @@ async function init() {
     hoursTouched.value = Math.abs(s.hours - diffHours(form.startTime, form.endTime)) > 1e-6
   } else {
     Object.assign(form, {
-      kind: p.kind ?? (p.vipPackageId ? 'VIP' : 'CLASS'), campusId: p.campusId ?? auth.me?.campusId ?? null,
+      kind: p.kind ?? (p.vipPackageId || !canClass.value ? 'VIP' : 'CLASS'), campusId: p.campusId ?? auth.me?.campusId ?? null,
       classGroupId: p.classGroupId ?? null, vipPackageId: p.vipPackageId ?? null, title: p.title ?? '',
       roomId: p.roomId ?? null, teacherId: ownOnly.value ? auth.me!.id : p.teacherId ?? null,
       date: p.date ?? today(), startTime: p.startTime ?? '10:00', endTime: p.endTime ?? (p.startTime ? addHour(p.startTime, 2) : '12:00'),
@@ -216,7 +218,7 @@ const title = computed(() => (editing.value ? (confirmed.value ? t('schedule.ses
     <el-form label-width="84px" :disabled="saving">
       <el-form-item :label="t('schedule.type')">
         <el-radio-group v-model="form.kind" :disabled="editing">
-          <el-radio-button value="CLASS">{{ t('schedule.groupClass') }}</el-radio-button>
+          <el-radio-button v-if="canClass || form.kind === 'CLASS'" value="CLASS" :disabled="!canClass">{{ t('schedule.groupClass') }}</el-radio-button>
           <el-radio-button value="VIP">VIP</el-radio-button>
           <el-radio-button value="OTHER">{{ t('schedule.otherBooking') }}</el-radio-button>
         </el-radio-group>

@@ -156,6 +156,9 @@ export default {
       recycleEmpty: "Recycle bin is empty",
       loginName: "Sign-in name",
       selectCampus: "Select a campus",
+      manageCampuses: "Managed campuses",
+      manageCampusesHint: "With the \"Own campus\" data scope, the account can also manage the campuses selected here in addition to its home campus. Roles with the \"All\" scope are not limited.",
+      manageCampusesPh: "Home campus only",
       multiple: "Multiple selections allowed",
       noSubjects: "No subjects. Add them under Teaching Subjects first",
       disabledSuffix: " (disabled)",
@@ -230,6 +233,7 @@ export default {
       system: "System Settings",
     },
     perms: {
+      grade: { view: "Grades: view assessments and scores", enter: "Grades: enter scores (existing assessments)", publish: "Grades: publish / unpublish to student portal", manage: "Grades: create / edit / delete assessments, manage rosters (includes entering and publishing)" },
       daily: { write: "Write daily reports" },
       crm: {
         daily: { all: "All staff daily reports (view everyone's reports)" },
@@ -250,11 +254,11 @@ export default {
       product: { manage: "Manage term courses / course packages" },
       schedule: {
         view: "View schedules / monthly schedules / room bookings",
-        own: "Edit own lessons (teacher)",
-        edit: "Edit all lessons (administration)",
+        own: "Teacher: schedule own VIP lessons, edit / confirm own lessons",
+        edit: "Administration: schedule / edit all lessons within data scope", class_own: "Teacher: schedule group lessons for own classes (otherwise only administration can)",
       },
       room: { manage: "Manage classrooms" },
-      class: { manage: "Manage group classes" },
+      class: { manage: "Manage group classes (create, edit, roster, close)" },
       vip: { manage: "Manage VIP classes", delete_confirmed: "Delete confirmed VIP lessons" },
       attendance: { manage: "Manage attendance" },
       interview: { manage: "Manage interview / consultation slots and records" },
@@ -270,7 +274,7 @@ export default {
         log: "Operation logs",
         site: "Site settings (name / Logo / sign-in copy / theme color)",
         rules: "Business rules and dropdown options",
-        mail: "Email (SMTP) settings",
+        mail: "Email (SMTP) settings", edu: "Grades & profile settings / industry presets",
       },
     },
     action: {

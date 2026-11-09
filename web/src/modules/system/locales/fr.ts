@@ -158,6 +158,9 @@ export default {
       recycleEmpty: "La corbeille est vide",
       loginName: "Identifiant de connexion",
       selectCampus: "Choisir un campus",
+      manageCampuses: "Sites gérés",
+      manageCampusesHint: "Avec le périmètre « Son site », le compte peut aussi gérer les sites sélectionnés ici, en plus de son site de rattachement. Les rôles au périmètre « Tous » ne sont pas limités.",
+      manageCampusesPh: "Site de rattachement uniquement",
       multiple: "Sélection multiple",
       noSubjects: "Aucun cours. Ajoutez-en d’abord dans « Matières enseignées »",
       disabledSuffix: " (désactivé)",
@@ -227,6 +230,7 @@ export default {
       schedule: "Gestion pédagogique", service: "Services pédagogiques", hr: "Ressources humaines", system: "Paramètres système",
     },
     perms: {
+      grade: { view: "Notes : consulter les évaluations et les notes", enter: "Notes : saisir les notes (évaluations existantes)", publish: "Notes : publier / retirer sur l'espace élève", manage: "Notes : créer / modifier / supprimer des évaluations, gérer les listes (saisie et publication incluses)" },
       daily: { write: "Rédiger les rapports quotidiens" },
       crm: {
         daily: { all: "Rapports de toute l’équipe (voir tous les rapports)" }, customer: { view: "Mes clients", all: "Tous les clients (tout voir)" },
@@ -240,10 +244,10 @@ export default {
       order: { view: "Commandes / paiements (personnels)", all: "Commandes / paiements (tous)", pay: "Enregistrer un paiement", refund: "Rembourser" },
       product: { manage: "Gérer les cours à la session / forfaits" },
       schedule: {
-        view: "Voir les emplois du temps / réservations de salles", own: "Modifier ses cours (enseignant)",
-        edit: "Modifier tous les cours (administration)",
+        view: "Voir les emplois du temps / réservations de salles", own: "Enseignant : planifier ses cours VIP, modifier / confirmer ses cours",
+        edit: "Administration : planifier / modifier tous les cours du périmètre", class_own: "Enseignant : planifier les cours collectifs de ses classes (sinon réservé à l'administration)",
       },
-      room: { manage: "Gérer les salles" }, class: { manage: "Gérer les cours collectifs" },
+      room: { manage: "Gérer les salles" }, class: { manage: "Gérer les cours collectifs (création, modification, liste, clôture)" },
       vip: { manage: "Gérer les classes VIP", delete_confirmed: "Supprimer les cours VIP confirmés" }, attendance: { manage: "Gérer les présences" },
       interview: { manage: "Gérer les créneaux et comptes rendus d’entretien" },
       document: { manage: "Documents : attribuer les correcteurs", review: "Documents : corriger et restituer" },
@@ -252,7 +256,7 @@ export default {
       system: {
         campus: "Gérer les campus", user: "Gérer les comptes du personnel", role: "Fonctions et droits", subject: "Matières enseignées",
         log: "Journal des opérations", site: "Paramètres du site (nom / Logo / textes de connexion / couleur du thème)", rules: "Règles métier et listes déroulantes",
-        mail: "Paramètres e-mail (SMTP)",
+        mail: "Paramètres e-mail (SMTP)", edu: "Paramètres notes et dossier / modèles sectoriels",
       },
     },
     action: {

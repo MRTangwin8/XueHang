@@ -57,7 +57,7 @@ export default async function (app: FastifyInstance) {
     const where: Prisma.StudentWhereInput = { deletedAt: null }
     // 下拉搜索只返回姓名 / 学号，但仍受校区范围限制；按电话搜索需要学员查看权限
     const lim = campusLimit(me)
-    if (lim != null) where.campusId = lim
+    if (lim != null) where.campusId = { in: lim }
     if (q.ids) where.id = { in: q.ids.split(',').map(Number).filter(Number.isInteger).slice(0, 200) }
     if (q.status) where.status = q.status
     andCampus(where, q.campusId)

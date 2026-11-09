@@ -7,7 +7,7 @@ import { badRequest, conflict, forbidden, notFound } from '../../lib/errors'
 import { audit } from '../../lib/audit'
 import { notifyUser } from '../../lib/notify'
 import { dayjs, DEFAULT_TZ } from '../../lib/time'
-import { perm, scopeWhere, staff } from '../../plugins/auth'
+import { inCampus, perm, scopeWhere, staff } from '../../plugins/auth'
 import { campusLimit, can, canViewCustomer, dayRange, editableCustomer, loadCustomer, zFlag, zOptDay, zOptId } from './util'
 
 const listQuery = pageQuery.extend({
@@ -73,7 +73,7 @@ export default async function (app: FastifyInstance) {
       if (!can(me, 'crm.pool')) throw forbidden()
       and.push({ ownerId: null })
       const lim = campusLimit(me)
-      if (lim) and.push({ campusId: lim })
+      if (lim) and.push({ campusId: { in: lim } })
     } else {
       if (!can(me, 'crm.customer.all')) throw forbidden()
       // 校区范围：超管 / 全部范围不限，其余限本校区
@@ -185,7 +185,7 @@ export default async function (app: FastifyInstance) {
       if (!can(me, 'crm.customer.all')) throw forbidden('只有拥有「全部客户」权限才能指定其他负责人')
       ownerId = reqOwner
     }
-    if (reqCampus && reqCampus !== me.campusId && campusLimit(me) != null) throw forbidden('只能在本校区新建客户')
+    if (reqCampus && !inCampus(me, reqCampus)) throw forbidden('只能在本校区新建客户')
     if (data.status === 'SIGNED') throw forbidden('「已签约」只能通过学员报名自动设置')
     let campusId = reqCampus ?? me.campusId
     if (!campusId) campusId = (await prisma.campus.findFirst({ where: { deletedAt: null }, orderBy: [{ sort: 'asc' }, { id: 'asc' }] }))?.id ?? null
@@ -206,7 +206,7 @@ export default async function (app: FastifyInstance) {
     const body = parse(customerBody.partial(), req.body)
     const { campusId, ...data } = body
     const old = await prisma.customer.findUniqueOrThrow({ where: { id }, select: { campusId: true, status: true } })
-    if (campusId && campusId !== old.campusId && campusLimit(me) != null) throw forbidden('无权把客户转到其他校区')
+    if (campusId && campusId !== old.campusId && !inCampus(me, campusId)) throw forbidden('无权把客户转到其他校区')
     if (data.status === old.status) delete data.status
     else if (data.status === 'SIGNED') throw forbidden('「已签约」只能通过学员报名自动设置')
     else if (old.status === 'SIGNED' && data.status) throw badRequest('已签约客户的状态不能手工修改')
@@ -255,7 +255,7 @@ export default async function (app: FastifyInstance) {
     if (!can(me, 'crm.customer.all')) where.ownerId = me.id
     else {
       const lim = campusLimit(me)
-      if (lim) where.OR = [{ ownerId: me.id }, { campusId: lim }]
+      if (lim) where.OR = [{ ownerId: me.id }, { campusId: { in: lim } }]
     }
     const r = await prisma.customer.updateMany({ where, data: { ownerId: null, assignedAt: null } })
     await audit(req, 'release', 'Customer', ids.join(','), { count: r.count })
@@ -269,7 +269,7 @@ export default async function (app: FastifyInstance) {
     if (!owner) throw badRequest('负责人不存在或已停用')
     const lim = campusLimit(me)
     const r = await prisma.customer.updateMany({
-      where: { id: { in: ids }, deletedAt: null, ...(lim ? { campusId: lim } : {}) },
+      where: { id: { in: ids }, deletedAt: null, ...(lim ? { campusId: { in: lim } } : {}) },
       data: { ownerId, assignedAt: new Date() },
     })
     await audit(req, 'assign', 'Customer', ids.join(','), { ownerId, owner: owner.name, count: r.count })

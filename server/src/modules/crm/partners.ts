@@ -117,7 +117,7 @@ export default async function (app: FastifyInstance) {
     const { id } = parse(zIdParam, req.params)
     // 关联的客户 / 学员只列出当前账号本来就有权查看的（机构资料本身对有渠道权限的人共享）
     const lim = campusLimit(me)
-    const inCampus = lim == null ? {} : { campusId: lim }
+    const inCampus = lim == null ? {} : { campusId: { in: lim } }
     const custWhere: Prisma.CustomerWhereInput = can(me, 'crm.customer.all')
       ? inCampus
       : { OR: [{ ownerId: me.id }, ...(can(me, 'crm.pool') ? [{ ownerId: null, ...inCampus }] : [])] }

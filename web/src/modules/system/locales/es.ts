@@ -156,6 +156,9 @@ export default {
       recycleEmpty: "La papelera está vacía",
       loginName: "Nombre de acceso",
       selectCampus: "Seleccione un campus",
+      manageCampuses: "Sedes gestionadas",
+      manageCampusesHint: "Con el ámbito «Su sede», la cuenta también puede gestionar las sedes seleccionadas aquí además de la suya. Los roles con ámbito «Todas» no tienen límite.",
+      manageCampusesPh: "Solo su sede",
       multiple: "Selección múltiple",
       noSubjects: "No hay asignaturas. Añádalas primero en « Asignaturas impartidas »",
       disabledSuffix: " (desactivada)",
@@ -223,6 +226,7 @@ export default {
       schedule: "Gestión académica", service: "Servicios educativos", hr: "Recursos humanos", system: "Configuración del sistema",
     },
     perms: {
+      grade: { view: "Calificaciones: ver evaluaciones y notas", enter: "Calificaciones: introducir notas (evaluaciones existentes)", publish: "Calificaciones: publicar / retirar del portal del estudiante", manage: "Calificaciones: crear / editar / eliminar evaluaciones, gestionar listas (incluye introducir y publicar)" },
       daily: { write: "Redactar informes diarios" },
       crm: {
         daily: { all: "Informes de todo el personal (ver todos)" }, customer: { view: "Mis clientes", all: "Todos los clientes (ver todos)" },
@@ -236,8 +240,8 @@ export default {
       },
       order: { view: "Pedidos / pagos (propios)", all: "Pedidos / pagos (todos)", pay: "Registrar pagos", refund: "Reembolsar" },
       product: { manage: "Gestionar cursos por periodo / paquetes" },
-      schedule: { view: "Ver horarios / reservas de aulas", own: "Editar clases propias (docente)", edit: "Editar todas las clases (administración)" },
-      room: { manage: "Gestionar aulas" }, class: { manage: "Gestionar clases grupales" },
+      schedule: { view: "Ver horarios / reservas de aulas", own: "Docente: programar sus clases VIP, modificar / confirmar sus clases", edit: "Coordinación: programar / modificar todas las clases de su ámbito", class_own: "Docente: programar clases grupales de sus grupos (si no, solo coordinación)" },
+      room: { manage: "Gestionar aulas" }, class: { manage: "Gestionar clases grupales (crear, editar, lista, cerrar)" },
       vip: { manage: "Gestionar clases VIP", delete_confirmed: "Eliminar clases VIP confirmadas" }, attendance: { manage: "Gestionar asistencia" },
       interview: { manage: "Gestionar franjas y registros de entrevistas" },
       document: { manage: "Documentos: asignar revisores", review: "Documentos: revisar y devolver" },
@@ -245,7 +249,7 @@ export default {
       system: {
         campus: "Gestionar sedes", user: "Gestionar cuentas del personal", role: "Puestos y permisos", subject: "Asignaturas impartidas",
         log: "Registro de operaciones", site: "Configuración del sitio (nombre / Logo / textos de acceso / color del tema)", rules: "Reglas de negocio y listas desplegables",
-        mail: "Configuración de correo (SMTP)",
+        mail: "Configuración de correo (SMTP)", edu: "Ajustes de calificaciones y expediente / plantillas del sector",
       },
     },
     action: {

@@ -5,7 +5,7 @@ export default [
   {
     path: 'students/grades',
     component: () => import('./views/Assessments.vue'),
-    meta: { title: 'grades.menu.grades', group: 'students', perm: ['grade.view', 'grade.manage'], order: 4 },
+    meta: { title: 'grades.menu.grades', group: 'students', perm: ['grade.view', 'grade.enter', 'grade.publish', 'grade.manage'], order: 4 },
   },
   {
     path: 'students/grades/:id(\\d+)',

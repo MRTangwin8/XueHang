@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { prisma } from '../../lib/prisma'
 import { pageArgs, pageQuery, paged, parse, zIdParam, zOptStr } from '../../lib/http'
 import { badRequest, conflict, forbidden, notFound } from '../../lib/errors'
-import { hasPerm, invalidatePrincipal, perm, staff } from '../../plugins/auth'
+import { hasPerm, invalidatePrincipal, perm, staff, campusLimit, type StaffPrincipal } from '../../plugins/auth'
 import { audit } from '../../lib/audit'
 import { effectiveSuperAdmins } from './roles'
 
@@ -34,6 +34,8 @@ const userBase = z.object({
   campusId: z.coerce.number().int().positive().nullable().optional(),
   roleIds: zIds,
   subjectIds: zIds,
+  /** 除所属校区外，额外可管理的校区（数据范围为「本校区」时生效） */
+  manageCampusIds: zIds,
   hourlyWage: zOptInt,
   transportFee: zOptInt,
   bankName: zOptStr,
@@ -47,6 +49,7 @@ const zPassword = zStrongPassword
 
 const userInclude = {
   campus: { select: { id: true, name: true } },
+  manageCampuses: { include: { campus: { select: { id: true, name: true } } } },
   roles: { include: { role: { select: { id: true, name: true, isSystem: true } } } },
   subjects: { include: { subject: { select: { id: true, name: true, category: true, active: true } } } },
 } satisfies Prisma.UserInclude
@@ -54,9 +57,11 @@ const userInclude = {
 type UserRow = Prisma.UserGetPayload<{ include: typeof userInclude }>
 
 function view(u: UserRow) {
-  const { passwordHash: _ph, roles, subjects, ...rest } = u
+  const { passwordHash: _ph, roles, subjects, manageCampuses, ...rest } = u
   return {
     ...rest,
+    manageCampuses: manageCampuses.map((c) => c.campus),
+    manageCampusIds: manageCampuses.map((c) => c.campusId),
     roles: roles.map((r) => r.role),
     roleIds: roles.map((r) => r.role.id),
     subjects: subjects.map((s) => s.subject).sort((a, b) => a.id - b.id),
@@ -98,6 +103,17 @@ async function checkRefs(campusId: number | null | undefined, roleIds: number[],
     const n = await prisma.teachingSubject.count({ where: { id: { in: subjectIds } } })
     if (n !== new Set(subjectIds).size) throw badRequest('包含不存在的教授课程')
   }
+}
+
+/** 校验并规整「可管理校区」：必须存在；非全部范围的操作者只能在自己可管理的校区内指定 */
+async function checkManageCampuses(me: StaffPrincipal, ids: number[], primary: number | null | undefined): Promise<number[]> {
+  const list = [...new Set(ids)].filter((c) => c !== primary)
+  if (!list.length) return []
+  const n = await prisma.campus.count({ where: { id: { in: list }, deletedAt: null } })
+  if (n !== list.length) throw badRequest('可管理校区中包含不存在的校区')
+  const lim = campusLimit(me)
+  if (lim && list.some((c) => !lim.includes(c))) throw forbidden('只能指定自己可管理范围内的校区')
+  return list
 }
 
 export default async function userRoutes(app: FastifyInstance) {
@@ -143,8 +159,9 @@ export default async function userRoutes(app: FastifyInstance) {
 
   app.post('/users', { preHandler: P }, async (req) => {
     const me = staff(req)
-    const { roleIds, subjectIds, password, ...data } = parse(userBase.extend({ password: zPassword }), req.body)
+    const { roleIds, subjectIds, manageCampusIds, password, ...data } = parse(userBase.extend({ password: zPassword }), req.body)
     await checkRefs(data.campusId, roleIds, subjectIds)
+    const manage = await checkManageCampuses(me, manageCampusIds, data.campusId)
     if (!hasPerm(me, '*')) {
       const sup = await superRoleIds()
       if (roleIds.some((r) => sup.includes(r))) throw forbidden('只有超级管理员可以分配超级管理员角色')
@@ -157,6 +174,7 @@ export default async function userRoutes(app: FastifyInstance) {
         passwordHash: await hashPassword(password),
         roles: { create: [...new Set(roleIds)].map((roleId) => ({ roleId })) },
         subjects: { create: [...new Set(subjectIds)].map((subjectId) => ({ subjectId })) },
+        manageCampuses: { create: manage.map((campusId) => ({ campusId })) },
       },
       include: userInclude,
     })
@@ -167,10 +185,11 @@ export default async function userRoutes(app: FastifyInstance) {
   app.put('/users/:id', { preHandler: P }, async (req) => {
     const me = staff(req)
     const { id } = parse(zIdParam, req.params)
-    const { roleIds, subjectIds, ...data } = parse(userBase, req.body)
+    const { roleIds, subjectIds, manageCampusIds, ...data } = parse(userBase, req.body)
     const old = await prisma.user.findUnique({ where: { id }, include: { roles: true } })
     if (!old) throw notFound('工号不存在')
     await checkRefs(data.campusId, roleIds, subjectIds)
+    const manage = await checkManageCampuses(me, manageCampusIds, data.campusId)
     const dup = await prisma.user.findFirst({ where: { staffNo: data.staffNo, id: { not: id } } })
     if (dup) throw conflict('工号已被其他账号使用')
 
@@ -191,18 +210,20 @@ export default async function userRoutes(app: FastifyInstance) {
     const u = await prisma.$transaction(async (tx) => {
       await tx.userRole.deleteMany({ where: { userId: id } })
       await tx.userSubject.deleteMany({ where: { userId: id } })
+      await tx.userCampus.deleteMany({ where: { userId: id } })
       return tx.user.update({
         where: { id },
         data: {
           ...data,
           roles: { create: newRoleIds.map((roleId) => ({ roleId })) },
           subjects: { create: [...new Set(subjectIds)].map((subjectId) => ({ subjectId })) },
+          manageCampuses: { create: manage.map((campusId) => ({ campusId })) },
         },
         include: userInclude,
       })
     })
     invalidatePrincipal('staff', id)
-    await audit(req, 'update', 'User', id, { ...data, roleIds: newRoleIds, subjectIds, bankAccount: data.bankAccount ? '***' : null })
+    await audit(req, 'update', 'User', id, { ...data, roleIds: newRoleIds, subjectIds, manageCampusIds: manage, bankAccount: data.bankAccount ? '***' : null })
     return view(u)
   })
 

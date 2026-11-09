@@ -13,6 +13,8 @@ export interface StaffPrincipal {
   id: number
   name: string
   campusId: number | null
+  /** 可管理的校区：所属校区 + 额外指定的校区（数据范围为「本校区」时按它限制） */
+  campusIds: number[]
   identity: string
   perms: string[]
   dataScope: DataScope
@@ -61,7 +63,7 @@ export async function loadPrincipal(payload: TokenPayload): Promise<Principal | 
   if (payload.type === 'staff') {
     const u = await prisma.user.findFirst({
       where: { id: payload.id, deletedAt: null, status: 'ACTIVE' },
-      include: { roles: { include: { role: { include: { permissions: true } } } } },
+      include: { roles: { include: { role: { include: { permissions: true } } } }, manageCampuses: { select: { campusId: true } } },
     })
     if (u) {
       pv = passwordVersion(u.passwordHash)
@@ -77,6 +79,7 @@ export async function loadPrincipal(payload: TokenPayload): Promise<Principal | 
         id: u.id,
         name: u.name,
         campusId: u.campusId,
+        campusIds: [...new Set([...(u.campusId ? [u.campusId] : []), ...u.manageCampuses.map((c) => c.campusId)])],
         identity: u.identity,
         perms: [...perms],
         dataScope: scope,
@@ -215,8 +218,8 @@ export function student(req: FastifyRequest): StudentPrincipal {
 /**
  * 数据范围过滤：返回 Prisma where 片段。
  * - 拥有 "*" 或 allPerm，或角色 dataScope=ALL：不限
- * - dataScope=CAMPUS：本校区（campusField）
- * - dataScope=SELF：ownerField = 本人（未给 ownerField 时退化为本校区）
+ * - dataScope=CAMPUS：可管理的校区（所属校区 + 账号上额外指定的校区）
+ * - dataScope=SELF：ownerField = 本人（未给 ownerField 时退化为可管理的校区）
  */
 export function scopeWhere(
   user: StaffPrincipal,
@@ -224,33 +227,42 @@ export function scopeWhere(
 ): Record<string, unknown> {
   const { ownerField, campusField = 'campusId', allPerm } = opts
   if (user.perms.includes('*') || (allPerm && user.perms.includes(allPerm)) || user.dataScope === 'ALL') return {}
-  // 受限账号没有所属校区时用 -1（不匹配任何校区），避免退化成「不限」
-  if (user.dataScope === 'CAMPUS') return { [campusField]: user.campusId ?? -1 }
+  if (user.dataScope === 'CAMPUS') return { [campusField]: { in: campusList(user) } }
   if (ownerField) return { [ownerField]: user.id }
-  return { [campusField]: user.campusId ?? -1 }
+  return { [campusField]: { in: campusList(user) } }
 }
+
+/** 受限账号可管理的校区；一个都没有时用 [-1]（不匹配任何校区），避免退化成「不限」 */
+const campusList = (user: StaffPrincipal) => (user.campusIds.length ? user.campusIds : [-1])
 
 /**
- * 校区限制：null = 不限（超级管理员、数据范围「全部」）；数字 = 只能访问该校区。
- * 受限账号没有所属校区时返回 -1（不匹配任何校区，按拒绝处理）。
+ * 校区限制：null = 不限（超级管理员、数据范围「全部」）；数组 = 只能访问这些校区
+ * （所属校区 + 账号上额外指定的可管理校区）。一个都没有时为 [-1]，按拒绝处理。
  */
-export function campusLimit(user: StaffPrincipal): number | null {
+export function campusLimit(user: StaffPrincipal): number[] | null {
   if (user.perms.includes('*') || user.dataScope === 'ALL') return null
-  return user.campusId ?? -1
+  return campusList(user)
 }
 
-/** 按 ID 操作归属某校区的数据前调用：数据范围不是「全部」的账号只能操作本校区 */
-export function assertCampus(user: StaffPrincipal, campusId: number | null | undefined, message = '只能操作本校区的数据') {
+/** 某校区是否在账号的可管理范围内 */
+export function inCampus(user: StaffPrincipal, campusId: number | null | undefined): boolean {
   const lim = campusLimit(user)
-  if (lim != null && campusId !== lim) throw forbidden(message)
+  return lim == null || (campusId != null && lim.includes(campusId))
+}
+
+/** 按 ID 操作归属某校区的数据前调用：数据范围不是「全部」的账号只能操作可管理的校区 */
+export function assertCampus(user: StaffPrincipal, campusId: number | null | undefined, message = '只能操作本校区的数据') {
+  if (!inCampus(user, campusId)) throw forbidden(message)
 }
 
 /** 列表的 campusId 筛选：与 where 中已有的校区限制取交集（筛选参数不能越过数据范围） */
 export function andCampus(where: object, requested?: number | null) {
   if (!requested) return
   const w = where as { campusId?: unknown }
-  if (w.campusId == null) w.campusId = requested
-  else if (w.campusId !== requested) w.campusId = -1
+  const cur = w.campusId
+  if (cur == null) w.campusId = requested
+  else if (typeof cur === 'number') w.campusId = cur === requested ? requested : -1
+  else w.campusId = ((cur as { in?: number[] }).in ?? []).includes(requested) ? requested : -1
 }
 
 /** 登录有效期 3 天 */

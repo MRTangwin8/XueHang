@@ -16,7 +16,7 @@ import { presentSession, sessionInclude } from './routes-sessions'
 function vipScope(me: StaffPrincipal): Prisma.VipPackageWhereInput {
   if (!hasPerm(me, 'vip.manage')) return { teachers: { some: { teacherId: me.id } } }
   const lim = campusLimit(me)
-  return lim == null ? {} : { OR: [{ student: { campusId: lim } }, { teachers: { some: { teacherId: me.id } } }] }
+  return lim == null ? {} : { OR: [{ student: { campusId: { in: lim } } }, { teachers: { some: { teacherId: me.id } } }] }
 }
 
 /** 取课时包并校验校区（按学员所属校区） */

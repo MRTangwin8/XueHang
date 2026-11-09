@@ -62,6 +62,8 @@ export interface AssessmentDetail extends Omit<AssessmentRow, 'summary'> {
   rows: ScoreRow[]
   stats: { summary: Summary; subjects: SubjectStat[]; bands: number[] }
   canManage: boolean
+  canEnter: boolean
+  canPublish: boolean
 }
 
 export interface HistoryRow {

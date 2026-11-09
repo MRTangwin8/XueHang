@@ -17,12 +17,12 @@ services:
     restart: unless-stopped
     init: true
     environment:
-      # 放在反向代理（Nginx / Caddy 等）后面时设为 1，用于取得真实客户端 IP；直接对外时保持 0
-      TRUST_PROXY: ${TRUST_PROXY:-0}
+      # 在反向代理后面时为 1（取得真实客户端 IP）；直接对外开放端口时必须为 0
+      TRUST_PROXY: ${TRUST_PROXY:-1}
       TZ: ${TZ:-Asia/Shanghai}
     ports:
-      # 访问端口，默认 8080；使用 https 配置（见下）时只监听本机
-      - "${BIND:-0.0.0.0}:${PORT:-8080}:3001"
+      # 默认只监听本机 8080，由前面的反向代理（Nginx / IIS / Caddy）对外提供 HTTPS；BIND=0.0.0.0 才直接对外
+      - "${BIND:-127.0.0.1}:${PORT:-8080}:3001"
     volumes:
       - ./data:/data
 

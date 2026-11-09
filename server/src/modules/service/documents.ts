@@ -36,7 +36,7 @@ export default async function (app: FastifyInstance) {
     const where: Prisma.DocumentRequestWhereInput = { deletedAt: trash ? { not: null } : null }
     // 文书管理员按数据范围（学员所属校区）查看；分配给自己的不受校区限制
     const lim = manage ? campusLimit(me) : null
-    const inScope: Prisma.DocumentRequestWhereInput = lim == null ? {} : { OR: [{ student: { campusId: lim } }, { assignedTeacherId: me.id }] }
+    const inScope: Prisma.DocumentRequestWhereInput = lim == null ? {} : { OR: [{ student: { campusId: { in: lim } } }, { assignedTeacherId: me.id }] }
     where.AND = [inScope]
     if (!manage || q.mine === '1' || q.mine === 'true') where.assignedTeacherId = me.id
     else if (q.assignedTeacherId) where.assignedTeacherId = q.assignedTeacherId

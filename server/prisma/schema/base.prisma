@@ -37,6 +37,7 @@ model Campus {
   sharedFiles        SharedFile[]
   wageReviewCampuses WageReviewCampus[]
   assessments        Assessment[]
+  managers           UserCampus[]
 }
 
 /// 教职工账号（工号）。identity 区分 教师 / 职工
@@ -66,6 +67,8 @@ model User {
   deletedAt    DateTime? /// 软删除，可恢复（角色、科目保留）
 
   roles    UserRole[]
+  /// 除所属校区外，额外可管理的校区（数据范围为「本校区」时生效）
+  manageCampuses UserCampus[]
   subjects UserSubject[]
 
   operationLogs             OperationLog[]
@@ -119,6 +122,16 @@ model RolePermission {
   role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([roleId, code])
+}
+
+/// 账号额外可管理的校区：数据范围「本校区」= 所属校区 + 这里列出的校区
+model UserCampus {
+  userId   Int
+  campusId Int
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campus   Campus @relation(fields: [campusId], references: [id], onDelete: Cascade)
+
+  @@id([userId, campusId])
 }
 
 model UserRole {

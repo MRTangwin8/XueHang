@@ -18,7 +18,7 @@ Differences between industries are handled by **industry presets**. Exam types, 
 - **Unified room scheduling.** Group lessons, one-to-one (VIP) lessons, and other bookings share one timetable. Room, teacher, and student conflicts are detected, and batch scheduling works by date range and weekday.
 - **Lesson-hour ledger.** One-to-one hours are tracked as total, confirmed, pending, and remaining. Students can confirm lessons themselves, and optional auto-confirmation runs after each lesson.
 - **Student services.** Attendance, consultation and interview booking, document review, printing quotes, notices, and shared files.
-- **Role-based access.** Permissions work together with own / campus / all data scopes, and payroll review scopes can be set per reviewer.
+- **Role-based access.** Permissions work together with own / campus / all data scopes, and each account can be given extra campuses to manage. Scheduling and grade permissions are fine-grained (group lessons are scheduled by the academic office by default; grades split into view, enter, publish, and manage). Payroll review scopes can be set per reviewer.
 - **Student timetable.** The student portal shows group classes and one-to-one lessons together in a week / month calendar, with room, teacher, attendance and lesson notes; finished one-to-one lessons can be confirmed right there.
 - **Two portals, eight languages, mobile ready.** Staff and students have separate portals, with responsive layouts and eight interface languages.
 - **Read-only admin role.** A built-in role that can view everything but change nothing, for public demos or auditors.
@@ -91,7 +91,7 @@ git clone https://github.com/MRTangwin8/XueHang.git
 cd XueHang && ./deploy.sh
 ```
 
-The script builds the image, starts the service, and prints the URL (port 8080 by default) and the install code. Finish the setup wizard in your browser. The image contains no database server: SQLite is the default, or enter an existing MySQL / PostgreSQL in the wizard. All data lives in `./data`. For a domain with automatic HTTPS, run `DOMAIN=crm.example.com ./deploy.sh`. See the [deployment guide](docs/部署指南.md) for HTTPS, backups, upgrades, and setting up a read-only demo site.
+The script builds the image, starts the service, and prints the install code. By default the container listens only on `127.0.0.1:8080`, and you put Nginx or IIS in front of it as a reverse proxy with HTTPS; then finish the setup wizard in your browser. For a quick trial without a proxy, run `DIRECT=1 ./deploy.sh` and open `http://server-ip:8080`. The image contains no database server: SQLite is the default, or enter an existing MySQL / PostgreSQL in the wizard. All data lives in `./data`. See the [deployment guide](docs/部署指南.md) for Nginx / IIS configuration, backups, upgrades, and setting up a read-only demo site.
 
 **From source:**
 

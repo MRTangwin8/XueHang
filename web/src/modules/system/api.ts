@@ -121,6 +121,8 @@ export interface StaffUser {
   createdAt: string
   deletedAt: string | null
   roles: { id: number; name: string; isSystem: boolean }[]
+  manageCampuses: { id: number; name: string }[]
+  manageCampusIds: number[]
   roleIds: number[]
   subjects: { id: number; name: string; category: string; active: boolean }[]
   subjectIds: number[]
@@ -133,6 +135,8 @@ export interface UserForm {
   password?: string
   identity: string
   campusId: number | null
+  /** 除所属校区外，额外可管理的校区 */
+  manageCampusIds: number[]
   roleIds: number[]
   subjectIds: number[]
   hourlyWage: number | null

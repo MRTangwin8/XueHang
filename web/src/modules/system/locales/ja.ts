@@ -156,6 +156,9 @@ export default {
       recycleEmpty: "ごみ箱は空です",
       loginName: "ログイン名",
       selectCampus: "校舎を選択",
+      manageCampuses: "管理できる校舎",
+      manageCampusesHint: "データ範囲が「自校舎」の場合、所属校舎に加えてここで選んだ校舎も管理できます。データ範囲が「すべて」のロールには影響しません。",
+      manageCampusesPh: "所属校舎のみ",
       multiple: "複数選択可",
       noSubjects: "科目がありません。「担当科目」で先に追加してください",
       disabledSuffix: "（無効）",
@@ -223,6 +226,7 @@ export default {
       service: "教育サービス", hr: "人事管理", system: "システム設定",
     },
     perms: {
+      grade: { view: "成績管理：試験と成績の閲覧", enter: "成績管理：成績入力（既存の試験）", publish: "成績管理：学生画面への公開・取り下げ", manage: "成績管理：試験の作成・変更・削除、名簿管理（入力・公開を含む）" },
       daily: { write: "日報を作成" },
       crm: {
         daily: { all: "全職員の日報（全員の日報を閲覧）" }, customer: { view: "自分の顧客", all: "全顧客（すべて閲覧）" },
@@ -232,8 +236,8 @@ export default {
       student: { enroll: "新規学生の入学登録", view: "自分の在籍学生", all: "全在籍学生", edit: "学生情報を編集" },
       order: { view: "注文 / 入金明細（本人）", all: "注文 / 入金明細（すべて）", pay: "入金を登録", refund: "返金" },
       product: { manage: "単期講座 / コースパッケージ管理" },
-      schedule: { view: "時間割 / 月間時間割 / 教室予約を閲覧", own: "自分の授業を編集（教師）", edit: "全授業を編集（教務）" },
-      room: { manage: "教室管理" }, class: { manage: "集団授業管理" },
+      schedule: { view: "時間割 / 月間時間割 / 教室予約を閲覧", own: "講師：自分の個別指導を登録、自分の授業を変更・確認", edit: "教務：データ範囲内のすべての授業を登録・変更", class_own: "講師：担当クラスの集団授業を登録（未選択の場合は教務のみ登録可）" },
+      room: { manage: "教室管理" }, class: { manage: "集団授業管理（クラス作成・変更・名簿・終了）" },
       vip: { manage: "VIP クラス管理", delete_confirmed: "確認済み VIP 授業を削除" }, attendance: { manage: "出欠管理" },
       interview: { manage: "面談 / 面接の時間帯・記録管理" },
       document: { manage: "書類添削：担当教師を割り当て", review: "書類添削：添削して返却" },
@@ -242,7 +246,7 @@ export default {
         campus: "校舎管理", user: "職員アカウント管理", role: "職務権限", subject: "担当科目", log: "操作ログ",
         site: "サイト設定（名称 / Logo / ログイン画面文言 / テーマカラー）",
         rules: "業務ルールと選択肢",
-        mail: "メール（SMTP）設定",
+        mail: "メール（SMTP）設定", edu: "成績・学生情報設定 / 業種テンプレート",
       },
     },
     action: {

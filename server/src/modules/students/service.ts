@@ -6,7 +6,7 @@ import { zOptStr } from '../../lib/http'
 import { dayjs, DEFAULT_TZ } from '../../lib/time'
 import { DICTS, RULES } from '../../dict'
 import { NO_REQUIRED, PROFILE_FIELDS, cleanScores, computeTotal, fieldConf, findExamType, type ProfileField } from '../../lib/educonfig'
-import { hasPerm, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
+import { hasPerm, inCampus, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
 
 // ------------------------------------------------------------------
 // 校验 schema
@@ -237,8 +237,7 @@ export function studentAccess(me: StaffPrincipal, s: StudentLite): Access {
   const byTeacher = hasPerm(me, 'teacher.students') && (s.mainTeacherId === me.id || s.contractTeacherId === me.id)
   let byAll = false
   if (hasPerm(me, 'student.all')) {
-    const w = scopeWhere(me) as { campusId?: number }
-    byAll = w.campusId == null || w.campusId === s.campusId
+    byAll = inCampus(me, s.campusId)
   }
   return { canView: bySales || byTeacher || byAll, bySales, byTeacher, byAll }
 }

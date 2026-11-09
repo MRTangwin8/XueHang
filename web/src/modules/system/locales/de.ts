@@ -158,6 +158,9 @@ export default {
       recycleEmpty: "Papierkorb ist leer",
       loginName: "Anmeldename",
       selectCampus: "Standort auswählen",
+      manageCampuses: "Verwaltete Standorte",
+      manageCampusesHint: "Beim Datenbereich „Eigener Standort“ kann das Konto zusätzlich die hier gewählten Standorte verwalten. Rollen mit dem Bereich „Alle“ sind nicht eingeschränkt.",
+      manageCampusesPh: "Nur eigener Standort",
       multiple: "Mehrfachauswahl möglich",
       noSubjects: "Keine Fächer. Zuerst unter „Unterrichtsfächer“ hinzufügen",
       disabledSuffix: " (deaktiviert)",
@@ -227,6 +230,7 @@ export default {
       schedule: "Unterrichtsverwaltung", service: "Unterrichtsservice", hr: "Personalwesen", system: "Systemeinstellungen",
     },
     perms: {
+      grade: { view: "Noten: Prüfungen und Noten ansehen", enter: "Noten: Noten eintragen (vorhandene Prüfungen)", publish: "Noten: im Schülerportal veröffentlichen / zurückziehen", manage: "Noten: Prüfungen anlegen / ändern / löschen, Listen verwalten (inkl. Eintragen und Veröffentlichen)" },
       daily: { write: "Tagesberichte schreiben" },
       crm: {
         daily: { all: "Tagesberichte aller Mitarbeitenden (alle anzeigen)" }, customer: { view: "Meine Kunden", all: "Alle Kunden (alle anzeigen)" },
@@ -239,8 +243,8 @@ export default {
         pay: "Zahlungen erfassen", refund: "Erstattungen durchführen",
       },
       product: { manage: "Kurse pro Zeitraum / Kurspakete verwalten" },
-      schedule: { view: "Stundenpläne / Raumbuchungen anzeigen", own: "Eigene Termine bearbeiten (Lehrkraft)", edit: "Alle Termine bearbeiten (Verwaltung)" },
-      room: { manage: "Unterrichtsräume verwalten" }, class: { manage: "Gruppenkurse verwalten" },
+      schedule: { view: "Stundenpläne / Raumbuchungen anzeigen", own: "Lehrkraft: eigene VIP-Stunden planen, eigene Stunden ändern / bestätigen", edit: "Verwaltung: alle Stunden im Datenbereich planen / ändern", class_own: "Lehrkraft: Gruppenunterricht für eigene Klassen planen (sonst nur Verwaltung)" },
+      room: { manage: "Unterrichtsräume verwalten" }, class: { manage: "Gruppenkurse verwalten (anlegen, ändern, Liste, abschließen)" },
       vip: { manage: "VIP-Klassen verwalten", delete_confirmed: "Bestätigte VIP-Termine löschen" }, attendance: { manage: "Anwesenheit verwalten" },
       interview: { manage: "Zeitfenster und Gesprächsprotokolle verwalten" },
       document: { manage: "Dokumente: Prüfer zuweisen", review: "Dokumente: prüfen und zurückgeben" },
@@ -248,7 +252,7 @@ export default {
       system: {
         campus: "Standorte verwalten", user: "Mitarbeiterkonten verwalten", role: "Funktionen und Berechtigungen", subject: "Unterrichtsfächer",
         log: "Vorgangsprotokoll", site: "Website-Einstellungen (Name / Logo / Anmeldetexte / Themenfarbe)", rules: "Geschäftsregeln und Auswahllisten",
-        mail: "E-Mail-Einstellungen (SMTP)",
+        mail: "E-Mail-Einstellungen (SMTP)", edu: "Noten- & Profileinstellungen / Branchenvorlagen",
       },
     },
     action: {

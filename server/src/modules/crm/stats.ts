@@ -24,7 +24,8 @@ export default async function (app: FastifyInstance) {
     const { from, to, gte, lt } = statRange(q.from, q.to)
     if (gte >= lt) throw badRequest('开始日期不能晚于结束日期')
     if (dayjs(lt).diff(gte, 'day') > 366) throw badRequest('统计区间不能超过一年')
-    const campusId = campusLimit(me) ?? q.campusId ?? undefined
+    const lim = campusLimit(me)
+    const campusId = q.campusId ? (lim == null || lim.includes(q.campusId) ? q.campusId : -1) : lim == null ? undefined : lim.length === 1 ? lim[0] : { in: lim }
     const cw: Prisma.CustomerWhereInput = { deletedAt: null, ...(campusId ? { campusId } : {}) }
 
     const [customers, follows, channels] = await Promise.all([
@@ -118,7 +119,8 @@ export default async function (app: FastifyInstance) {
     const q = parse(statQuery, req.query)
     const { from, to, gte, lt } = statRange(q.from, q.to)
     if (gte >= lt) throw badRequest('开始日期不能晚于结束日期')
-    const campusId = campusLimit(me) ?? q.campusId ?? undefined
+    const lim = campusLimit(me)
+    const campusId = q.campusId ? (lim == null || lim.includes(q.campusId) ? q.campusId : -1) : lim == null ? undefined : lim.length === 1 ? lim[0] : { in: lim }
     const cw: Prisma.CustomerWhereInput = { deletedAt: null, ...(campusId ? { campusId } : {}) }
 
     const [newC, follows, signed, orders, payments, salesUsers] = await Promise.all([

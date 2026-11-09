@@ -60,21 +60,21 @@ const campusLimitOf = (me: StaffPrincipal) => campusLimit(me)
 
 function assertSlotAccess(me: StaffPrincipal, slot: { campusId: number | null; hostId: number }) {
   const lim = campusLimitOf(me)
-  if (lim && slot.campusId && slot.campusId !== lim && slot.hostId !== me.id) throw forbidden('无权操作其他校区的时间段')
+  if (lim && slot.campusId && !lim.includes(slot.campusId) && slot.hostId !== me.id) throw forbidden('无权操作其他校区的时间段')
 }
 
 async function assertStudentAccess(me: StaffPrincipal, studentId: number) {
   const s = await prisma.student.findFirst({ where: { id: studentId, deletedAt: null }, select: { campusId: true } })
   if (!s) throw badRequest('学员不存在')
   const lim = campusLimitOf(me)
-  if (lim && s.campusId !== lim) throw forbidden('无权操作其他校区的学员')
+  if (lim && !lim.includes(s.campusId)) throw forbidden('无权操作其他校区的学员')
 }
 
 async function assertTeacherAccess(me: StaffPrincipal, teacherId: number) {
   const u = await prisma.user.findFirst({ where: { id: teacherId, deletedAt: null, status: 'ACTIVE' }, select: { campusId: true } })
   if (!u) throw badRequest('老师不存在或已停用')
   const lim = campusLimitOf(me)
-  if (lim && u.campusId && u.campusId !== lim) throw forbidden('只能指定本校区的老师')
+  if (lim && u.campusId && !lim.includes(u.campusId)) throw forbidden('只能指定本校区的老师')
 }
 
 export default async function (app: FastifyInstance) {
@@ -98,7 +98,7 @@ export default async function (app: FastifyInstance) {
     const lim = campusLimitOf(me)
     const where: Prisma.InterviewSlotWhereInput = { deletedAt: null }
     // 范围条件放在 AND 里，任何查询参数都无法覆盖
-    if (lim) where.AND = [{ OR: [{ campusId: lim }, { campusId: null }, { hostId: me.id }] }]
+    if (lim) where.AND = [{ OR: [{ campusId: { in: lim } }, { campusId: null }, { hostId: me.id }] }]
     if (q.kind) where.kind = q.kind
     if (q.hostId) where.hostId = q.hostId
     if (q.status) where.status = { in: q.status.split(',') }
@@ -123,7 +123,7 @@ export default async function (app: FastifyInstance) {
     await assertTeacherAccess(me, host.id)
     const campusId = b.campusId ?? host.campusId ?? me.campusId
     const lim = campusLimitOf(me)
-    if (lim && campusId && campusId !== lim) throw forbidden('只能在本校区发布时间段')
+    if (lim && campusId && !lim.includes(campusId)) throw forbidden('只能在本校区发布时间段')
     const tz = await campusTz(campusId)
 
     let dates: string[]
@@ -273,7 +273,7 @@ export default async function (app: FastifyInstance) {
     // 学员条件：关键字 + 校区范围（范围条件不可被参数覆盖）
     const studentWhere: Prisma.StudentWhereInput = {}
     if (q.q) studentWhere.OR = [{ name: { contains: q.q } }, { studentNo: { contains: q.q } }]
-    if (lim) studentWhere.campusId = lim
+    if (lim) studentWhere.campusId = { in: lim }
     if (Object.keys(studentWhere).length) where.student = studentWhere
     const [items, total] = await Promise.all([
       prisma.interviewRecord.findMany({

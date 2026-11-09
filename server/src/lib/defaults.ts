@@ -39,7 +39,7 @@ export const DEFAULT_ROLES: { key: string; name: string; dataScope: string; desc
     key: 'teacher',
     name: '教师',
     dataScope: 'SELF',
-    codes: ['daily.write', 'wage.claim', 'teacher.students', 'schedule.view', 'schedule.own', 'attendance.manage', 'interview.manage', 'document.review', 'grade.manage'],
+    codes: ['daily.write', 'wage.claim', 'teacher.students', 'schedule.view', 'schedule.own', 'attendance.manage', 'interview.manage', 'document.review', 'grade.enter'],
   },
   {
     key: 'clerk',

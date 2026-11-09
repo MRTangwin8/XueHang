@@ -158,6 +158,9 @@ export default {
       recycleEmpty: "A lixeira está vazia",
       loginName: "Nome de acesso",
       selectCampus: "Selecione uma unidade",
+      manageCampuses: "Unidades gerenciadas",
+      manageCampusesHint: "Com o escopo «Própria unidade», a conta também pode gerenciar as unidades selecionadas aqui, além da sua. Funções com escopo «Todas» não são limitadas.",
+      manageCampusesPh: "Somente a própria unidade",
       multiple: "Seleção múltipla",
       noSubjects: "Nenhuma disciplina. Adicione primeiro em «Disciplinas lecionadas»",
       disabledSuffix: " (desativada)",
@@ -225,6 +228,7 @@ export default {
       schedule: "Gestão acadêmica", service: "Serviços educacionais", hr: "Recursos humanos", system: "Configurações do sistema",
     },
     perms: {
+      grade: { view: "Notas: ver avaliações e notas", enter: "Notas: lançar notas (avaliações existentes)", publish: "Notas: publicar / retirar do portal do estudante", manage: "Notas: criar / editar / excluir avaliações, gerenciar listas (inclui lançar e publicar)" },
       daily: { write: "Preencher relatórios diários" },
       crm: {
         daily: { all: "Relatórios de toda a equipe (ver todos)" }, customer: { view: "Meus clientes", all: "Todos os clientes (ver todos)" },
@@ -234,8 +238,8 @@ export default {
       student: { enroll: "Matricular novos alunos", view: "Meus alunos ativos", all: "Todos os alunos ativos", edit: "Editar cadastros de alunos" },
       order: { view: "Pedidos / pagamentos (próprios)", all: "Pedidos / pagamentos (todos)", pay: "Registrar pagamentos", refund: "Efetuar reembolsos" },
       product: { manage: "Gerenciar cursos por período / pacotes" },
-      schedule: { view: "Ver horários / reservas de salas", own: "Editar as próprias aulas (professor)", edit: "Editar todas as aulas (administração)" },
-      room: { manage: "Gerenciar salas" }, class: { manage: "Gerenciar turmas" },
+      schedule: { view: "Ver horários / reservas de salas", own: "Professor: agendar suas aulas VIP, alterar / confirmar suas aulas", edit: "Secretaria: agendar / alterar todas as aulas do seu escopo", class_own: "Professor: agendar aulas em grupo das suas turmas (caso contrário, só a secretaria)" },
+      room: { manage: "Gerenciar salas" }, class: { manage: "Gerenciar turmas (criar, editar, lista, encerrar)" },
       vip: { manage: "Gerenciar turmas VIP", delete_confirmed: "Excluir aulas VIP confirmadas" }, attendance: { manage: "Gerenciar presença" },
       interview: { manage: "Gerenciar horários e registros de entrevistas" },
       document: { manage: "Documentos: atribuir revisores", review: "Documentos: revisar e devolver" },
@@ -243,7 +247,7 @@ export default {
       system: {
         campus: "Gerenciar unidades", user: "Gerenciar contas da equipe", role: "Cargos e permissões", subject: "Disciplinas ministradas",
         log: "Registro de operações", site: "Configurações do site (nome / Logo / textos de acesso / cor do tema)", rules: "Regras de negócio e listas",
-        mail: "Configurações de e-mail (SMTP)",
+        mail: "Configurações de e-mail (SMTP)", edu: "Configurações de notas e ficha / modelos do setor",
       },
     },
     action: {

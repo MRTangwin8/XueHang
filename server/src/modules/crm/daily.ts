@@ -93,7 +93,7 @@ export default async function (app: FastifyInstance) {
     if (r) where.reportDate = r
     if (q.unread) where.readAt = null
     const lim = campusLimit(me)
-    if (lim) where.user = { campusId: lim }
+    if (lim) where.user = { campusId: { in: lim } }
     const [items, total, unread] = await Promise.all([
       prisma.dailyReport.findMany({
         where,
@@ -116,7 +116,7 @@ export default async function (app: FastifyInstance) {
     const d = await prisma.dailyReport.findUnique({ where: { id }, include: { user: { select: { campusId: true } } } })
     if (!d) throw notFound('日报不存在')
     const lim = campusLimit(me)
-    if (lim && d.user.campusId !== lim) throw forbidden('无权查看其他校区的日报')
+    if (lim && !(d.user.campusId != null && lim.includes(d.user.campusId))) throw forbidden('无权查看其他校区的日报')
     if (d.userId === me.id) return { ok: true, self: true }
     if (!d.readAt) await prisma.dailyReport.update({ where: { id }, data: { readById: me.id, readAt: new Date() } })
     return { ok: true }

@@ -191,22 +191,20 @@ const pctOf = (v: number | null, max: number) => (v == null || !max ? 0 : Math.m
         </div>
         <div class="head-actions">
           <el-button icon="Download" @click="exportXlsx">{{ t('common.export') }}</el-button>
-          <template v-if="a.canManage">
-            <el-button icon="Edit" @click="editDlg = true">{{ t('common.edit') }}</el-button>
-            <el-button :type="a.published ? 'default' : 'success'" icon="Promotion" @click="togglePublish">
-              {{ a.published ? t('grades.list.unpublish') : t('grades.list.publish') }}
-            </el-button>
-          </template>
+          <el-button v-if="a.canManage" icon="Edit" @click="editDlg = true">{{ t('common.edit') }}</el-button>
+          <el-button v-if="a.canPublish" :type="a.published ? 'default' : 'success'" icon="Promotion" @click="togglePublish">
+            {{ a.published ? t('grades.list.unpublish') : t('grades.list.publish') }}
+          </el-button>
         </div>
       </div>
 
       <div class="page-card">
         <el-tabs v-model="tab">
           <!-- 录入 -->
-          <el-tab-pane :label="a.canManage ? t('grades.detail.entry') : t('grades.detail.scores')" name="entry">
-            <div v-if="a.canManage" class="toolbar">
-              <el-button icon="Plus" @click="addDlg = true">{{ t('grades.detail.addStudents') }}</el-button>
-              <el-button v-if="a.classGroupId" icon="Refresh" @click="addStudents(true)">{{ t('grades.detail.syncClass') }}</el-button>
+          <el-tab-pane :label="a.canEnter ? t('grades.detail.entry') : t('grades.detail.scores')" name="entry">
+            <div v-if="a.canEnter" class="toolbar">
+              <el-button v-if="a.canManage" icon="Plus" @click="addDlg = true">{{ t('grades.detail.addStudents') }}</el-button>
+              <el-button v-if="a.canManage && a.classGroupId" icon="Refresh" @click="addStudents(true)">{{ t('grades.detail.syncClass') }}</el-button>
               <el-button icon="DocumentCopy" @click="pasteDlg = true">{{ t('grades.detail.paste') }}</el-button>
               <span class="spacer" />
               <span v-if="dirtyCount" class="dirty">{{ t('grades.detail.unsaved', { p1: dirtyCount }) }}</span>
@@ -227,7 +225,7 @@ const pctOf = (v: number | null, max: number) => (v == null || !max ? 0 : Math.m
               <el-table-column v-for="s in conf.subjects" :key="s.key" :label="`${s.name} (${s.max})`" min-width="96" align="center">
                 <template #default="{ row }: any">
                   <el-input-number
-                    v-if="a.canManage"
+                    v-if="a.canEnter"
                     v-model="row.scores[s.key]"
                     :min="0"
                     :max="s.max"
@@ -243,19 +241,19 @@ const pctOf = (v: number | null, max: number) => (v == null || !max ? 0 : Math.m
               </el-table-column>
               <el-table-column :label="t('students.messages.total')" width="90" align="center">
                 <template #default="{ row }: any">
-                  <el-input-number v-if="manual && a.canManage" v-model="row.total" :min="0" :controls="false" size="small" :disabled="row.absent"
+                  <el-input-number v-if="manual && a.canEnter" v-model="row.total" :min="0" :controls="false" size="small" :disabled="row.absent"
                     class="score-in" @change="touch(row)" />
                   <b v-else class="total">{{ rowTotal(row) ?? '—' }}</b>
                 </template>
               </el-table-column>
               <el-table-column :label="t('grades.detail.absent')" width="64" align="center">
                 <template #default="{ row }: any">
-                  <el-checkbox v-model="row.absent" :disabled="!a.canManage" @change="touch(row)" />
+                  <el-checkbox v-model="row.absent" :disabled="!a.canEnter" @change="touch(row)" />
                 </template>
               </el-table-column>
               <el-table-column :label="t('grades.detail.comment')" min-width="180">
                 <template #default="{ row }: any">
-                  <el-input v-if="a.canManage" v-model="row.comment" size="small" maxlength="500" @input="touch(row)" />
+                  <el-input v-if="a.canEnter" v-model="row.comment" size="small" maxlength="500" @input="touch(row)" />
                   <span v-else>{{ row.comment }}</span>
                 </template>
               </el-table-column>

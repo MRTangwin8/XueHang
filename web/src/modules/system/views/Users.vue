@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { groupSubjects, systemApi, type Role, type StaffUser, type Subject, type UserForm, type UserQuery } from '../api'
 import CampusSelect from '@/components/CampusSelect.vue'
+import { api } from '@/api/http'
 import DictSelect from '@/components/DictSelect.vue'
 import DictTag from '@/components/DictTag.vue'
 import { useAuth } from '@/stores/auth'
@@ -105,12 +106,14 @@ onMounted(() => {
 })
 
 // ---------------- 编辑 ----------------
+const campuses = ref<{ id: number; name: string }[]>([])
+api.get<{ id: number; name: string }[]>('/common/campuses').then((r) => (campuses.value = r)).catch(() => undefined)
 const dlg = ref(false)
 const editing = ref<StaffUser | null>(null)
 const saving = ref(false)
 const emptyForm = (): UserForm => ({
   staffNo: '', name: '', phone: '', email: '', password: '', identity: 'TEACHER', campusId: auth.me?.campusId ?? null,
-  roleIds: [], subjectIds: [], hourlyWage: null, transportFee: null,
+  manageCampusIds: [], roleIds: [], subjectIds: [], hourlyWage: null, transportFee: null,
   bankName: '', bankBranch: '', bankAccount: '', bankHolder: '', note: '', sort: 50,
 })
 const form = reactive<UserForm>(emptyForm())
@@ -131,7 +134,7 @@ function openEdit(u?: StaffUser) {
   if (u) {
     Object.assign(form, {
       staffNo: u.staffNo, name: u.name, phone: u.phone ?? '', email: u.email ?? '', password: undefined, identity: u.identity, campusId: u.campusId,
-      roleIds: [...u.roleIds], subjectIds: [...u.subjectIds], hourlyWage: u.hourlyWage, transportFee: u.transportFee,
+      manageCampusIds: [...(u.manageCampusIds ?? [])], roleIds: [...u.roleIds], subjectIds: [...u.subjectIds], hourlyWage: u.hourlyWage, transportFee: u.transportFee,
       bankName: u.bankName ?? '', bankBranch: u.bankBranch ?? '', bankAccount: u.bankAccount ?? '',
       bankHolder: u.bankHolder ?? '', note: u.note ?? '', sort: u.sort,
     })
@@ -280,7 +283,12 @@ const isSelf = (u: StaffUser) => u.id === auth.me?.id
           <template #default="{ row }"><DictTag dict="userIdentities" :value="row.identity" /></template>
         </el-table-column>
         <el-table-column :label="t('common.campus')" width="110">
-          <template #default="{ row }">{{ row.campus?.name ?? '—' }}</template>
+          <template #default="{ row }: any">
+            {{ row.campus?.name ?? '—' }}
+            <el-tooltip v-if="row.manageCampuses?.length" :content="row.manageCampuses.map((c: { name: string }) => c.name).join(' / ')" placement="top">
+              <el-tag size="small" type="info" effect="plain" disable-transitions>+{{ row.manageCampuses.length }}</el-tag>
+            </el-tooltip>
+          </template>
         </el-table-column>
         <el-table-column :label="t('system.fields.roles')" min-width="130">
           <template #default="{ row }">
@@ -375,6 +383,14 @@ const isSelf = (u: StaffUser) => u.id === auth.me?.id
           <el-col :xs="24" :sm="12">
           <el-form-item :label="t('common.campus')">
           <CampusSelect v-model="form.campusId" :placeholder="t('system.user.selectCampus')" style="width: 100%" />
+          </el-form-item>
+          </el-col>
+          <el-col :span="24">
+          <el-form-item :label="t('system.user.manageCampuses')">
+          <el-select v-model="form.manageCampusIds" multiple clearable :placeholder="t('system.user.manageCampusesPh')" style="width: 100%">
+            <el-option v-for="c in campuses.filter((x) => x.id !== form.campusId)" :key="c.id" :value="c.id" :label="c.name" />
+          </el-select>
+          <div class="muted" style="width: 100%; line-height: 1.5">{{ t('system.user.manageCampusesHint') }}</div>
           </el-form-item>
           </el-col>
           <el-col :span="24">

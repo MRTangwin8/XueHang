@@ -156,6 +156,9 @@ export default {
       recycleEmpty: "回收站为空",
       loginName: "登录名",
       selectCampus: "选择校区",
+      manageCampuses: "可管理校区",
+      manageCampusesHint: "数据范围为「本校区」时，除所属校区外还能管理这里选中的校区。数据范围为「全部」的角色不受此限制。",
+      manageCampusesPh: "仅所属校区",
       multiple: "可多选",
       noSubjects: "暂无课程，请先在「教授课程」中添加",
       disabledSuffix: "（停用）",
@@ -227,6 +230,7 @@ export default {
       system: "系统设置",
     },
     perms: {
+      grade: { view: "成绩管理：查看考试与成绩", enter: "成绩管理：录入成绩（已有的考试）", publish: "成绩管理：发布 / 撤回到学生端", manage: "成绩管理：创建 / 编辑 / 删除考试、管理名单（含录入与发布）" },
       daily: { write: "写日报" },
       crm: {
         daily: { all: "全员日报（查看所有人的日报）" },
@@ -247,11 +251,11 @@ export default {
       product: { manage: "单期课程 / 套餐课程管理" },
       schedule: {
         view: "查看课程表 / 月课表 / 教室预约",
-        own: "编辑本人课次（教师）",
-        edit: "编辑全部课次（教务）",
+        own: "教师：安排本人的 VIP 课次，修改 / 确认本人课次",
+        edit: "教务：安排 / 修改数据范围内的全部课次", class_own: "教师：为本人任课的班级排班课（不勾选则班课只能由教务排）",
       },
       room: { manage: "教室管理" },
-      class: { manage: "班课管理" },
+      class: { manage: "班课管理（建班、改班、名单、结课）" },
       vip: { manage: "VIP 班级管理", delete_confirmed: "删除已确认的 VIP 课次" },
       attendance: { manage: "出勤管理" },
       interview: { manage: "面谈 / 面试时间段与记录" },
@@ -267,7 +271,7 @@ export default {
         log: "操作日志",
         site: "站点设置（名称 / Logo / 登录页文案 / 主题色）",
         rules: "业务规则与下拉选项",
-        mail: "邮件（SMTP）设置",
+        mail: "邮件（SMTP）设置", edu: "成绩与档案设置 / 行业模板",
       },
     },
     action: {

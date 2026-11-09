@@ -14,10 +14,14 @@ import { EDU, TOTAL_MODES, cleanScores, computeTotal, defaultEdu, examCodesInUse
 import { PRESET_PARTS, applyPreset, presetSummaries } from '../../lib/presets'
 import { andCampus, hasPerm, perm, staff, student, studentOnly } from '../../plugins/auth'
 import { assertCanView, loadStudentOr404 } from '../students/service'
-import { assertManage, assertTargets, assessmentScope, computeStats, loadAssessment, readSubjects, type AssessmentSubjects } from './service'
+import { assertTargets, assessmentScope, computeStats, loadAssessment, readSubjects, type AssessmentSubjects } from './service'
 
-const VIEW = perm('grade.view', 'grade.manage')
+const VIEW = perm('grade.view', 'grade.enter', 'grade.publish', 'grade.manage')
 const MANAGE = perm('grade.manage')
+/** 录入、发布可单独授权；grade.manage 包含两者 */
+const ENTER = perm('grade.enter', 'grade.manage')
+const PUBLISH = perm('grade.publish', 'grade.manage')
+const canAny = (me: Parameters<typeof hasPerm>[0], ...codes: string[]) => codes.some((c) => hasPerm(me, c))
 const EDU_ADMIN = perm('system.edu')
 
 const subjectsBody = z
@@ -202,6 +206,8 @@ export default async function (app: FastifyInstance) {
         .sort((x, y) => x.student.studentNo.localeCompare(y.student.studentNo)),
       stats: { summary: stats.summary, subjects: stats.subjects, bands: stats.bands },
       canManage: hasPerm(me, 'grade.manage'),
+      canEnter: canAny(me, 'grade.enter', 'grade.manage'),
+      canPublish: canAny(me, 'grade.publish', 'grade.manage'),
     }
   })
 
@@ -265,7 +271,7 @@ export default async function (app: FastifyInstance) {
   })
 
   /** 发布 / 取消发布到学生端 */
-  app.post('/assessments/:id/publish', { preHandler: MANAGE }, async (req) => {
+  app.post('/assessments/:id/publish', { preHandler: PUBLISH }, async (req) => {
     const me = staff(req)
     const { id } = parse(zIdParam, req.params)
     const { published } = parse(z.object({ published: z.boolean() }), req.body)
@@ -328,9 +334,8 @@ export default async function (app: FastifyInstance) {
   })
 
   /** 批量保存成绩（只更新传入的学生；学生必须已在本次考试名单中） */
-  app.put('/assessments/:id/scores', { preHandler: MANAGE }, async (req) => {
+  app.put('/assessments/:id/scores', { preHandler: ENTER }, async (req) => {
     const me = staff(req)
-    assertManage(me)
     const { id } = parse(zIdParam, req.params)
     const a = await loadAssessment(me, id)
     const conf = readSubjects(a.subjects)
@@ -398,11 +403,11 @@ export default async function (app: FastifyInstance) {
   // ==================================================================
   // 学员成绩档案（学员详情「成绩」页签）
   // ==================================================================
-  app.get('/students/:id', { preHandler: perm('grade.view', 'grade.manage', 'student.view', 'student.all', 'teacher.students') }, async (req) => {
+  app.get('/students/:id', { preHandler: perm('grade.view', 'grade.enter', 'grade.publish', 'grade.manage', 'student.view', 'student.all', 'teacher.students') }, async (req) => {
     const me = staff(req)
     const { id } = parse(zIdParam, req.params)
     const s = await loadStudentOr404(id)
-    const byGrade = hasPerm(me, 'grade.view') || hasPerm(me, 'grade.manage')
+    const byGrade = canAny(me, 'grade.view', 'grade.enter', 'grade.publish', 'grade.manage')
     if (!byGrade) assertCanView(me, s)
     // 有成绩权限：可看范围内的考试；否则（只能看该学员）看全部
     return studentHistory(id, byGrade ? assessmentScope(me) : {})

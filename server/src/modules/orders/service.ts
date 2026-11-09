@@ -2,7 +2,7 @@ import { RULES } from '../../dict'
 import { prisma, type Tx } from '../../lib/prisma'
 import { forbidden, notFound } from '../../lib/errors'
 import { dayjs, DEFAULT_TZ } from '../../lib/time'
-import { hasPerm, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
+import { hasPerm, inCampus, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
 
 /** 订单号 SO{YYYY}{6位序号} */
 export async function nextOrderNo(tx: Tx | typeof prisma = prisma): Promise<string> {
@@ -40,8 +40,7 @@ type OrderLite = { id: number; campusId: number; salesId: number | null; student
 /** 订单可见：order.all（校区范围内）或 本人销售 / 该生销售（order.view） */
 export function orderVisible(me: StaffPrincipal, o: OrderLite) {
   if (hasPerm(me, 'order.all')) {
-    const w = scopeWhere(me) as { campusId?: number }
-    if (w.campusId == null || w.campusId === o.campusId) return true
+    if (inCampus(me, o.campusId)) return true
   }
   if (hasPerm(me, 'order.view') || hasPerm(me, 'order.pay') || hasPerm(me, 'student.enroll')) {
     if (o.salesId === me.id || o.student?.salesId === me.id) return true
@@ -58,6 +57,6 @@ export async function loadOrderForAccess(me: StaffPrincipal, id: number) {
 
 /** 订单类列表的数据范围：order.all → 校区范围；否则仅本人 */
 export function orderScope(me: StaffPrincipal, selfField: 'salesId' | 'payeeId' = 'salesId') {
-  if (hasPerm(me, 'order.all')) return { kind: 'all' as const, where: scopeWhere(me) as { campusId?: number } }
+  if (hasPerm(me, 'order.all')) return { kind: 'all' as const, where: scopeWhere(me) as Record<string, unknown> }
   return { kind: 'self' as const, field: selfField }
 }

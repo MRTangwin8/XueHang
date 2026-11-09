@@ -2,7 +2,9 @@
 # 学航 · 一键部署脚本（Docker）
 #
 #   ./deploy.sh                 构建并启动（首次安装、升级都用这一条）
-#   PORT=9000 ./deploy.sh       换一个访问端口（默认 8080）
+#                               默认只监听本机 127.0.0.1:8080，由前面的 Nginx / IIS 等反向代理对外提供 HTTPS
+#   PORT=9000 ./deploy.sh       换一个端口（默认 8080）
+#   DIRECT=1 ./deploy.sh        不经反向代理，直接对外开放端口（HTTP 明文，仅用于内网或临时试用）
 #   DOMAIN=crm.example.com ./deploy.sh
 #                               同时启动自动申请 HTTPS 证书的反向代理（域名需已解析到本机，放行 80/443）
 #   WITH_MYSQL=1 ./deploy.sh    镜像内预装 MySQL / MariaDB 驱动（不预装也可以，选择 MySQL 时会联网按需安装）
@@ -35,21 +37,29 @@ PORT="${PORT:-$(get PORT)}"; PORT="${PORT:-8080}"
 DOMAIN="${DOMAIN-$(get DOMAIN)}"
 WITH_MYSQL="${WITH_MYSQL:-$(get WITH_MYSQL)}"; WITH_MYSQL="${WITH_MYSQL:-0}"
 TZ_VALUE="${TZ:-$(get TZ)}"; TZ_VALUE="${TZ_VALUE:-Asia/Shanghai}"
-if [ -n "$DOMAIN" ]; then TRUST_PROXY=1; BIND=127.0.0.1; PROFILE=(--profile https)
-else TRUST_PROXY="${TRUST_PROXY:-$(get TRUST_PROXY)}"; TRUST_PROXY="${TRUST_PROXY:-0}"; BIND="${BIND:-$(get BIND)}"; BIND="${BIND:-0.0.0.0}"; PROFILE=(); fi
+DIRECT="${DIRECT:-$(get DIRECT)}"; DIRECT="${DIRECT:-0}"
+# 三种对外方式：DOMAIN=自带 Caddy 自动 HTTPS；DIRECT=1 直接开放端口；默认 = 只监听本机，交给你自己的反向代理
+if [ -n "$DOMAIN" ]; then TRUST_PROXY=1; BIND=127.0.0.1; DIRECT=0; PROFILE=(--profile https)
+elif [ "$DIRECT" = "1" ]; then TRUST_PROXY=0; BIND=0.0.0.0; PROFILE=()
+else TRUST_PROXY=1; BIND=127.0.0.1; PROFILE=(); fi
 save_env() {
   cat > "$ENV_FILE" <<EOF
 # 由 deploy.sh 生成，可手动修改后重新运行 ./deploy.sh
 PORT=$PORT
 BIND=$BIND
 DOMAIN=$DOMAIN
+DIRECT=$DIRECT
 TRUST_PROXY=$TRUST_PROXY
 WITH_MYSQL=$WITH_MYSQL
 TZ=$TZ_VALUE
 EOF
 }
 
-url() { if [ -n "$DOMAIN" ]; then echo "https://$DOMAIN"; else echo "http://<服务器IP>:$PORT （本机可用 http://localhost:$PORT）"; fi; }
+url() {
+  if [ -n "$DOMAIN" ]; then echo "https://$DOMAIN"
+  elif [ "$DIRECT" = "1" ]; then echo "http://<服务器IP>:$PORT"
+  else echo "你的域名（先按部署指南配置 Nginx / IIS 反向代理到 http://127.0.0.1:$PORT）"; fi
+}
 health() { "${DC[@]}" exec -T app node -e "fetch('http://127.0.0.1:3001/api/install/status').then(r=>r.json()).then(j=>{console.log(j.installed?'installed':'install');}).catch(()=>{console.log('down');})" 2>/dev/null || echo down; }
 show_token() {
   local t
@@ -78,7 +88,8 @@ case "${1:-up}" in
       *)
         warn "服务还没有就绪，可能仍在同步数据库结构。请稍后运行 ./deploy.sh logs 查看日志。" ;;
     esac
-    [ -n "$DOMAIN" ] || [ "$BIND" != "0.0.0.0" ] || warn "当前为 HTTP 明文访问，仅建议在内网或测试时使用。正式使用请配置 HTTPS（见 docs/部署指南.md）。"
+    if [ "$DIRECT" = "1" ]; then warn "当前直接开放端口（HTTP 明文），仅建议在内网或临时试用。正式使用请去掉 DIRECT=1，改用反向代理 + HTTPS（见 docs/部署指南.md）。"
+    elif [ -z "$DOMAIN" ]; then echo; say "服务只监听本机 127.0.0.1:$PORT。下一步：配置 Nginx / IIS 反向代理并启用 HTTPS（docs/部署指南.md 第 A4 节）。"; fi
     ;;
   token) show_token ;;
   logs) "${DC[@]}" ${PROFILE[@]+"${PROFILE[@]}"} logs -f --tail=200 ;;

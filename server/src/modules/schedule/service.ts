@@ -10,7 +10,7 @@
  */
 import type { Prisma } from '../../generated/prisma/client'
 import type { Principal, StaffPrincipal } from '../../plugins/auth'
-import { campusLimit, hasPerm } from '../../plugins/auth'
+import { hasPerm, inCampus } from '../../plugins/auth'
 import type { Tx } from '../../lib/prisma'
 import { badRequest, notFound } from '../../lib/errors'
 import { dayjs, DEFAULT_TZ } from '../../lib/time'
@@ -27,8 +27,7 @@ export const round2 = (n: number) => Math.round(n * 100) / 100
 export function canEditSession(user: Principal | undefined, s: { teacherId: number | null; campusId: number }): boolean {
   if (!user || user.type !== 'staff') return false
   if (hasPerm(user, 'schedule.edit')) {
-    const lim = campusLimit(user)
-    if (lim == null || lim === s.campusId) return true
+    if (inCampus(user, s.campusId)) return true
   }
   return hasPerm(user, 'schedule.own') && s.teacherId != null && s.teacherId === user.id
 }

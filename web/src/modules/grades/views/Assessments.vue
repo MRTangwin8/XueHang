@@ -20,6 +20,7 @@ const auth = useAuth()
 const dict = useDict()
 const isMobile = useIsMobile()
 const canManage = computed(() => auth.can('grade.manage'))
+const canPublish = computed(() => auth.can(['grade.publish', 'grade.manage']))
 
 const q = route.query
 const filters = reactive({
@@ -112,7 +113,7 @@ const open = (r: AssessmentRow) => !r.deletedAt && router.push(`/students/grades
         <CampusSelect v-model="filters.campusId" :placeholder="t('common.allCampuses')" style="width: 140px" />
         <el-date-picker v-model="filters.range" type="daterange" value-format="YYYY-MM-DD" :start-placeholder="t('common.startDate')"
           :end-placeholder="t('common.endDate')" style="width: 240px" />
-        <el-checkbox v-model="filters.deleted" @change="search">{{ t('common.recycleBin') }}</el-checkbox>
+        <el-checkbox v-if="canManage" v-model="filters.deleted" @change="search">{{ t('common.recycleBin') }}</el-checkbox>
         <el-button type="primary" icon="Search" @click="search">{{ t('common.search') }}</el-button>
         <el-button @click="reset">{{ t('common.reset') }}</el-button>
         <span class="spacer" />
@@ -165,15 +166,15 @@ const open = (r: AssessmentRow) => !r.deletedAt && router.push(`/students/grades
           </template>
         </el-table-column>
         <el-table-column :label="t('grades.list.creator')" width="90"><template #default="{ row }: any">{{ row.createdBy.name }}</template></el-table-column>
-        <el-table-column v-if="canManage" :label="t('common.operation')" width="160" fixed="right">
+        <el-table-column v-if="canManage || canPublish" :label="t('common.operation')" :width="canManage ? 160 : 80" fixed="right">
           <template #default="{ row }: any">
             <template v-if="row.deletedAt">
-              <el-button link type="primary" @click.stop="restore(row)">{{ t('common.restore') }}</el-button>
+              <el-button v-if="canManage" link type="primary" @click.stop="restore(row)">{{ t('common.restore') }}</el-button>
             </template>
             <template v-else>
-              <el-button link @click.stop="openEdit(row)">{{ t('common.edit') }}</el-button>
-              <el-button link @click.stop="togglePublish(row)">{{ row.published ? t('grades.list.unpublish') : t('grades.list.publish') }}</el-button>
-              <el-button link type="danger" @click.stop="remove(row)">{{ t('common.delete') }}</el-button>
+              <el-button v-if="canManage" link @click.stop="openEdit(row)">{{ t('common.edit') }}</el-button>
+              <el-button v-if="canPublish" link @click.stop="togglePublish(row)">{{ row.published ? t('grades.list.unpublish') : t('grades.list.publish') }}</el-button>
+              <el-button v-if="canManage" link type="danger" @click.stop="remove(row)">{{ t('common.delete') }}</el-button>
             </template>
           </template>
         </el-table-column>

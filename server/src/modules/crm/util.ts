@@ -37,7 +37,7 @@ export const isSuper = (me: StaffPrincipal) => me.perms.includes('*')
 export const can = (me: StaffPrincipal, code: string) => isSuper(me) || me.perms.includes(code)
 
 /** 校区数据范围（与 scopeWhere 一致的校区部分，但不因 allPerm 放开）：ALL / * 不限，其他限本校区 */
-export function campusLimit(me: StaffPrincipal): number | null {
+export function campusLimit(me: StaffPrincipal): number[] | null {
   return sharedCampusLimit(me)
 }
 
@@ -48,12 +48,12 @@ export function canViewCustomer(me: StaffPrincipal, c: CustomerLite) {
   if (c.ownerId === me.id) return true
   if (can(me, 'crm.customer.all')) {
     const lim = campusLimit(me)
-    return lim == null || lim === c.campusId
+    return lim == null || lim.includes(c.campusId)
   }
   // 公海客户同样受校区范围约束
   if (c.ownerId == null && can(me, 'crm.pool')) {
     const lim = campusLimit(me)
-    return lim == null || lim === c.campusId
+    return lim == null || lim.includes(c.campusId)
   }
   return false
 }
