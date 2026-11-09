@@ -14,10 +14,9 @@ import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
 import { ensureDriver, providerOf, setupDatabase, type DbProvider } from '../lib/dbsetup'
 import { zStrongPassword } from '../lib/password'
+import { DATA_DIR, ENV_FILE, SERVER_ROOT, SQLITE_DIR, SQLITE_URL, TOKEN_FILE } from '../lib/paths'
+import { registerWebStatic } from '../lib/webstatic'
 
-const SERVER_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const ENV_FILE = path.join(SERVER_ROOT, '.env')
-const TOKEN_FILE = path.join(SERVER_ROOT, '.install-token')
 
 const dbSchema = z.object({
   type: z.enum(['sqlite', 'mysql', 'postgresql']),
@@ -49,7 +48,7 @@ const installSchema = z.object({
 })
 
 export function databaseUrl(db: DbInput): string {
-  if (db.type === 'sqlite') return 'file:./prisma/data.db'
+  if (db.type === 'sqlite') return SQLITE_URL
   const auth = db.user ? `${encodeURIComponent(db.user)}${db.password ? ':' + encodeURIComponent(db.password) : ''}@` : ''
   const port = db.port ?? (db.type === 'mysql' ? 3306 : 5432)
   if (!db.database) throw new Error('请填写数据库名')
@@ -61,8 +60,8 @@ async function testConnection(db: DbInput, log: (s: string) => void): Promise<st
   const url = databaseUrl(db)
   const provider: DbProvider = providerOf(url)
   if (provider === 'sqlite') {
-    accessSync(path.join(SERVER_ROOT, 'prisma'), constants.W_OK)
-    return 'SQLite：数据文件将保存在 server/prisma/data.db'
+    accessSync(SQLITE_DIR, constants.W_OK)
+    return `SQLite：数据文件将保存在 ${DATA_DIR ? SQLITE_URL.slice(5) : 'server/prisma/data.db'}`
   }
   if (provider === 'postgresql') {
     const { default: pg } = await import('pg')
@@ -133,7 +132,7 @@ export async function buildInstallApp(onInstalled: () => void) {
   // 安装码：6 位数字 + 6 位字母数字，易于抄写
   const token = `${randomInt(100000, 999999)}-${randomBytes(4).toString('base64url').slice(0, 6)}`
   writeFileSync(TOKEN_FILE, token + '\n', { mode: 0o600 })
-  app.log.warn(`\n\n==================== 首次安装 ====================\n请在浏览器打开系统地址完成安装，安装码：${token}\n（安装码也保存在 server/.install-token）\n=================================================\n`)
+  app.log.warn(`\n\n==================== 首次安装 ====================\n请在浏览器打开系统地址完成安装，安装码：${token}\n（安装码也保存在 ${TOKEN_FILE}）\n=================================================\n`)
   const checkToken = (t: string) => {
     const a = Buffer.from(t)
     const b = Buffer.from(token)
@@ -169,7 +168,7 @@ export async function buildInstallApp(onInstalled: () => void) {
       node: process.version,
       nodeOk: Number(process.versions.node.split('.')[0]) >= 22,
       serverWritable: writable(SERVER_ROOT),
-      prismaWritable: writable(path.join(SERVER_ROOT, 'prisma')),
+      prismaWritable: writable(path.join(SERVER_ROOT, 'prisma')) && writable(SQLITE_DIR),
       platform: `${process.platform} ${process.arch}`,
     }
   })
@@ -236,5 +235,7 @@ export async function buildInstallApp(onInstalled: () => void) {
 
   // 其他接口在安装完成前一律不可用
   app.all('/api/*', async (_req, reply) => reply.status(503).send({ code: 'NOT_INSTALLED', message: '系统尚未安装' }))
+  // 有前端构建产物时直接提供安装页面（Docker / 单进程部署）
+  await registerWebStatic(app, true)
   return app
 }

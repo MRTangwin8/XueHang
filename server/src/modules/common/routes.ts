@@ -5,7 +5,7 @@ import { prisma } from '../../lib/prisma'
 import { parse, zIdParam } from '../../lib/http'
 import { saveUpload } from '../../lib/upload'
 import { forbidden } from '../../lib/errors'
-import { anyUser, hasPerm, perm, staffOnly } from '../../plugins/auth'
+import { andCampus, anyUser, campusLimit, hasPerm, perm, staff, staffOnly } from '../../plugins/auth'
 import { DICT_HIDDEN, DICTS, RULES } from '../../dict'
 import { EDU } from '../../lib/educonfig'
 
@@ -53,11 +53,16 @@ export default async function (app: FastifyInstance) {
   /** 学员远程搜索：?q=&status=ENROLLED&ids= */
   app.get('/students', { preHandler: staffOnly }, async (req) => {
     const q = parse(z.object({ q: z.string().optional(), status: z.string().optional(), campusId: z.coerce.number().optional(), ids: z.string().optional() }), req.query)
+    const me = staff(req)
     const where: Prisma.StudentWhereInput = { deletedAt: null }
-    if (q.ids) where.id = { in: q.ids.split(',').map(Number) }
+    // 下拉搜索只返回姓名 / 学号，但仍受校区范围限制；按电话搜索需要学员查看权限
+    const lim = campusLimit(me)
+    if (lim != null) where.campusId = lim
+    if (q.ids) where.id = { in: q.ids.split(',').map(Number).filter(Number.isInteger).slice(0, 200) }
     if (q.status) where.status = q.status
-    if (q.campusId) where.campusId = q.campusId
-    if (q.q) where.OR = [{ name: { contains: q.q } }, { studentNo: { contains: q.q } }, { nameAlt: { contains: q.q } }, { phone: { contains: q.q } }]
+    andCampus(where, q.campusId)
+    const byPhone = ['student.view', 'student.all', 'student.edit', 'teacher.students'].some((c) => hasPerm(me, c))
+    if (q.q) where.OR = [{ name: { contains: q.q } }, { studentNo: { contains: q.q } }, { nameAlt: { contains: q.q } }, ...(byPhone ? [{ phone: { contains: q.q } }] : [])]
     return prisma.student.findMany({
       where,
       orderBy: { id: 'desc' },

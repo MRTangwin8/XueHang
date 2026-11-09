@@ -72,7 +72,7 @@ export default async function (app: FastifyInstance) {
     } else if (q.scope === 'pool') {
       if (!can(me, 'crm.pool')) throw forbidden()
       and.push({ ownerId: null })
-      const lim = can(me, 'crm.customer.all') ? null : campusLimit(me)
+      const lim = campusLimit(me)
       if (lim) and.push({ campusId: lim })
     } else {
       if (!can(me, 'crm.customer.all')) throw forbidden()
@@ -229,6 +229,7 @@ export default async function (app: FastifyInstance) {
   app.post('/customers/:id/restore', { preHandler: perm('crm.customer.all') }, async (req) => {
     const { id } = parse(zIdParam, req.params)
     const c = await loadCustomer(id, { withDeleted: true })
+    if (!canViewCustomer(staff(req), c)) throw forbidden('无权恢复其他校区的客户')
     if (!c.deletedAt) return { ok: true }
     await prisma.customer.update({ where: { id }, data: { deletedAt: null } })
     await audit(req, 'restore', 'Customer', id, { name: c.name })

@@ -69,6 +69,7 @@ export default {
     language: 'Language',
     weakPassword: 'Your password is too simple (at least 8 characters with letters and digits). Please change it soon.',
     changeNow: 'Change now',
+    readOnlyBanner: "This is a read-only demo account: you can browse every page, but changes cannot be saved.",
     studentPortal: 'Student portal',
   },
   notification: {

@@ -70,6 +70,7 @@ export default {
       "rapidement pour protéger votre compte."
     ),
     "changeNow": "Modifier maintenant",
+    "readOnlyBanner": "Compte de démonstration en lecture seule : toutes les pages sont consultables, mais aucune modification ne peut être enregistrée.",
     "studentPortal": "Espace élève",
     "signOut": "Déconnexion"
   },

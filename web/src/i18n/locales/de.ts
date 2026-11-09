@@ -67,6 +67,7 @@ export default {
     "language": "Sprache",
     "weakPassword": "Ihr Passwort ist zu einfach (mindestens 8 Zeichen mit Buchstaben und Zahlen). Ändern Sie es bitte bald, um Ihr Konto zu schützen.",
     "changeNow": "Jetzt ändern",
+    "readOnlyBanner": "Schreibgeschütztes Demokonto: Alle Seiten können angesehen werden, Änderungen lassen sich jedoch nicht speichern.",
     "studentPortal": "Schülerportal",
     "signOut": "Abmelden"
   },

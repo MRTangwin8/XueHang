@@ -8,7 +8,7 @@ import { parse, pageQuery, pageArgs, paged, zId } from '../../lib/http'
 import { badRequest, forbidden, notFound } from '../../lib/errors'
 import { audit } from '../../lib/audit'
 import { fmtZoned } from '../../lib/time'
-import { perm, staff, hasPerm, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
+import { andCampus, perm, staff, hasPerm, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
 import { DICTS } from '../../dict'
 import { dateFilter } from './util'
 
@@ -180,7 +180,7 @@ export default async function (app: FastifyInstance) {
     const where: Prisma.SessionWhereInput = { kind: 'CLASS', status: { not: 'CANCELLED' }, classGroupId: { not: null }, ...sessionScope(me) }
     if (q.classGroupId) where.classGroupId = q.classGroupId
     if (q.teacherId && !onlyOwn(me)) where.teacherId = q.teacherId
-    if (q.campusId) where.campusId = q.campusId
+    andCampus(where, q.campusId)
     const df = dateFilter(q.from, q.to)
     if (df) where.startAt = df
     const [rows, total] = await Promise.all([

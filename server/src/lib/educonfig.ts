@@ -19,6 +19,7 @@ const code = z
   .string()
   .trim()
   .regex(/^[A-Za-z0-9_-]{1,30}$/, '代码只能包含字母、数字、下划线和短横线（1–30 位）')
+  .refine((v) => !['__proto__', 'constructor', 'prototype'].includes(v), '该代码为保留字，请换一个')
 const name = z.string().trim().min(1, '请填写名称').max(40, '名称最多 40 个字')
 
 export const subjectSchema = z.object({
@@ -191,7 +192,7 @@ export function cleanScores(subjects: SubjectDef[], raw: Record<string, unknown>
   const out: Record<string, number> = {}
   if (!raw) return out
   for (const s of subjects) {
-    const v = raw[s.key]
+    const v = Object.hasOwn(raw, s.key) ? raw[s.key] : undefined
     if (v === null || v === undefined || v === '') continue
     const n = Number(v)
     if (!Number.isFinite(n)) throw badRequest(`${label}「${s.name}」分数无效`)

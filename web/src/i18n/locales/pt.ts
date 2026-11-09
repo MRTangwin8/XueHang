@@ -67,6 +67,7 @@ export default {
     "language": "Idioma",
     "weakPassword": "Sua senha é muito simples (mínimo de 8 caracteres com letras e números). Altere-a em breve para proteger sua conta.",
     "changeNow": "Alterar agora",
+    "readOnlyBanner": "Conta de demonstração somente leitura: você pode ver todas as páginas, mas as alterações não são salvas.",
     "studentPortal": "Portal do aluno",
     "signOut": "Sair"
   },

@@ -1,8 +1,8 @@
 import type { Prisma } from '../../generated/prisma/client'
-import { forbidden, notFound } from '../../lib/errors'
+import { badRequest, forbidden, notFound } from '../../lib/errors'
 import { prisma } from '../../lib/prisma'
 import { parseScores, type SubjectDef, type TotalMode } from '../../lib/educonfig'
-import { hasPerm, type StaffPrincipal } from '../../plugins/auth'
+import { campusLimit, hasPerm, type StaffPrincipal } from '../../plugins/auth'
 
 export interface AssessmentSubjects {
   subjects: SubjectDef[]
@@ -21,20 +21,62 @@ export function readSubjects(json: string): AssessmentSubjects {
   }
 }
 
-const isAll = (me: StaffPrincipal) => me.perms.includes('*') || me.dataScope === 'ALL'
+/** 本人任课的班级：默认任课老师，或排过本人的课 */
+const teaches = (me: StaffPrincipal): Prisma.ClassGroupWhereInput => ({ OR: [{ teacherId: me.id }, { sessions: { some: { teacherId: me.id } } }] })
 
 /**
  * 可见范围：全部 / 本校区 / 本人（本人创建的考试，或本人任课班级的考试）
  */
 export function assessmentScope(me: StaffPrincipal): Prisma.AssessmentWhereInput {
-  if (isAll(me)) return {}
-  if (me.dataScope === 'CAMPUS' && me.campusId) return { campusId: me.campusId }
+  const lim = campusLimit(me)
+  if (lim == null) return {}
+  if (me.dataScope === 'CAMPUS') return { campusId: lim }
   return {
     OR: [
       { createdById: me.id },
       { classGroup: { teacherId: me.id } },
       { classGroup: { sessions: { some: { teacherId: me.id } } } },
     ],
+  }
+}
+
+/** 可关联的班课：全部 / 本校区 / 本人任课的班级 */
+export function classScope(me: StaffPrincipal): Prisma.ClassGroupWhereInput {
+  const lim = campusLimit(me)
+  if (lim == null) return {}
+  if (me.dataScope === 'CAMPUS') return { campusId: lim }
+  return teaches(me)
+}
+
+/** 可加入考试名单的学员：全部 / 本校区 / 本人负责或任课的学员 */
+export function studentScope(me: StaffPrincipal): Prisma.StudentWhereInput {
+  const lim = campusLimit(me)
+  if (lim == null) return {}
+  if (me.dataScope === 'CAMPUS') return { campusId: lim }
+  return {
+    OR: [
+      { mainTeacherId: me.id },
+      { contractTeacherId: me.id },
+      { salesId: me.id },
+      { classLinks: { some: { classGroup: { deletedAt: null, ...teaches(me) } } } },
+      { vipPackages: { some: { deletedAt: null, teachers: { some: { teacherId: me.id } } } } },
+    ],
+  }
+}
+
+/** 校验考试的校区、关联班课与学员都在当前账号的数据范围内 */
+export async function assertTargets(me: StaffPrincipal, t: { campusId?: number; classGroupId?: number | null; studentIds?: number[] }) {
+  const lim = campusLimit(me)
+  if (t.campusId != null && lim != null && t.campusId !== lim) throw forbidden('只能为本校区创建或修改考试')
+  if (t.classGroupId) {
+    const cg = await prisma.classGroup.findFirst({ where: { id: t.classGroupId, deletedAt: null, AND: [classScope(me)] }, select: { campusId: true } })
+    if (!cg) throw badRequest('班课不存在，或不在您的数据范围内')
+    if (t.campusId != null && cg.campusId !== t.campusId) throw badRequest('关联班课不属于所选校区')
+  }
+  const ids = [...new Set(t.studentIds ?? [])]
+  if (ids.length) {
+    const n = await prisma.student.count({ where: { id: { in: ids }, deletedAt: null, AND: [studentScope(me)] } })
+    if (n !== ids.length) throw badRequest('部分学员不存在，或不在您的数据范围内')
   }
 }
 

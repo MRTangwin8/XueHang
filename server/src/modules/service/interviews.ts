@@ -7,7 +7,7 @@ import { badRequest, conflict, forbidden, notFound } from '../../lib/errors'
 import { audit } from '../../lib/audit'
 import { notifyStudent, notifyUser } from '../../lib/notify'
 import { dayjs, fmtZoned } from '../../lib/time'
-import { hasPerm, perm, staff, type StaffPrincipal } from '../../plugins/auth'
+import { campusLimit, hasPerm, perm, staff, type StaffPrincipal } from '../../plugins/auth'
 import { campusTz, dateFilter } from './util'
 
 const KIND = z.enum(['CONSULT', 'EXAM'])
@@ -23,10 +23,10 @@ const batchBody = z.object({
   location: zOptStr,
   online: z.boolean().default(false),
   dates: z.union([
-    z.array(YMD).min(1, '请选择日期'),
+    z.array(YMD).min(1, '请选择日期').max(400, '一次最多选择 400 个日期'),
     z.object({ startDate: YMD, endDate: YMD, weekdays: z.array(z.coerce.number().int().min(1).max(7)).min(1, '请选择星期') }),
   ]),
-  times: z.array(z.object({ start: HM, end: HM })).min(1, '请至少添加一个时间段'),
+  times: z.array(z.object({ start: HM, end: HM })).min(1, '请至少添加一个时间段').max(30, '一次最多添加 30 个时间段'),
   preview: z.boolean().optional(),
 })
 
@@ -56,7 +56,7 @@ const slotInclude = {
 // ---------------- 数据范围（校区）校验 ----------------
 // 数据范围为 ALL 或超级管理员：不限；其他（CAMPUS / SELF）：只能操作本校区的时间段、学员和老师。
 
-const campusLimitOf = (me: StaffPrincipal) => (hasPerm(me, '*') || me.dataScope === 'ALL' ? null : me.campusId)
+const campusLimitOf = (me: StaffPrincipal) => campusLimit(me)
 
 function assertSlotAccess(me: StaffPrincipal, slot: { campusId: number | null; hostId: number }) {
   const lim = campusLimitOf(me)

@@ -132,7 +132,8 @@ export async function ensureDriver(provider: DbProvider, log: (s: string) => voi
   if (provider !== 'mysql') return
   if (hasModule('@prisma/adapter-mariadb') && hasModule('mariadb')) return
   log('安装 MySQL 驱动：@prisma/adapter-mariadb、mariadb（LGPL-2.1）…\n')
-  await run('npm', ['install', '--no-audit', '--no-fund', '@prisma/adapter-mariadb@7.10.1', 'mariadb'], process.env, log)
+  // --no-save：不改动 package.json / lockfile（升级代码后重新运行 db:setup 会再次按需安装）
+  await run('npm', ['install', '--no-save', '--no-audit', '--no-fund', '@prisma/adapter-mariadb@7.10.1', 'mariadb'], process.env, log)
 }
 
 /**

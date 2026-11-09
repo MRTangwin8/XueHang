@@ -6,7 +6,8 @@ import { Prisma } from '../../generated/prisma/client'
 import { prisma } from '../../lib/prisma'
 import { parse, pageQuery, pageArgs, paged, zIdParam, zId } from '../../lib/http'
 import { badRequest, conflict, forbidden, notFound } from '../../lib/errors'
-import { invalidatePrincipal, perm, staff, staffOnly, hasPerm, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
+import { assertCampus, invalidatePrincipal, perm, staff, staffOnly, hasPerm, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
+import { canEditCustomer, canViewCustomer } from '../crm/util'
 import { audit } from '../../lib/audit'
 import { DICTS } from '../../dict'
 import {
@@ -273,6 +274,7 @@ export default async function (app: FastifyInstance) {
     const body = parse(studentSchema.extend({ customerId: zId.optional().nullable() }), req.body)
     const { exams, admissions } = await validateStudentInput(body)
     const { customerId, ...input } = body
+    assertCampus(me, input.campusId, '只能在本校区办理报名')
     const initialPassword = generatePassword()
     const hash = await hashPassword(initialPassword)
 
@@ -283,6 +285,8 @@ export default async function (app: FastifyInstance) {
           if (customerId) {
             const c = await tx.customer.findFirst({ where: { id: customerId, deletedAt: null } })
             if (!c) throw notFound('客户不存在')
+            // 只能把自己名下（或有权管理 / 领取）的客户转为学员
+            if (!canEditCustomer(me, c) && !(c.ownerId == null && canViewCustomer(me, c))) throw forbidden('无权把该客户转为学员')
             if (c.studentId) throw conflict('该客户已转为学员')
           }
           const studentNo = await nextStudentNo(tx)
@@ -317,6 +321,7 @@ export default async function (app: FastifyInstance) {
     const s = await loadStudentOr404(id)
     if (!canEditStudent(me, s)) throw forbidden('无权编辑该学员档案')
     const input = parse(studentSchema, req.body)
+    if (input.campusId !== s.campusId) assertCampus(me, input.campusId, '无权把学员转到其他校区')
     const { exams, admissions } = await validateStudentInput(input)
     await prisma.$transaction(async (tx) => {
       await tx.student.update({ where: { id }, data: profileData(input) })

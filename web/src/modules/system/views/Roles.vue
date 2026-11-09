@@ -22,7 +22,7 @@ const loading = ref(false)
 const saving = ref(false)
 /** 当前编辑：角色 id，或 'new' 表示新建 */
 const current = ref<number | 'new' | null>(null)
-const form = reactive<RoleForm>({ name: '', description: '', dataScope: 'SELF', sort: 50, permissions: [] })
+const form = reactive<RoleForm>({ name: '', description: '', dataScope: 'SELF', sort: 50, readOnly: false, permissions: [] })
 const isSuper = ref(false)
 const checked = ref<Set<string>>(new Set())
 
@@ -50,7 +50,7 @@ onMounted(() => load())
 
 function select(r: Role) {
   current.value = r.id
-  Object.assign(form, { name: r.name, description: r.description ?? '', dataScope: r.dataScope, sort: r.sort })
+  Object.assign(form, { name: r.name, description: r.description ?? '', dataScope: r.dataScope, sort: r.sort, readOnly: r.readOnly })
   isSuper.value = r.permissions.includes('*')
   checked.value = new Set(r.permissions.filter((c) => c !== '*'))
   router.replace({ query: { id: String(r.id) } })
@@ -58,7 +58,7 @@ function select(r: Role) {
 
 function createNew() {
   current.value = 'new'
-  Object.assign(form, { name: '', description: '', dataScope: 'SELF', sort: 50 })
+  Object.assign(form, { name: '', description: '', dataScope: 'SELF', sort: 50, readOnly: false })
   isSuper.value = false
   checked.value = new Set()
   router.replace({ query: {} })
@@ -137,6 +137,7 @@ const permLabel = (code: string, name: string) => {
           <div class="ri-top">
             <span class="ri-name">{{ r.name }}</span>
             <el-tag v-if="r.isSystem" size="small" type="warning" disable-transitions>{{ t('system.role.builtIn') }}</el-tag>
+            <el-tag v-if="r.readOnly" size="small" type="info" disable-transitions>{{ t('system.role.readOnlyTag') }}</el-tag>
             <span class="spacer" />
             <span class="muted">{{ t('system.shared.peopleSpaced', { n: r.userCount }) }}</span>
           </div>
@@ -179,6 +180,10 @@ const permLabel = (code: string, name: string) => {
             <el-form-item :label="t('system.fields.superAdmin')">
               <el-switch v-model="isSuper" :disabled="superLocked" :active-text="t('system.role.superSwitch')" />
               <div v-if="!canTouchSuper" class="muted" style="width: 100%">{{ t('system.role.superHint') }}</div>
+            </el-form-item>
+            <el-form-item :label="t('system.role.readOnly')">
+              <el-switch v-model="form.readOnly" :disabled="isSystemRole || (isSuper && !canTouchSuper)" :active-text="t('system.role.readOnlySwitch')" />
+              <div class="muted" style="width: 100%">{{ t('system.role.readOnlyHint') }}</div>
             </el-form-item>
           </el-form>
 

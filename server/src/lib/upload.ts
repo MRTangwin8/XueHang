@@ -7,8 +7,9 @@ import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { badRequest } from './errors'
 import { dayjs } from './time'
+import { UPLOAD_DIR } from './paths'
 
-export const UPLOAD_ROOT = path.resolve(process.cwd(), 'uploads')
+export const UPLOAD_ROOT = UPLOAD_DIR
 /** 唯一可匿名访问的子目录（只放站点 Logo） */
 export const PUBLIC_DIR = 'public'
 

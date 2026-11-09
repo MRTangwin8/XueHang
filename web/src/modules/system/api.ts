@@ -79,6 +79,8 @@ export interface Role {
   dataScope: 'SELF' | 'CAMPUS' | 'ALL'
   sort: number
   isSystem: boolean
+  /** 只读角色：持有者只能查看，不能修改任何数据 */
+  readOnly: boolean
   permissions: string[]
   userCount: number
 }
@@ -87,6 +89,7 @@ export interface RoleForm {
   description: string | null
   dataScope: 'SELF' | 'CAMPUS' | 'ALL'
   sort: number
+  readOnly: boolean
   permissions: string[]
 }
 

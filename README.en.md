@@ -21,7 +21,8 @@ Differences between industries are handled by **industry presets**. Exam types, 
 - **Role-based access.** Permissions work together with own / campus / all data scopes, and payroll review scopes can be set per reviewer.
 - **Student timetable.** The student portal shows group classes and one-to-one lessons together in a week / month calendar, with room, teacher, attendance and lesson notes; finished one-to-one lessons can be confirmed right there.
 - **Two portals, eight languages, mobile ready.** Staff and students have separate portals, with responsive layouts and eight interface languages.
-- **Flexible deployment.** Runs on SQLite, MySQL / MariaDB, or PostgreSQL, with a browser-based first-run installer. SMTP email covers notification emails and password recovery.
+- **Read-only admin role.** A built-in role that can view everything but change nothing, for public demos or auditors.
+- **Flexible deployment.** Ships with a Docker image and a one-command deploy script. Runs on SQLite, MySQL / MariaDB, or PostgreSQL, with a browser-based first-run installer. SMTP email covers notification emails and password recovery.
 
 ## Screenshots
 
@@ -80,7 +81,19 @@ Node.js 22+ (24 recommended), npm workspaces, TypeScript · Fastify 5, Prisma 7,
 
 ## Quick start
 
-**First-run installer (recommended):**
+**Docker, one command (recommended):**
+
+```bash
+git clone https://github.com/MRTangwin8/XueHang.git
+```
+
+```bash
+cd XueHang && ./deploy.sh
+```
+
+The script builds the image, starts the service, and prints the URL (port 8080 by default) and the install code. Finish the setup wizard in your browser. The image contains no database server: SQLite is the default, or enter an existing MySQL / PostgreSQL in the wizard. All data lives in `./data`. For a domain with automatic HTTPS, run `DOMAIN=crm.example.com ./deploy.sh`. See the [deployment guide](docs/部署指南.md) for HTTPS, backups, upgrades, and setting up a read-only demo site.
+
+**From source:**
 
 ```bash
 npm install

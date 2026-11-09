@@ -7,7 +7,7 @@ import { badRequest, notFound } from '../../lib/errors'
 import { audit } from '../../lib/audit'
 import { notifyStudent } from '../../lib/notify'
 import { fmtZoned } from '../../lib/time'
-import { perm, staff, scopeWhere } from '../../plugins/auth'
+import { andCampus, assertCampus, perm, staff, scopeWhere } from '../../plugins/auth'
 import { dateFilter } from './util'
 
 export default async function (app: FastifyInstance) {
@@ -20,7 +20,7 @@ export default async function (app: FastifyInstance) {
       req.query,
     )
     const studentWhere: Prisma.StudentWhereInput = { ...(scopeWhere(me) as Prisma.StudentWhereInput) }
-    if (q.campusId) studentWhere.campusId = q.campusId
+    andCampus(studentWhere, q.campusId)
     if (q.q) studentWhere.OR = [{ name: { contains: q.q } }, { studentNo: { contains: q.q } }]
     const where: Prisma.PrintRequestWhereInput = { deletedAt: null, student: studentWhere }
     if (q.status) where.status = { in: q.status.split(',') }
@@ -51,8 +51,9 @@ export default async function (app: FastifyInstance) {
     const me = staff(req)
     const { id } = parse(zIdParam, req.params)
     const { status } = parse(z.object({ status: z.enum(['PENDING', 'PRINTED', 'PICKED_UP', 'CANCELLED']) }), req.body)
-    const p = await prisma.printRequest.findFirst({ where: { id, deletedAt: null } })
+    const p = await prisma.printRequest.findFirst({ where: { id, deletedAt: null }, include: { student: { select: { campusId: true } } } })
     if (!p) throw notFound('打印申请不存在')
+    assertCampus(me, p.student.campusId)
     if (p.status === status) return p
     if (p.status === 'CANCELLED') throw badRequest('该申请已取消')
     const r = await prisma.printRequest.update({ where: { id }, data: { status, handledById: me.id, handledAt: new Date() } })

@@ -12,6 +12,7 @@ import { AppError } from './lib/errors'
 import { UPLOAD_ROOT } from './lib/upload'
 import { loadSettings } from './lib/rules'
 import { pickLang, translate } from './i18n'
+import { registerWebStatic } from './lib/webstatic'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 
@@ -113,5 +114,7 @@ export async function buildApp(opts: { logger?: boolean; jobs?: boolean } = {}) 
   // 业务规则与下拉选项（后台可配置）在注册模块、启动定时任务之前载入
   await loadSettings()
   await registerModules(app, opts.jobs ?? true)
+  // 有前端构建产物（web/dist）时由后端直接提供页面
+  if (await registerWebStatic(app, false)) app.log.info('已启用内置前端页面（web/dist）')
   return app
 }

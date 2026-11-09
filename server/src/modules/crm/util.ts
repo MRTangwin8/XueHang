@@ -3,7 +3,7 @@ import type { Prisma } from '../../generated/prisma/client'
 import { forbidden, notFound } from '../../lib/errors'
 import { prisma } from '../../lib/prisma'
 import { dayjs, DEFAULT_TZ, zonedDateTime } from '../../lib/time'
-import type { StaffPrincipal } from '../../plugins/auth'
+import { campusLimit as sharedCampusLimit, type StaffPrincipal } from '../../plugins/auth'
 
 export const zDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式应为 YYYY-MM-DD')
 /** 查询串布尔：1 / true → true */
@@ -38,8 +38,7 @@ export const can = (me: StaffPrincipal, code: string) => isSuper(me) || me.perms
 
 /** 校区数据范围（与 scopeWhere 一致的校区部分，但不因 allPerm 放开）：ALL / * 不限，其他限本校区 */
 export function campusLimit(me: StaffPrincipal): number | null {
-  if (isSuper(me) || me.dataScope === 'ALL') return null
-  return me.campusId ?? null
+  return sharedCampusLimit(me)
 }
 
 type CustomerLite = { id: number; ownerId: number | null; campusId: number; deletedAt: Date | null }
@@ -51,7 +50,11 @@ export function canViewCustomer(me: StaffPrincipal, c: CustomerLite) {
     const lim = campusLimit(me)
     return lim == null || lim === c.campusId
   }
-  if (c.ownerId == null && can(me, 'crm.pool')) return true
+  // 公海客户同样受校区范围约束
+  if (c.ownerId == null && can(me, 'crm.pool')) {
+    const lim = campusLimit(me)
+    return lim == null || lim === c.campusId
+  }
   return false
 }
 

@@ -8,6 +8,7 @@
  *           sales01 / 123456         市场销售
  *           t01 ~ t04 / 123456       教师
  *           sw01 / 123456            事务
+ *           demo / demo123456        只读管理员（演示：能看全部，不能修改）
  *   学生端  S2026001 ~ S2026006 / 123456
  */
 import '../src/env'
@@ -33,6 +34,7 @@ async function main() {
   }
   const pw = await bcrypt.hash('123456', 10)
   const adminPw = await bcrypt.hash('admin123', 10)
+  const demoPw = await bcrypt.hash('demo123456', 10)
 
   // ---------- 校区 ----------
   const hq = await prisma.campus.create({ data: { code: 'TKY', name: '东京本部', address: '東京都板橋区', sort: 1 } })
@@ -56,6 +58,9 @@ async function main() {
   const mkRole = (name: string, dataScope: string, codes: string[], description?: string, isSystem = false) =>
     prisma.role.create({ data: { name, dataScope, description, isSystem, permissions: { create: codes.map((code) => ({ code })) } } })
   const rAdmin = await mkRole('超级管理员', 'ALL', ['*'], '校长 / 系统管理员，拥有全部权限', true)
+  const rReadOnly = await prisma.role.create({
+    data: { name: '只读管理员', dataScope: 'ALL', readOnly: true, description: '演示 / 审计用：可以查看全部页面和数据，但不能做任何修改', permissions: { create: [{ code: '*' }] } },
+  })
   const rJw = await mkRole('教务', 'CAMPUS', [
     'daily.write', 'wage.claim', 'teacher.students', 'student.view', 'student.all', 'student.edit',
     'schedule.view', 'schedule.edit', 'room.manage', 'class.manage', 'vip.manage', 'vip.delete_confirmed', 'attendance.manage',
@@ -77,13 +82,14 @@ async function main() {
   const mkUser = (staffNo: string, name: string, identity: string, roleId: number, campusId: number, extra: object = {}, subjects: number[] = []) =>
     prisma.user.create({
       data: {
-        staffNo, name, identity, campusId, passwordHash: staffNo === 'admin' ? adminPw : pw,
+        staffNo, name, identity, campusId, passwordHash: staffNo === 'admin' ? adminPw : staffNo === 'demo' ? demoPw : pw,
         roles: { create: [{ roleId }] },
         subjects: { create: subjects.map((subjectId) => ({ subjectId })) },
         ...extra,
       },
     })
   const admin = await mkUser('admin', '系统管理员', 'STAFF', rAdmin.id, hq.id)
+  await mkUser('demo', '演示账号（只读）', 'STAFF', rReadOnly.id, hq.id)
   const jw = await mkUser('jw01', '教务 山田', 'STAFF', rJw.id, hq.id)
   const sales = await mkUser('sales01', '销售 李明', 'STAFF', rSales.id, hq.id)
   await mkUser('sw01', '事务 佐藤', 'STAFF', rClerk.id, hq.id)

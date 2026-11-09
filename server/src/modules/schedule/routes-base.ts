@@ -5,7 +5,8 @@ import { z } from 'zod'
 import { prisma } from '../../lib/prisma'
 import { parse, pageQuery, pageArgs, paged, zId, zIdParam, zOptStr } from '../../lib/http'
 import { badRequest, forbidden, notFound } from '../../lib/errors'
-import { hasPerm, perm, staff } from '../../plugins/auth'
+import { assertCampus, hasPerm, perm, staff } from '../../plugins/auth'
+import type { FastifyRequest } from 'fastify'
 import { audit } from '../../lib/audit'
 
 const zBool = z.union([z.boolean(), z.enum(['true', 'false', '1', '0'])]).transform((v) => v === true || v === 'true' || v === '1')
@@ -159,8 +160,17 @@ export default async function (app: FastifyInstance) {
     if (b.teacherId && !(await prisma.user.findFirst({ where: { id: b.teacherId, deletedAt: null } }))) throw badRequest('任课老师不存在')
   }
 
+  /** 取班课并校验校区：数据范围不是「全部」的账号只能管理本校区的班课 */
+  async function ownClass(req: FastifyRequest, id: number, deleted = false) {
+    const c = await prisma.classGroup.findFirst({ where: { id, deletedAt: deleted ? { not: null } : null } })
+    if (!c) throw notFound(deleted ? '班课不存在或未删除' : '班课不存在')
+    assertCampus(staff(req), c.campusId)
+    return c
+  }
+
   app.post('/classes', { preHandler: perm('class.manage') }, async (req) => {
     const { studentIds, ...b } = parse(zClass, req.body)
+    assertCampus(staff(req), b.campusId)
     await validateClassRefs(b)
     const c = await prisma.classGroup.create({
       data: { ...b, students: studentIds?.length ? { create: [...new Set(studentIds)].map((studentId) => ({ studentId })) } : undefined },
@@ -172,8 +182,8 @@ export default async function (app: FastifyInstance) {
   app.put('/classes/:id', { preHandler: perm('class.manage') }, async (req) => {
     const { id } = parse(zIdParam, req.params)
     const { studentIds: _ignored, ...b } = parse(zClass.partial(), req.body)
-    const cur = await prisma.classGroup.findFirst({ where: { id, deletedAt: null } })
-    if (!cur) throw notFound('班课不存在')
+    const cur = await ownClass(req, id)
+    if (b.campusId !== undefined) assertCampus(staff(req), b.campusId)
     await validateClassRefs({ ...b, campusId: b.campusId ?? cur.campusId })
     const c = await prisma.classGroup.update({ where: { id }, data: b })
     await audit(req, 'update', 'ClassGroup', id, b)
@@ -182,8 +192,7 @@ export default async function (app: FastifyInstance) {
 
   app.delete('/classes/:id', { preHandler: perm('class.manage') }, async (req) => {
     const { id } = parse(zIdParam, req.params)
-    const cur = await prisma.classGroup.findFirst({ where: { id, deletedAt: null } })
-    if (!cur) throw notFound('班课不存在')
+    const cur = await ownClass(req, id)
     const future = await prisma.session.count({ where: { classGroupId: id, status: 'SCHEDULED', startAt: { gte: new Date() } } })
     if (future) throw badRequest(`该班还有 ${future} 节未上的课次，请先取消后再删除`)
     await prisma.classGroup.update({ where: { id }, data: { deletedAt: new Date() } })
@@ -193,6 +202,7 @@ export default async function (app: FastifyInstance) {
 
   app.post('/classes/:id/restore', { preHandler: perm('class.manage') }, async (req) => {
     const { id } = parse(zIdParam, req.params)
+    await ownClass(req, id, true)
     const r = await prisma.classGroup.updateMany({ where: { id, deletedAt: { not: null } }, data: { deletedAt: null } })
     if (!r.count) throw notFound('班课不存在或未删除')
     await audit(req, 'restore', 'ClassGroup', id)
@@ -202,7 +212,7 @@ export default async function (app: FastifyInstance) {
   app.post('/classes/:id/students', { preHandler: perm('class.manage') }, async (req) => {
     const { id } = parse(zIdParam, req.params)
     const { studentIds } = parse(z.object({ studentIds: z.array(zId).min(1, '请选择学员') }), req.body)
-    if (!(await prisma.classGroup.findFirst({ where: { id, deletedAt: null } }))) throw notFound('班课不存在')
+    await ownClass(req, id)
     const exists = await prisma.classGroupStudent.findMany({ where: { classGroupId: id, studentId: { in: studentIds } }, select: { studentId: true } })
     const have = new Set(exists.map((e) => e.studentId))
     const add = [...new Set(studentIds)].filter((s) => !have.has(s))
@@ -214,6 +224,7 @@ export default async function (app: FastifyInstance) {
 
   app.delete('/classes/:id/students/:studentId', { preHandler: perm('class.manage') }, async (req) => {
     const { id, studentId } = parse(z.object({ id: zId, studentId: zId }), req.params)
+    await ownClass(req, id)
     const r = await prisma.classGroupStudent.deleteMany({ where: { classGroupId: id, studentId } })
     if (!r.count) throw notFound('该学员不在班级中')
     await audit(req, 'removeStudent', 'ClassGroup', id, { studentId })
@@ -222,6 +233,7 @@ export default async function (app: FastifyInstance) {
 
   app.post('/classes/:id/finish', { preHandler: perm('class.manage') }, async (req) => {
     const { id } = parse(zIdParam, req.params)
+    await ownClass(req, id)
     const r = await prisma.classGroup.updateMany({ where: { id, deletedAt: null }, data: { status: 'FINISHED' } })
     if (!r.count) throw notFound('班课不存在')
     await audit(req, 'finish', 'ClassGroup', id)
@@ -230,6 +242,7 @@ export default async function (app: FastifyInstance) {
 
   app.post('/classes/:id/reopen', { preHandler: perm('class.manage') }, async (req) => {
     const { id } = parse(zIdParam, req.params)
+    await ownClass(req, id)
     const r = await prisma.classGroup.updateMany({ where: { id, deletedAt: null }, data: { status: 'ACTIVE' } })
     if (!r.count) throw notFound('班课不存在')
     await audit(req, 'reopen', 'ClassGroup', id)

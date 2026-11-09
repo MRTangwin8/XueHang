@@ -1138,3 +1138,83 @@ add('{0} 总分应在 0–{1} 之间', '{0}: total score must be between 0 and {
 // 学生端：我的课表
 add('查询范围最长 62 天', 'The date range can be at most 62 days', '検索期間は最長 62 日です', 'La période ne peut pas dépasser 62 jours',
   'El intervalo no puede superar los 62 días', 'Период не может превышать 62 дня', 'O período pode ter no máximo 62 dias', 'Der Zeitraum darf höchstens 62 Tage umfassen')
+
+// 只读（演示 / 审计）角色
+add('当前账号为只读（演示）账号，不能修改数据', 'This is a read-only (demo) account and cannot change data', 'このアカウントは閲覧専用（デモ）のため、データを変更できません',
+  'Ce compte est en lecture seule (démonstration) et ne peut pas modifier les données', 'Esta cuenta es de solo lectura (demostración) y no puede modificar datos',
+  'Эта учётная запись доступна только для чтения (демо) и не может изменять данные', 'Esta conta é somente leitura (demonstração) e não pode alterar dados',
+  'Dieses Konto ist schreibgeschützt (Demo) und kann keine Daten ändern')
+add('系统内置角色不能设为只读', 'Built-in roles cannot be made read-only', '組み込みロールは閲覧専用にできません', 'Les rôles intégrés ne peuvent pas être mis en lecture seule',
+  'Los roles integrados no pueden ser de solo lectura', 'Встроенные роли нельзя сделать доступными только для чтения', 'Funções integradas não podem ser somente leitura',
+  'Integrierte Rollen können nicht schreibgeschützt werden')
+add('设为只读后将没有有效的超级管理员', 'Making this role read-only would leave no effective super administrator', '閲覧専用にすると有効な特権管理者がいなくなります',
+  'Mettre ce rôle en lecture seule ne laisserait aucun super administrateur effectif', 'Si este rol pasa a solo lectura, no quedará ningún superadministrador efectivo',
+  'Если сделать роль доступной только для чтения, не останется действующих суперадминистраторов', 'Tornar esta função somente leitura deixaria o sistema sem superadministrador efetivo',
+  'Wird diese Rolle schreibgeschützt, gibt es keinen wirksamen Superadministrator mehr')
+add('该账号是最后一个有效的超级管理员，不能移除其超级管理员角色或为其添加只读角色',
+  'This is the last effective super administrator; its super administrator role cannot be removed and a read-only role cannot be added',
+  'このアカウントは最後の有効な特権管理者のため、特権管理者ロールの解除や閲覧専用ロールの追加はできません',
+  'Ce compte est le dernier super administrateur effectif : impossible de retirer son rôle ou de lui ajouter un rôle en lecture seule',
+  'Esta cuenta es el último superadministrador efectivo: no se puede quitar su rol ni añadirle un rol de solo lectura',
+  'Это последний действующий суперадминистратор: нельзя снять его роль или добавить роль «только чтение»',
+  'Esta conta é o último superadministrador efetivo: não é possível remover sua função nem adicionar uma função somente leitura',
+  'Dies ist der letzte wirksame Superadministrator: Die Rolle kann nicht entfernt und keine Nur-Lesen-Rolle hinzugefügt werden')
+
+// 数据范围（校区）校验与安全加固
+add('只能操作本校区的数据', 'You can only work with data of your own campus', '自校舎のデータのみ操作できます', 'Vous ne pouvez agir que sur les données de votre site',
+  'Solo puede operar con datos de su propia sede', 'Можно работать только с данными своего филиала', 'Você só pode operar dados da sua própria unidade',
+  'Sie können nur Daten Ihres eigenen Standorts bearbeiten')
+add('只能在本校区排课', 'You can only schedule lessons in your own campus', '自校舎でのみ授業を登録できます', 'Vous ne pouvez planifier des cours que sur votre site',
+  'Solo puede programar clases en su propia sede', 'Занятия можно назначать только в своём филиале', 'Você só pode agendar aulas na sua própria unidade',
+  'Unterricht kann nur am eigenen Standort geplant werden')
+add('只能在本校区办理报名', 'You can only enroll students in your own campus', '自校舎でのみ入塾手続きができます', 'Vous ne pouvez inscrire des élèves que sur votre site',
+  'Solo puede matricular estudiantes en su propia sede', 'Зачислять учащихся можно только в своём филиале', 'Você só pode matricular estudantes na sua própria unidade',
+  'Anmeldungen sind nur am eigenen Standort möglich')
+add('无权把学员转到其他校区', 'You are not allowed to move the student to another campus', '学生を他の校舎へ移す権限がありません',
+  'Vous n’êtes pas autorisé à transférer l’élève vers un autre site', 'No tiene permiso para trasladar al estudiante a otra sede',
+  'Нет прав на перевод учащегося в другой филиал', 'Você não tem permissão para transferir o estudante para outra unidade',
+  'Sie dürfen den Schüler nicht an einen anderen Standort verlegen')
+add('该代码为保留字，请换一个', 'This code is reserved; please choose another', 'このコードは予約語です。別のコードにしてください', 'Ce code est réservé, veuillez en choisir un autre',
+  'Este código está reservado; elija otro', 'Этот код зарезервирован, выберите другой', 'Este código é reservado; escolha outro', 'Dieser Code ist reserviert, bitte einen anderen wählen')
+add('无权恢复其他校区的客户', 'You are not allowed to restore customers of another campus', '他の校舎の顧客を復元する権限がありません',
+  'Vous n’êtes pas autorisé à restaurer les clients d’un autre site', 'No tiene permiso para restaurar clientes de otra sede',
+  'Нет прав на восстановление клиентов другого филиала', 'Você não tem permissão para restaurar clientes de outra unidade',
+  'Sie dürfen Kunden eines anderen Standorts nicht wiederherstellen')
+add('学员 {0} 不在本次考试名单中，请先添加学员', 'Student {0} is not on the roster of this assessment; add the student first', '学生 {0} はこの試験の名簿にいません。先に学生を追加してください',
+  'L’élève {0} ne figure pas dans la liste de cette évaluation ; ajoutez-le d’abord', 'El estudiante {0} no está en la lista de esta evaluación; añádalo primero',
+  'Учащегося {0} нет в списке этой контрольной; сначала добавьте его', 'O estudante {0} não está na lista desta avaliação; adicione-o primeiro',
+  'Schüler {0} steht nicht auf der Liste dieser Prüfung; bitte zuerst hinzufügen')
+add('只能为本校区创建或修改考试', 'You can only create or edit assessments for your own campus', '自校舎の試験のみ作成・変更できます',
+  'Vous ne pouvez créer ou modifier des évaluations que pour votre site', 'Solo puede crear o modificar evaluaciones de su propia sede',
+  'Создавать и изменять контрольные можно только для своего филиала', 'Você só pode criar ou alterar avaliações da sua própria unidade',
+  'Prüfungen können nur für den eigenen Standort angelegt oder geändert werden')
+add('班课不存在，或不在您的数据范围内', 'The class does not exist or is outside your data scope', 'クラスが存在しないか、データ範囲外です',
+  'La classe n’existe pas ou est hors de votre périmètre', 'El grupo no existe o está fuera de su ámbito de datos',
+  'Группа не существует или находится вне вашей области данных', 'A turma não existe ou está fora do seu escopo de dados',
+  'Die Klasse existiert nicht oder liegt außerhalb Ihres Datenbereichs')
+add('关联班课不属于所选校区', 'The linked class does not belong to the selected campus', '関連付けたクラスは選択した校舎に属していません',
+  'La classe associée n’appartient pas au site sélectionné', 'El grupo vinculado no pertenece a la sede seleccionada',
+  'Связанная группа не относится к выбранному филиалу', 'A turma vinculada não pertence à unidade selecionada',
+  'Die verknüpfte Klasse gehört nicht zum gewählten Standort')
+add('部分学员不存在，或不在您的数据范围内', 'Some students do not exist or are outside your data scope', '一部の学生が存在しないか、データ範囲外です',
+  'Certains élèves n’existent pas ou sont hors de votre périmètre', 'Algunos estudiantes no existen o están fuera de su ámbito de datos',
+  'Некоторые учащиеся не существуют или находятся вне вашей области данных', 'Alguns estudantes não existem ou estão fora do seu escopo de dados',
+  'Einige Schüler existieren nicht oder liegen außerhalb Ihres Datenbereichs')
+add('只能为本人任课的班级排课', 'You can only schedule lessons for classes you teach', '自分が担当するクラスの授業のみ登録できます',
+  'Vous ne pouvez planifier des cours que pour vos propres classes', 'Solo puede programar clases para los grupos que imparte',
+  'Занятия можно назначать только для групп, которые вы ведёте', 'Você só pode agendar aulas para as turmas que leciona',
+  'Unterricht kann nur für eigene Klassen geplant werden')
+add('一次最多选择 400 个日期', 'You can select at most 400 dates at a time', '一度に選択できる日付は 400 件までです', 'Vous pouvez sélectionner 400 dates au maximum à la fois',
+  'Puede seleccionar como máximo 400 fechas a la vez', 'За один раз можно выбрать не более 400 дат', 'Você pode selecionar no máximo 400 datas por vez',
+  'Es können höchstens 400 Termine auf einmal gewählt werden')
+add('一次最多添加 30 个时间段', 'You can add at most 30 time slots at a time', '一度に追加できる時間帯は 30 件までです', 'Vous pouvez ajouter 30 créneaux au maximum à la fois',
+  'Puede añadir como máximo 30 franjas a la vez', 'За один раз можно добавить не более 30 интервалов', 'Você pode adicionar no máximo 30 horários por vez',
+  'Es können höchstens 30 Zeitfenster auf einmal hinzugefügt werden')
+add('无权把该客户转为学员', 'You are not allowed to convert this customer into a student', 'この顧客を学生に切り替える権限がありません',
+  'Vous n’êtes pas autorisé à convertir ce client en élève', 'No tiene permiso para convertir este cliente en estudiante',
+  'Нет прав на перевод этого клиента в учащиеся', 'Você não tem permissão para converter este cliente em estudante',
+  'Sie dürfen diesen Kunden nicht in einen Schüler umwandeln')
+add('只有超级管理员可以修改超级管理员账号', 'Only super administrators can edit super administrator accounts', '特権管理者アカウントを変更できるのは特権管理者のみです',
+  'Seuls les super administrateurs peuvent modifier les comptes de super administrateur', 'Solo los superadministradores pueden modificar cuentas de superadministrador',
+  'Изменять учётные записи суперадминистраторов могут только суперадминистраторы', 'Somente superadministradores podem editar contas de superadministrador',
+  'Nur Superadministratoren können Superadministrator-Konten bearbeiten')

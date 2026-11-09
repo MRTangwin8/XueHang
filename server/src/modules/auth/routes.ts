@@ -93,7 +93,11 @@ export default async function (app: FastifyInstance) {
     recordFailure(key, req.ip) // 计入频率限制：同一账号 / IP 短时间内多次申请会被锁定
     const acc =
       b.type === 'staff'
-        ? await prisma.user.findFirst({ where: { staffNo: b.account, deletedAt: null, status: 'ACTIVE' }, select: { id: true, email: true, name: true } })
+        ? await prisma.user.findFirst({
+            // 只读（演示）账号不允许通过邮件重置密码
+            where: { staffNo: b.account, deletedAt: null, status: 'ACTIVE', roles: { none: { role: { readOnly: true } } } },
+            select: { id: true, email: true, name: true },
+          })
         : await prisma.student.findFirst({ where: { studentNo: b.account, deletedAt: null, portalEnabled: true }, select: { id: true, email: true, name: true } })
     if (acc?.email) {
       const token = randomBytes(32).toString('base64url')

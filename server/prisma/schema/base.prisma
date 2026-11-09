@@ -107,6 +107,7 @@ model Role {
   dataScope   String           @default("SELF") /// SELF | CAMPUS | ALL（数据可见范围）
   sort        Int              @default(50)
   isSystem    Boolean          @default(false)
+  readOnly    Boolean          @default(false) /// 只读角色：持有者只能查看，任何修改请求都会被拒绝（演示 / 审计账号）
   createdAt   DateTime         @default(now())
   permissions RolePermission[]
   users       UserRole[]

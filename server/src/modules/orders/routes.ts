@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs'
 import { prisma } from '../../lib/prisma'
 import { parse, pageQuery, pageArgs, paged, zIdParam, zId, zOptStr } from '../../lib/http'
 import { badRequest, forbidden, notFound } from '../../lib/errors'
-import { perm, staff, staffOnly, hasPerm, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
+import { andCampus, perm, staff, staffOnly, hasPerm, scopeWhere, type StaffPrincipal } from '../../plugins/auth'
 import { audit } from '../../lib/audit'
 import { dayjs, DEFAULT_TZ, fmtZoned, startOfZonedDay } from '../../lib/time'
 import { DICTS } from '../../dict'
@@ -96,7 +96,7 @@ function paymentWhere(me: StaffPrincipal, q: z.infer<typeof paymentQuery>): Pris
   const and: Prisma.PaymentWhereInput[] = []
   if (sc.kind === 'all') Object.assign(orderW, sc.where)
   else and.push({ payeeId: me.id })
-  if (q.campusId) orderW.campusId = q.campusId
+  andCampus(orderW, q.campusId)
   if (q.q) orderW.OR = [{ orderNo: { contains: q.q } }, { student: { name: { contains: q.q } } }, { student: { studentNo: { contains: q.q } } }]
   and.push({ order: orderW })
   const paidAt = dateRange(q.from, q.to)
@@ -296,7 +296,7 @@ export default async function (app: FastifyInstance) {
       req.query,
     )
     const orderW: Prisma.OrderWhereInput = { deletedAt: null, ...(scopeWhere(me) as Prisma.OrderWhereInput) }
-    if (q.campusId) orderW.campusId = q.campusId
+    andCampus(orderW, q.campusId)
     if (q.q) orderW.OR = [{ orderNo: { contains: q.q } }, { student: { name: { contains: q.q } } }, { student: { studentNo: { contains: q.q } } }]
     const where: Prisma.RefundWhereInput = { order: orderW }
     const range = dateRange(q.from, q.to)

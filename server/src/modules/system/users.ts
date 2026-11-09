@@ -7,6 +7,7 @@ import { pageArgs, pageQuery, paged, parse, zIdParam, zOptStr } from '../../lib/
 import { badRequest, conflict, forbidden, notFound } from '../../lib/errors'
 import { hasPerm, invalidatePrincipal, perm, staff } from '../../plugins/auth'
 import { audit } from '../../lib/audit'
+import { effectiveSuperAdmins } from './roles'
 
 const P = perm('system.user')
 
@@ -70,13 +71,7 @@ async function superRoleIds(): Promise<number[]> {
 }
 
 /** 除 excludeUserId 外，仍然有效（未删除、未锁定）且拥有「*」的账号数 */
-async function otherSuperAdmins(excludeUserId: number): Promise<number> {
-  const ids = await superRoleIds()
-  if (!ids.length) return 0
-  return prisma.user.count({
-    where: { id: { not: excludeUserId }, deletedAt: null, status: 'ACTIVE', roles: { some: { roleId: { in: ids } } } },
-  })
-}
+const otherSuperAdmins = (excludeUserId: number) => effectiveSuperAdmins({ excludeUserId })
 
 async function isSuperUser(userId: number): Promise<boolean> {
   const ids = await superRoleIds()
@@ -85,7 +80,8 @@ async function isSuperUser(userId: number): Promise<boolean> {
 }
 
 async function ensureNotLastSuper(userId: number, what: string) {
-  if ((await isSuperUser(userId)) && (await otherSuperAdmins(userId)) === 0)
+  // 只读角色的持有者不算有效超级管理员；去掉该账号后一个不剩才拦截
+  if ((await effectiveSuperAdmins()) > 0 && (await otherSuperAdmins(userId)) === 0)
     throw badRequest(`该账号是最后一个有效的超级管理员（拥有全部权限），不能${what}`)
 }
 
@@ -181,12 +177,16 @@ export default async function userRoutes(app: FastifyInstance) {
     const sup = await superRoleIds()
     const oldRoleIds = old.roles.map((r) => r.roleId)
     const newRoleIds = [...new Set(roleIds)]
-    const hadSuper = oldRoleIds.some((r) => sup.includes(r))
-    const hasSuper = newRoleIds.some((r) => sup.includes(r))
     const superChanged = sup.some((r) => oldRoleIds.includes(r) !== newRoleIds.includes(r))
     if (superChanged && !hasPerm(me, '*')) throw forbidden('只有超级管理员可以调整超级管理员角色')
-    if (hadSuper && !hasSuper && !old.deletedAt && old.status === 'ACTIVE' && (await otherSuperAdmins(id)) === 0)
-      throw badRequest('不能移除最后一个有效超级管理员的超级管理员角色')
+    // 非超级管理员不能修改超级管理员的资料（否则可改其邮箱再走「找回密码」接管账号）
+    if (!hasPerm(me, '*') && oldRoleIds.some((r) => sup.includes(r))) throw forbidden('只有超级管理员可以修改超级管理员账号')
+    // 有效超级管理员 = 有非只读的「*」角色且不持有只读角色；去掉「*」角色或加上只读角色都会使其失效
+    const roleRows = await prisma.role.findMany({ where: { id: { in: [...oldRoleIds, ...newRoleIds] } }, select: { id: true, readOnly: true } })
+    const ro = new Set(roleRows.filter((r) => r.readOnly).map((r) => r.id))
+    const effective = (ids: number[]) => ids.some((r) => sup.includes(r) && !ro.has(r)) && !ids.some((r) => ro.has(r))
+    if (effective(oldRoleIds) && !effective(newRoleIds) && !old.deletedAt && old.status === 'ACTIVE' && (await otherSuperAdmins(id)) === 0)
+      throw badRequest('该账号是最后一个有效的超级管理员，不能移除其超级管理员角色或为其添加只读角色')
 
     const u = await prisma.$transaction(async (tx) => {
       await tx.userRole.deleteMany({ where: { userId: id } })

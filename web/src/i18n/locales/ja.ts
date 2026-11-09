@@ -67,6 +67,7 @@ export default {
     "language": "言語",
     "weakPassword": "現在のパスワードは安全性が不十分です（8文字以上で英字と数字が必要）。アカウント保護のため、お早めに変更してください。",
     "changeNow": "今すぐ変更",
+    "readOnlyBanner": "閲覧専用のデモアカウントです。すべての画面を表示できますが、変更は保存できません。",
     "studentPortal": "学生ポータル",
     "signOut": "ログアウト"
   },

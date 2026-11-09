@@ -13,7 +13,7 @@ export const DEFAULT_SUBJECTS: Record<string, string[]> = {
   美术: ['设计', '纯艺', 'ACG', '日式素描', '服装', '映像写真', '作品集排版'],
 }
 
-export const DEFAULT_ROLES: { key: string; name: string; dataScope: string; description?: string; isSystem?: boolean; codes: string[] }[] = [
+export const DEFAULT_ROLES: { key: string; name: string; dataScope: string; description?: string; isSystem?: boolean; readOnly?: boolean; codes: string[] }[] = [
   { key: 'admin', name: '超级管理员', dataScope: 'ALL', description: '校长 / 系统管理员，拥有全部权限', isSystem: true, codes: ['*'] },
   {
     key: 'academic',
@@ -50,6 +50,14 @@ export const DEFAULT_ROLES: { key: string; name: string; dataScope: string; desc
       'print.manage', 'notice.manage', 'file.manage', 'wage.review', 'schedule.view', 'grade.view',
     ],
   },
+  {
+    key: 'readonly',
+    name: '只读管理员',
+    dataScope: 'ALL',
+    description: '演示 / 审计用：可以查看全部页面和数据，但不能做任何修改',
+    readOnly: true,
+    codes: ['*'],
+  },
 ]
 
 export const DEFAULT_CHANNELS = ['渠道推荐', '渠道名单邀约', '语言学校说明会', '主动上门', '企宣&网络', '学员转介绍', '二次转化', '身边资源']
@@ -63,7 +71,7 @@ export async function createDefaults(tx: Tx, subjects: Record<string, string[]> 
   for (const r of DEFAULT_ROLES) {
     const role = await tx.role.upsert({
       where: { name: r.name },
-      create: { name: r.name, dataScope: r.dataScope, description: r.description, isSystem: !!r.isSystem, permissions: { create: r.codes.map((code) => ({ code })) } },
+      create: { name: r.name, dataScope: r.dataScope, description: r.description, isSystem: !!r.isSystem, readOnly: !!r.readOnly, permissions: { create: r.codes.map((code) => ({ code })) } },
       update: {},
     })
     roleIds[r.key] = role.id

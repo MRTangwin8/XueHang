@@ -5,14 +5,26 @@ import { z } from 'zod'
 import { prisma } from '../../lib/prisma'
 import { parse, pageQuery, pageArgs, paged, zId, zIdParam, zOptStr } from '../../lib/http'
 import { badRequest, notFound } from '../../lib/errors'
-import { hasPerm, perm, staff, type StaffPrincipal } from '../../plugins/auth'
+import { assertCampus, campusLimit, hasPerm, perm, staff, type StaffPrincipal } from '../../plugins/auth'
+import type { FastifyRequest } from 'fastify'
 import { audit } from '../../lib/audit'
 import { remainingOf, round2 } from './service'
 import { presentSession, sessionInclude } from './routes-sessions'
 
 /** 有 vip.manage 看全部；只有 schedule.own 的老师只看自己任教的包 */
+/** vip.manage：数据范围内（按学员校区）的课时包；否则只看自己任课的 */
 function vipScope(me: StaffPrincipal): Prisma.VipPackageWhereInput {
-  return hasPerm(me, 'vip.manage') ? {} : { teachers: { some: { teacherId: me.id } } }
+  if (!hasPerm(me, 'vip.manage')) return { teachers: { some: { teacherId: me.id } } }
+  const lim = campusLimit(me)
+  return lim == null ? {} : { OR: [{ student: { campusId: lim } }, { teachers: { some: { teacherId: me.id } } }] }
+}
+
+/** 取课时包并校验校区（按学员所属校区） */
+async function ownPkg(req: FastifyRequest, id: number, deleted = false) {
+  const p = await prisma.vipPackage.findFirst({ where: { id, deletedAt: deleted ? { not: null } : null }, include: { student: { select: { campusId: true } } } })
+  if (!p) throw notFound(deleted ? '课时包不存在或未删除' : 'VIP 课时包不存在')
+  assertCampus(staff(req), p.student.campusId)
+  return p
 }
 
 const pkgInclude = {
@@ -115,6 +127,8 @@ export default async function (app: FastifyInstance) {
   app.post('/vip', { preHandler: perm('vip.manage') }, async (req) => {
     const { teacherIds, ...b } = parse(zPkg, req.body)
     await validateRefs({ ...b, teacherIds })
+    const stu = await prisma.student.findUniqueOrThrow({ where: { id: b.studentId }, select: { campusId: true } })
+    assertCampus(staff(req), stu.campusId)
     const p = await prisma.vipPackage.create({
       data: { ...b, totalHours: round2(b.totalHours), teachers: { create: [...new Set(teacherIds)].map((teacherId) => ({ teacherId })) } },
     })
@@ -125,6 +139,7 @@ export default async function (app: FastifyInstance) {
   app.put('/vip/:id', { preHandler: perm('vip.manage') }, async (req) => {
     const { id } = parse(zIdParam, req.params)
     const { teacherIds, studentId: _sid, ...b } = parse(zPkg.partial(), req.body)
+    await ownPkg(req, id)
     const p = await prisma.$transaction(async (tx) => {
       const cur = await tx.vipPackage.findFirst({ where: { id, deletedAt: null } })
       if (!cur) throw notFound('VIP 课时包不存在')
@@ -147,6 +162,7 @@ export default async function (app: FastifyInstance) {
   for (const [action, status] of [['finish', 'FINISHED'], ['reopen', 'ACTIVE']] as const) {
     app.post(`/vip/:id/${action}`, { preHandler: perm('vip.manage') }, async (req) => {
       const { id } = parse(zIdParam, req.params)
+      await ownPkg(req, id)
       const r = await prisma.vipPackage.updateMany({ where: { id, deletedAt: null }, data: { status } })
       if (!r.count) throw notFound('VIP 课时包不存在')
       await audit(req, action, 'VipPackage', id)
@@ -156,8 +172,7 @@ export default async function (app: FastifyInstance) {
 
   app.delete('/vip/:id', { preHandler: perm('vip.manage') }, async (req) => {
     const { id } = parse(zIdParam, req.params)
-    const cur = await prisma.vipPackage.findFirst({ where: { id, deletedAt: null } })
-    if (!cur) throw notFound('VIP 课时包不存在')
+    const cur = await ownPkg(req, id)
     const live = await prisma.session.count({ where: { vipPackageId: id, status: { not: 'CANCELLED' } } })
     if (live) throw badRequest(`该课时包还有 ${live} 节未取消的课次，不能删除`)
     await prisma.vipPackage.update({ where: { id }, data: { deletedAt: new Date() } })
@@ -167,6 +182,7 @@ export default async function (app: FastifyInstance) {
 
   app.post('/vip/:id/restore', { preHandler: perm('vip.manage') }, async (req) => {
     const { id } = parse(zIdParam, req.params)
+    await ownPkg(req, id, true)
     const r = await prisma.vipPackage.updateMany({ where: { id, deletedAt: { not: null } }, data: { deletedAt: null } })
     if (!r.count) throw notFound('课时包不存在或未删除')
     await audit(req, 'restore', 'VipPackage', id)

@@ -69,6 +69,7 @@ export default {
     language: '语言',
     weakPassword: '当前密码过于简单（需 8 位以上且包含字母和数字），为了账号安全请尽快修改。',
     changeNow: '立即修改',
+    readOnlyBanner: "当前为只读演示账号：可以查看全部页面，但不能保存任何修改。",
     studentPortal: '学生端',
   },
   notification: {

@@ -5,7 +5,8 @@ import { prisma } from '../../lib/prisma'
 import { pageArgs, pageQuery, paged, parse, zId, zIdParam, zOptStr } from '../../lib/http'
 import { badRequest, notFound } from '../../lib/errors'
 import { audit } from '../../lib/audit'
-import { perm, staff } from '../../plugins/auth'
+import { hasPerm, perm, scopeWhere, staff } from '../../plugins/auth'
+import { campusLimit, can } from './util'
 import { zFlag, zOptId } from './util'
 
 const rate = z.coerce.number().min(0, '返点比例应在 0~100% 之间').max(1, '返点比例应在 0~100% 之间').optional().nullable()
@@ -112,7 +113,17 @@ export default async function (app: FastifyInstance) {
   })
 
   app.get('/organizations/:id', { preHandler: perm('crm.channel') }, async (req) => {
+    const me = staff(req)
     const { id } = parse(zIdParam, req.params)
+    // 关联的客户 / 学员只列出当前账号本来就有权查看的（机构资料本身对有渠道权限的人共享）
+    const lim = campusLimit(me)
+    const inCampus = lim == null ? {} : { campusId: lim }
+    const custWhere: Prisma.CustomerWhereInput = can(me, 'crm.customer.all')
+      ? inCampus
+      : { OR: [{ ownerId: me.id }, ...(can(me, 'crm.pool') ? [{ ownerId: null, ...inCampus }] : [])] }
+    const stuWhere: Prisma.StudentWhereInput = hasPerm(me, 'student.all')
+      ? (scopeWhere(me) as Prisma.StudentWhereInput)
+      : { OR: [{ salesId: me.id }, { mainTeacherId: me.id }, { contractTeacherId: me.id }] }
     const o = await prisma.organization.findUnique({
       where: { id },
       include: {
@@ -125,13 +136,13 @@ export default async function (app: FastifyInstance) {
     if (!o) throw notFound('机构不存在')
     const [customers, students] = await Promise.all([
       prisma.customer.findMany({
-        where: { organizationId: id, deletedAt: null },
+        where: { organizationId: id, deletedAt: null, AND: [custWhere] },
         orderBy: { id: 'desc' },
         take: 20,
         select: { id: true, name: true, status: true, intentLevel: true, owner: { select: { name: true } }, createdAt: true },
       }),
       prisma.student.findMany({
-        where: { organizationId: id, deletedAt: null },
+        where: { organizationId: id, deletedAt: null, AND: [stuWhere] },
         orderBy: { id: 'desc' },
         take: 20,
         select: { id: true, name: true, studentNo: true, status: true },

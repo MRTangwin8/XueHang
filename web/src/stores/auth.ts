@@ -14,6 +14,8 @@ export interface Me {
   perms?: string[]
   dataScope?: 'SELF' | 'CAMPUS' | 'ALL'
   roleNames?: string[]
+  /** 只读（演示 / 审计）账号：只能查看 */
+  readOnly?: boolean
   // student
   studentNo?: string
 }

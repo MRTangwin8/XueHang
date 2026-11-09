@@ -4,7 +4,7 @@ import { z } from 'zod'
 import ExcelJS from 'exceljs'
 import { prisma } from '../../lib/prisma'
 import { parse, pageArgs, pageQuery, paged, zId, zIdParam, zOptStr } from '../../lib/http'
-import { badRequest, forbidden } from '../../lib/errors'
+import { badRequest } from '../../lib/errors'
 import { audit } from '../../lib/audit'
 import { notifyStudent } from '../../lib/notify'
 import { fmtZoned } from '../../lib/time'
@@ -12,9 +12,9 @@ import { workbookBuffer } from '../../lib/excel'
 import { DICTS } from '../../dict'
 import { EDU, TOTAL_MODES, cleanScores, computeTotal, defaultEdu, examCodesInUse, parseScores, saveEdu, subjectSchema } from '../../lib/educonfig'
 import { PRESET_PARTS, applyPreset, presetSummaries } from '../../lib/presets'
-import { hasPerm, perm, staff, student, studentOnly } from '../../plugins/auth'
+import { andCampus, hasPerm, perm, staff, student, studentOnly } from '../../plugins/auth'
 import { assertCanView, loadStudentOr404 } from '../students/service'
-import { assertManage, assessmentScope, computeStats, loadAssessment, readSubjects, type AssessmentSubjects } from './service'
+import { assertManage, assertTargets, assessmentScope, computeStats, loadAssessment, readSubjects, type AssessmentSubjects } from './service'
 
 const VIEW = perm('grade.view', 'grade.manage')
 const MANAGE = perm('grade.manage')
@@ -142,7 +142,7 @@ export default async function (app: FastifyInstance) {
     const where: Prisma.AssessmentWhereInput = { deletedAt: q.deleted ? { not: null } : null, ...assessmentScope(me) }
     if (q.q) where.name = { contains: q.q }
     if (q.kind) where.kind = q.kind
-    if (q.campusId) where.campusId = q.campusId
+    andCampus(where, q.campusId)
     if (q.classGroupId) where.classGroupId = q.classGroupId
     if (q.from || q.to) where.examDate = { ...(q.from ? { gte: q.from } : {}), ...(q.to ? { lte: q.to } : {}) }
     const [items, total] = await Promise.all([
@@ -209,17 +209,9 @@ export default async function (app: FastifyInstance) {
     const me = staff(req)
     const body = parse(assessmentBody.extend({ studentIds: z.array(zId).max(1000).default([]) }), req.body)
     checkKind(body.kind)
-    if (!(me.perms.includes('*') || me.dataScope === 'ALL') && me.campusId && body.campusId !== me.campusId && me.dataScope === 'CAMPUS')
-      throw forbidden('只能为本校区创建考试')
-    if (body.classGroupId) {
-      const cg = await prisma.classGroup.findFirst({ where: { id: body.classGroupId, deletedAt: null } })
-      if (!cg) throw badRequest('班课不存在')
-    }
+    // 校区、关联班课、追加的学员都必须在当前账号的数据范围内（班课名单随班课一起授权）
+    await assertTargets(me, { campusId: body.campusId, classGroupId: body.classGroupId, studentIds: body.studentIds })
     const ids = await memberIds(body.classGroupId, body.studentIds)
-    if (ids.length) {
-      const n = await prisma.student.count({ where: { id: { in: ids }, deletedAt: null } })
-      if (n !== ids.length) throw badRequest('部分学员不存在或已删除')
-    }
     const a = await prisma.assessment.create({
       data: {
         name: body.name,
@@ -244,6 +236,10 @@ export default async function (app: FastifyInstance) {
     const old = await loadAssessment(me, id)
     const body = parse(assessmentBody, req.body)
     checkKind(body.kind)
+    await assertTargets(me, {
+      campusId: body.campusId !== old.campusId ? body.campusId : undefined,
+      classGroupId: body.classGroupId && body.classGroupId !== old.classGroupId ? body.classGroupId : undefined,
+    })
     const conf = body.conf as AssessmentSubjects
     // 科目变化后重新计算总分（删除的科目分数一并移除）
     const rows = await prisma.assessmentScore.findMany({ where: { assessmentId: id } })
@@ -312,6 +308,7 @@ export default async function (app: FastifyInstance) {
     const { id } = parse(zIdParam, req.params)
     const a = await loadAssessment(me, id)
     const body = parse(z.object({ studentIds: z.array(zId).max(1000).default([]), fromClass: z.boolean().default(false) }), req.body)
+    await assertTargets(me, { studentIds: body.studentIds })
     const ids = await memberIds(body.fromClass ? a.classGroupId : null, body.studentIds)
     const valid = await prisma.student.findMany({ where: { id: { in: ids }, deletedAt: null }, select: { id: true } })
     const existing = new Set((await prisma.assessmentScore.findMany({ where: { assessmentId: id }, select: { studentId: true } })).map((r) => r.studentId))
@@ -330,7 +327,7 @@ export default async function (app: FastifyInstance) {
     return { ok: true }
   })
 
-  /** 批量保存成绩（只更新传入的学生；不在名单中的学生自动加入） */
+  /** 批量保存成绩（只更新传入的学生；学生必须已在本次考试名单中） */
   app.put('/assessments/:id/scores', { preHandler: MANAGE }, async (req) => {
     const me = staff(req)
     assertManage(me)
@@ -338,11 +335,14 @@ export default async function (app: FastifyInstance) {
     const a = await loadAssessment(me, id)
     const conf = readSubjects(a.subjects)
     const rows = parse(z.object({ rows: scoreRows }), req.body).rows
-    const students = await prisma.student.findMany({ where: { id: { in: rows.map((r) => r.studentId) }, deletedAt: null }, select: { id: true, name: true } })
-    const names = new Map(students.map((s) => [s.id, s.name]))
+    const roster = await prisma.assessmentScore.findMany({
+      where: { assessmentId: id, studentId: { in: rows.map((r) => r.studentId) } },
+      select: { studentId: true, student: { select: { name: true } } },
+    })
+    const names = new Map(roster.map((s) => [s.studentId, s.student.name]))
     const data = rows.map((r) => {
       const name = names.get(r.studentId)
-      if (!name) throw badRequest(`学员 ${r.studentId} 不存在`)
+      if (!name) throw badRequest(`学员 ${r.studentId} 不在本次考试名单中，请先添加学员`)
       const scores = r.absent ? {} : cleanScores(conf.subjects, r.scores as Record<string, unknown> | null, name)
       let total = r.absent ? null : computeTotal(conf.subjects, scores, conf.totalMode, conf.scoreStep)
       if (conf.totalMode === 'manual' && !r.absent) total = r.total ?? null
@@ -355,12 +355,8 @@ export default async function (app: FastifyInstance) {
       }
     })
     await prisma.$transaction(async (tx) => {
-      for (const d of data)
-        await tx.assessmentScore.upsert({
-          where: { assessmentId_studentId: { assessmentId: id, studentId: d.studentId } },
-          create: { assessmentId: id, ...d },
-          update: d,
-        })
+      for (const { studentId, ...d } of data)
+        await tx.assessmentScore.update({ where: { assessmentId_studentId: { assessmentId: id, studentId } }, data: d })
     })
     await audit(req, 'saveScores', 'Assessment', id, { rows: data.length })
     return { saved: data.length }

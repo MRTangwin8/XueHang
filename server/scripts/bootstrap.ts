@@ -5,6 +5,7 @@
  * demoData=true 时写入完整演示数据（与 npm run db:seed 相同），并把演示管理员替换为这里填写的账号。
  */
 import '../src/env'
+import { randomBytes } from 'node:crypto'
 import { prisma } from '../src/lib/prisma'
 import { hashPassword } from '../src/lib/password'
 import { createDefaults } from '../src/lib/defaults'
@@ -42,7 +43,12 @@ if (p.demoData) {
     where: { id: demoAdmin.id },
     data: { staffNo: p.admin.staffNo, name: p.admin.name, email: p.admin.email || null, passwordHash },
   })
-  console.log('已写入演示数据')
+  // 演示账号的密码是公开的（123456 等）：全部换成随机密码并停用，需要时由管理员解锁并重置密码
+  const scrambled = await hashPassword(randomBytes(24).toString('base64url'))
+  await prisma.user.updateMany({ where: { id: { not: demoAdmin.id } }, data: { passwordHash: scrambled, status: 'LOCKED' } })
+  await prisma.student.updateMany({ data: { portalPasswordHash: scrambled, portalEnabled: false } })
+  console.log('已写入演示数据。演示用的教职工账号（jw01、t01、demo 等）已锁定、学生端账号已停用：')
+  console.log('需要使用时，请在「工号账户管理」中解锁并重置密码；学生在学员详情中「重置学生端密码」。')
 } else {
   await prisma.$transaction(async (tx) => {
     const roles = await createDefaults(tx, preset.subjects)

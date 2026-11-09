@@ -10,7 +10,7 @@
  */
 import type { Prisma } from '../../generated/prisma/client'
 import type { Principal, StaffPrincipal } from '../../plugins/auth'
-import { hasPerm } from '../../plugins/auth'
+import { campusLimit, hasPerm } from '../../plugins/auth'
 import type { Tx } from '../../lib/prisma'
 import { badRequest, notFound } from '../../lib/errors'
 import { dayjs, DEFAULT_TZ } from '../../lib/time'
@@ -23,10 +23,13 @@ export const round2 = (n: number) => Math.round(n * 100) / 100
 // 权限
 // ============================================================
 
-/** 教务（schedule.edit）可改全部；教师（schedule.own）只能改 teacherId = 本人 的课次 */
-export function canEditSession(user: Principal | undefined, s: { teacherId: number | null }): boolean {
+/** 教务（schedule.edit）可改数据范围内（本校区 / 全部）的课次；教师（schedule.own）只能改 teacherId = 本人 的课次 */
+export function canEditSession(user: Principal | undefined, s: { teacherId: number | null; campusId: number }): boolean {
   if (!user || user.type !== 'staff') return false
-  if (hasPerm(user, 'schedule.edit')) return true
+  if (hasPerm(user, 'schedule.edit')) {
+    const lim = campusLimit(user)
+    if (lim == null || lim === s.campusId) return true
+  }
   return hasPerm(user, 'schedule.own') && s.teacherId != null && s.teacherId === user.id
 }
 

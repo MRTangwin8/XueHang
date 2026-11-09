@@ -17,6 +17,8 @@ export interface StaffPrincipal {
   perms: string[]
   dataScope: DataScope
   roleNames: string[]
+  /** 持有任一「只读」角色：只能查看，所有修改请求被拒绝（见 assertWritable） */
+  readOnly: boolean
 }
 export interface StudentPrincipal {
   type: 'student'
@@ -79,6 +81,7 @@ export async function loadPrincipal(payload: TokenPayload): Promise<Principal | 
         perms: [...perms],
         dataScope: scope,
         roleNames: u.roles.map((r) => r.role.name),
+        readOnly: u.roles.some((r) => r.role.readOnly),
       }
     }
   } else {
@@ -152,6 +155,23 @@ async function authenticate(req: FastifyRequest) {
   const p = await loadPrincipal(payload)
   if (!p) throw new AppError(401, '账号不存在或已停用', 'UNAUTHORIZED')
   req.user = p
+  assertWritable(req, p)
+}
+
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
+/** 只读账号仍可调用的写接口：只影响本人的提醒已读状态 */
+const READ_ONLY_ALLOW = [/^\/api\/common\/notifications\/(\d+\/read|read-all)$/]
+
+/**
+ * 只读角色（演示 / 审计账号）：除查询外的请求一律拒绝。
+ * 所有需要登录的接口都经过 authenticate，因此这里是唯一的拦截点；
+ * 约定 GET 接口不修改数据，新增接口时请遵守。
+ */
+function assertWritable(req: FastifyRequest, p: Principal) {
+  if (p.type !== 'staff' || !p.readOnly || SAFE_METHODS.has(req.method)) return
+  const url = req.url.split('?')[0]
+  if (READ_ONLY_ALLOW.some((r) => r.test(url))) return
+  throw new AppError(403, '当前账号为只读（演示）账号，不能修改数据', 'READ_ONLY')
 }
 
 /** preHandler：任意已登录用户（教职工或学生） */
@@ -204,9 +224,33 @@ export function scopeWhere(
 ): Record<string, unknown> {
   const { ownerField, campusField = 'campusId', allPerm } = opts
   if (user.perms.includes('*') || (allPerm && user.perms.includes(allPerm)) || user.dataScope === 'ALL') return {}
-  if (user.dataScope === 'CAMPUS' && user.campusId) return { [campusField]: user.campusId }
+  // 受限账号没有所属校区时用 -1（不匹配任何校区），避免退化成「不限」
+  if (user.dataScope === 'CAMPUS') return { [campusField]: user.campusId ?? -1 }
   if (ownerField) return { [ownerField]: user.id }
-  return user.campusId ? { [campusField]: user.campusId } : {}
+  return { [campusField]: user.campusId ?? -1 }
+}
+
+/**
+ * 校区限制：null = 不限（超级管理员、数据范围「全部」）；数字 = 只能访问该校区。
+ * 受限账号没有所属校区时返回 -1（不匹配任何校区，按拒绝处理）。
+ */
+export function campusLimit(user: StaffPrincipal): number | null {
+  if (user.perms.includes('*') || user.dataScope === 'ALL') return null
+  return user.campusId ?? -1
+}
+
+/** 按 ID 操作归属某校区的数据前调用：数据范围不是「全部」的账号只能操作本校区 */
+export function assertCampus(user: StaffPrincipal, campusId: number | null | undefined, message = '只能操作本校区的数据') {
+  const lim = campusLimit(user)
+  if (lim != null && campusId !== lim) throw forbidden(message)
+}
+
+/** 列表的 campusId 筛选：与 where 中已有的校区限制取交集（筛选参数不能越过数据范围） */
+export function andCampus(where: object, requested?: number | null) {
+  if (!requested) return
+  const w = where as { campusId?: unknown }
+  if (w.campusId == null) w.campusId = requested
+  else if (w.campusId !== requested) w.campusId = -1
 }
 
 /** 登录有效期 3 天 */

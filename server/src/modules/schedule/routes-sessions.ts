@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { prisma, type Tx } from '../../lib/prisma'
 import { parse, zId, zIdParam } from '../../lib/http'
 import { badRequest, conflict, forbidden, notFound } from '../../lib/errors'
-import { hasPerm, perm, staff, type StaffPrincipal } from '../../plugins/auth'
+import { assertCampus, hasPerm, perm, staff, type StaffPrincipal } from '../../plugins/auth'
 import { audit } from '../../lib/audit'
 import {
   adjustHours, assertRange, campusTz, canEditSession, cancelSession, confirmSession, durationHours, expandDates,
@@ -80,6 +80,9 @@ async function resolveInput(tx: Tx, me: StaffPrincipal, b: SessionBase, duration
     const cg = await tx.classGroup.findFirst({ where: { id: b.classGroupId, deletedAt: null } })
     if (!cg) throw badRequest('班课不存在')
     if (cg.status !== 'ACTIVE') throw badRequest('该班课已结课，不能再排课')
+    // 教师只能给自己任课的班级排课（否则可借此取得其他班级的点名、成绩等访问权）
+    if (isOwnOnly(me) && cg.teacherId !== me.id && !(await tx.session.count({ where: { classGroupId: cg.id, teacherId: me.id } })))
+      throw forbidden('只能为本人任课的班级排课')
     fallbackCampus = cg.campusId
     title ||= cg.name
     if (b.teacherId === undefined) teacherId = cg.teacherId
@@ -113,6 +116,8 @@ async function resolveInput(tx: Tx, me: StaffPrincipal, b: SessionBase, duration
     if (!t) throw badRequest('老师不存在')
   }
   if (isOwnOnly(me) && teacherId !== me.id) throw forbidden('教师只能为自己安排课次')
+  // 教务：数据范围不是「全部」时只能在本校区排课
+  if (!isOwnOnly(me)) assertCampus(me, campusId, '只能在本校区排课')
 
   return {
     kind: b.kind, campusId, tz: await campusTz(tx, campusId), title, roomId, teacherId,
@@ -140,6 +145,7 @@ const BATCH_LIMIT = 200
 async function expandBatch(tx: Tx, me: StaffPrincipal, b: z.infer<typeof zBatch>) {
   if (b.endDate < b.startDate) throw badRequest('结束日期不能早于开始日期')
   if (b.endTime <= b.startTime) throw badRequest('结束时刻必须晚于开始时刻')
+  if ((Date.parse(b.endDate) - Date.parse(b.startDate)) / 86_400_000 > 366) throw badRequest('日期区间不能超过一年')
   const dates = expandDates(b.startDate, b.endDate, b.weekdays)
   if (!dates.length) throw badRequest('所选日期区间内没有符合星期条件的日期')
   if (dates.length > BATCH_LIMIT) throw badRequest(`一次最多生成 ${BATCH_LIMIT} 节课次（当前 ${dates.length} 节），请缩短日期区间`)

@@ -117,7 +117,11 @@ function logout() {
           </template>
         </el-dropdown>
       </header>
-      <div v-if="auth.weakPassword && route.path !== '/profile'" class="weak-pw">
+      <div v-if="auth.me?.readOnly" class="weak-pw read-only">
+        <el-icon><View /></el-icon>
+        <span>{{ t('layout.readOnlyBanner') }}</span>
+      </div>
+      <div v-else-if="auth.weakPassword && route.path !== '/profile'" class="weak-pw">
         <el-icon><WarningFilled /></el-icon>
         <span>{{ t('layout.weakPassword') }}</span>
         <el-button size="small" type="warning" @click="router.push('/profile')">{{ t('layout.changeNow') }}</el-button>
