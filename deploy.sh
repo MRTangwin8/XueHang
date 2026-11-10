@@ -2,6 +2,8 @@
 # 学航 · 一键部署脚本（Docker）
 #
 #   ./deploy.sh                 构建并启动（首次安装、升级都用这一条）
+#   IMAGE=ghcr.io/mrtangwin8/xuehang:latest ./deploy.sh
+#                               不在本机构建，直接拉取官方镜像（推荐：更快，升级只需 ./deploy.sh update）
 #                               默认只监听本机 127.0.0.1:8080，由前面的 Nginx / IIS 等反向代理对外提供 HTTPS
 #   PORT=9000 ./deploy.sh       换一个端口（默认 8080）
 #   DIRECT=1 ./deploy.sh        不经反向代理，直接对外开放端口（HTTP 明文，仅用于内网或临时试用）
@@ -16,7 +18,7 @@
 #   ./deploy.sh backup          把 ./data 打包备份到 ./backups/
 #   ./deploy.sh stop            停止
 #   ./deploy.sh restart         重启
-#   ./deploy.sh update          拉取最新代码并重新构建、启动
+#   ./deploy.sh update          升级到最新版本：用官方镜像时拉取新镜像；否则拉取最新代码并重新构建
 #
 # 数据（配置、SQLite 数据库、上传文件）都在 ./data，不包含数据库服务。
 set -euo pipefail
@@ -41,6 +43,7 @@ WITH_MYSQL="${WITH_MYSQL:-$(get WITH_MYSQL)}"; WITH_MYSQL="${WITH_MYSQL:-0}"
 TZ_VALUE="${TZ:-$(get TZ)}"; TZ_VALUE="${TZ_VALUE:-Asia/Shanghai}"
 DB_NETWORK="${DB_NETWORK-$(get DB_NETWORK)}"
 DIRECT="${DIRECT:-$(get DIRECT)}"; DIRECT="${DIRECT:-0}"
+IMAGE="${IMAGE-$(get IMAGE)}"
 # 三种对外方式：DOMAIN=自带 Caddy 自动 HTTPS；DIRECT=1 直接开放端口；默认 = 只监听本机，交给你自己的反向代理
 if [ -n "$DOMAIN" ]; then TRUST_PROXY=1; BIND=127.0.0.1; DIRECT=0; PROFILE=(--profile https)
 elif [ "$DIRECT" = "1" ]; then TRUST_PROXY=0; BIND=0.0.0.0; PROFILE=()
@@ -55,6 +58,7 @@ DIRECT=$DIRECT
 TRUST_PROXY=$TRUST_PROXY
 WITH_MYSQL=$WITH_MYSQL
 DB_NETWORK=$DB_NETWORK
+IMAGE=$IMAGE
 TZ=$TZ_VALUE
 EOF
 }
@@ -92,8 +96,15 @@ EOF
       rm -f docker-compose.override.yml
     fi
     mkdir -p data
-    say "构建镜像并启动（首次需要几分钟）…"
-    "${DC[@]}" ${PROFILE[@]+"${PROFILE[@]}"} up -d --build --remove-orphans
+    if [ -n "$IMAGE" ]; then
+      say "拉取镜像 $IMAGE …"
+      "${DC[@]}" pull app || die "拉取镜像失败。国内服务器可在 Docker / 1Panel 中配置镜像加速，或去掉 IMAGE 改为本机构建。"
+      say "启动（数据库结构会在启动时自动同步）…"
+      "${DC[@]}" ${PROFILE[@]+"${PROFILE[@]}"} up -d --no-build --remove-orphans
+    else
+      say "构建镜像并启动（首次需要几分钟）…"
+      "${DC[@]}" ${PROFILE[@]+"${PROFILE[@]}"} up -d --build --remove-orphans
+    fi
     say "等待服务就绪…"
     state=down
     for _ in $(seq 1 90); do state=$(health); [ "$state" != "down" ] && break; sleep 2; done
@@ -126,9 +137,13 @@ EOF
     "${DC[@]}" start app >/dev/null
     say "已备份到 $f（使用外部 MySQL / PostgreSQL 时，数据库请另行用 mysqldump / pg_dump 备份）" ;;
   update)
+    if [ -n "$IMAGE" ]; then
+      say "使用官方镜像 $IMAGE：拉取新版本并重建容器（./data 中的数据不受影响）"
+      exec "$0" up
+    fi
     command -v git >/dev/null 2>&1 && [ -d .git ] || die "当前目录不是 git 仓库，请手动更新代码后运行 ./deploy.sh"
     say "拉取最新代码…"
     git pull --ff-only
     exec "$0" up ;;
-  *) sed -n '2,18p' "$0"; exit 1 ;;
+  *) sed -n '2,23p' "$0"; exit 1 ;;
 esac

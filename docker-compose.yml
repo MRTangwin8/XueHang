@@ -2,6 +2,7 @@
 #
 #   最简单的启动方式：./deploy.sh        （见 docs/部署指南.md）
 #   或手动：          docker compose up -d --build
+#   用官方镜像：      IMAGE=ghcr.io/mrtangwin8/xuehang:latest ./deploy.sh   （升级：./deploy.sh update）
 #
 # 数据（配置、SQLite 数据库、上传文件）保存在当前目录的 ./data，备份这个目录即可。
 # 本文件不包含数据库服务：默认使用 SQLite；需要 MySQL / PostgreSQL 时，在安装向导里填写已有数据库的地址。
@@ -12,7 +13,8 @@ services:
       context: .
       args:
         WITH_MYSQL: ${WITH_MYSQL:-0}
-    image: xuehang:latest
+    # 设置 IMAGE=ghcr.io/mrtangwin8/xuehang:latest 时直接拉取官方镜像（不在本机构建）；不设置则用本地源码构建
+    image: ${IMAGE:-xuehang:latest}
     container_name: xuehang
     restart: unless-stopped
     init: true
