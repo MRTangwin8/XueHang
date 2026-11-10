@@ -97,6 +97,11 @@ EOF
       rm -f docker-compose.override.yml
     fi
     mkdir -p data
+    # 把提交号和构建时间写进镜像，后台「业务规则」页和教职工登录页可以看到当前版本
+    if [ -z "$IMAGE" ] && command -v git >/dev/null 2>&1 && [ -d .git ]; then
+      APP_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || true); export APP_COMMIT
+      APP_BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ); export APP_BUILD_TIME
+    fi
     if [ -n "$IMAGE" ]; then
       say "拉取镜像 $IMAGE …"
       "${DC[@]}" pull app || die "拉取镜像失败。国内服务器可在 Docker / 1Panel 中配置镜像加速，或去掉 IMAGE 改为本机构建。"

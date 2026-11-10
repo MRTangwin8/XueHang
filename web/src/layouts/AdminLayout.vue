@@ -5,6 +5,7 @@ import { adminChildren } from '@/router'
 import { MENU_GROUPS } from '@/menu'
 import { useAuth } from '@/stores/auth'
 import { useIsMobile } from '@/utils/format'
+import { useVersion, versionText } from '@/utils/version'
 import NotificationBell from '@/components/NotificationBell.vue'
 import BrandLogo from '@/components/BrandLogo.vue'
 import LangSwitcher from '@/components/LangSwitcher.vue'
@@ -18,6 +19,7 @@ const auth = useAuth()
 const route = useRoute()
 const router = useRouter()
 const isMobile = useIsMobile()
+const version = useVersion()
 const hidden = ref(false)
 const drawer = ref(false)
 
@@ -114,6 +116,7 @@ function logout() {
             <el-dropdown-menu>
               <el-dropdown-item disabled>{{ auth.me?.roleNames?.join(' / ') }}</el-dropdown-item>
               <el-dropdown-item divided icon="User" @click="router.push('/profile')">{{ t('profile.title') }}</el-dropdown-item>
+              <el-dropdown-item v-if="version" disabled>{{ versionText(version) }}</el-dropdown-item>
               <el-dropdown-item icon="SwitchButton" @click="logout">{{ t('layout.logout') }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>

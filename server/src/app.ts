@@ -11,6 +11,7 @@ import authPlugin, { authorizeFileRequest } from './plugins/auth'
 import { AppError } from './lib/errors'
 import { UPLOAD_ROOT } from './lib/upload'
 import { loadSettings } from './lib/rules'
+import { VERSION_INFO } from './lib/version'
 import { pickLang, translate } from './i18n'
 import { registerWebStatic } from './lib/webstatic'
 
@@ -108,7 +109,7 @@ export async function buildApp(opts: { logger?: boolean; jobs?: boolean } = {}) 
     if (q && typeof q === 'object') for (const k of Object.keys(q)) if (q[k] === '') delete q[k]
   })
 
-  app.get('/api/health', async () => ({ ok: true }))
+  app.get('/api/health', async () => ({ ok: true, ...VERSION_INFO }))
   // 安装向导在切换到正式应用后据此确认安装完成
   app.get('/api/install/status', async () => ({ installed: true }))
   // 业务规则与下拉选项（后台可配置）在注册模块、启动定时任务之前载入

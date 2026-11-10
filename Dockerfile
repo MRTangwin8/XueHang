@@ -37,7 +37,11 @@ FROM node:24-bookworm-slim
 RUN apt-get update \
   && apt-get install -y --no-install-recommends openssl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
-ENV NODE_ENV=production \
+ARG APP_COMMIT=
+ARG APP_BUILD_TIME=
+ENV APP_COMMIT=$APP_COMMIT \
+    APP_BUILD_TIME=$APP_BUILD_TIME \
+    NODE_ENV=production \
     DATA_DIR=/data \
     PORT=3001 \
     PRISMA_HIDE_UPDATE_MESSAGE=1 \

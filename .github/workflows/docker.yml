@@ -78,7 +78,10 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           # 发布的镜像预装 MySQL / MariaDB 驱动，服务器不需要联网安装
-          build-args: WITH_MYSQL=1
+          build-args: |
+            WITH_MYSQL=1
+            APP_COMMIT=${{ github.sha }}
+            APP_BUILD_TIME=${{ github.event.head_commit.timestamp || github.run_started_at }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

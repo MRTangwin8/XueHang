@@ -13,6 +13,8 @@ services:
       context: .
       args:
         WITH_MYSQL: ${WITH_MYSQL:-0}
+        APP_COMMIT: ${APP_COMMIT:-}
+        APP_BUILD_TIME: ${APP_BUILD_TIME:-}
     # 设置 IMAGE=ghcr.io/mrtangwin8/xuehang:latest 时直接拉取官方镜像（不在本机构建）；不设置则用本地源码构建
     image: ${IMAGE:-xuehang:latest}
     container_name: xuehang

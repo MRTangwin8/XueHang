@@ -3,8 +3,10 @@
 import BrandLogo from './BrandLogo.vue'
 import LangSwitcher from './LangSwitcher.vue'
 import { useSite } from '@/stores/site'
+import { useVersion, versionText } from '@/utils/version'
 
 const site = useSite()
+const version = useVersion()
 const props = defineProps<{ title: string; subtitle?: string; portal?: boolean }>()
 const heroTitle = () => site.text(props.portal ? 'portalHeroTitle' : 'heroTitle')
 </script>
@@ -34,6 +36,8 @@ const heroTitle = () => site.text(props.portal ? 'portalHeroTitle' : 'heroTitle'
         <h1>{{ title }}</h1>
         <p v-if="subtitle" class="sub">{{ subtitle }}</p>
         <slot />
+        <!-- 版本号只在教职工登录页显示，学生端不显示 -->
+        <div v-if="!portal && version" class="ver">{{ versionText(version) }}</div>
       </div>
     </section>
   </div>
@@ -52,6 +56,7 @@ const heroTitle = () => site.text(props.portal ? 'portalHeroTitle' : 'heroTitle'
 .lang { position: absolute; top: 20px; right: 20px; }
 .form-side { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .form-box { width: 100%; max-width: 360px; }
+.ver { margin-top: 28px; text-align: center; font-size: 12px; color: var(--xh-text-2); opacity: 0.7; }
 .m-logo { display: none; margin-bottom: 20px; }
 h1 { font-size: 26px; margin: 0; font-weight: 700; }
 .sub { color: var(--xh-text-2); margin: 8px 0 28px; }

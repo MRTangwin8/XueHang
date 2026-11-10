@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { PORTAL_MODULES, PRINT_TYPE_LABEL } from '@/utils/portal'
+import { useVersion, versionText } from '@/utils/version'
 import { useRoute } from 'vue-router'
 import { currencyName, money } from '@/utils/format'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
@@ -164,12 +165,14 @@ async function resetDict(item: (typeof dicts.value)[number]) {
 }
 
 onMounted(load)
+const version = useVersion()
 </script>
 
 <template>
   <div v-loading="loading" class="page rules-page">
     <div class="page-card">
       <el-alert :title="t('system.rules.immediateHint')" type="info" :closable="false" show-icon />
+      <p v-if="version" class="ver-line">{{ t('system.rules.versionLabel') }}：{{ versionText(version) }}<template v-if="version.builtAt"> · {{ version.builtAt }}</template></p>
       <el-tabs v-model="active" class="rules-tabs">
           <el-tab-pane
             v-for="group in groups"
@@ -264,6 +267,7 @@ onMounted(load)
 .prefix-setting .el-input { max-width: 220px; }
 .prefix-setting span, .field-hint { color: var(--xh-text-2); font-size: 12px; }
 .field-hint { margin-top: 8px; line-height: 1.6; }
+.ver-line { margin: 10px 0 0; font-size: 12px; color: var(--xh-text-2); }
 .check-list { display: flex; flex-wrap: wrap; gap: 4px 18px; }
 .month-grid { display: flex; flex-wrap: wrap; }
 .dict-list { display: flex; flex-direction: column; gap: 16px; }
