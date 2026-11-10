@@ -16,6 +16,8 @@ export interface SiteConfig {
   footerText: string
   portalTitle: string
   portalLoginSubtitle: string
+  portalHeroTitle: string
+  portalHeroPoints: string[]
 }
 
 export function defaultSite(): SiteConfig {
@@ -35,7 +37,13 @@ export function defaultSite(): SiteConfig {
     ],
     footerText: '© 学航 · 教学管理平台',
     portalTitle: '学生端',
-    portalLoginSubtitle: '查看课时、预约面谈、提交文书与打印',
+    portalLoginSubtitle: '使用学号和密码登录',
+    portalHeroTitle: '你的课表、成绩与申请\n都在这里',
+    portalHeroPoints: [
+      '课表一目了然，上完的课随手确认课时',
+      '考试成绩与进步趋势随时查看',
+      '在线预约面谈，提交文书与打印申请',
+    ],
   }
 }
 
@@ -91,18 +99,21 @@ export const useSite = defineStore('site', () => {
    * 用法：site.text('loginTitle')、site.points()
    */
   const defaults = defaultSite()
-  type TextField = Exclude<keyof SiteConfig, 'logoUrl' | 'primaryColor' | 'heroPoints'>
+  type TextField = Exclude<keyof SiteConfig, 'logoUrl' | 'primaryColor' | 'heroPoints' | 'portalHeroPoints'>
   function text(field: TextField): string {
     void i18n.global.locale.value // 建立对语言的响应式依赖
     const v = config.value[field]
     return v === defaults[field] ? t(`site.${field}`) : v
   }
-  function points(): string[] {
+  /** 登录页要点；portal=true 时取学生端的要点 */
+  function points(portal = false): string[] {
     void i18n.global.locale.value
-    const v = config.value.heroPoints
-    const isDefault = v.length === defaults.heroPoints.length && v.every((p, i) => p === defaults.heroPoints[i])
+    const field = portal ? 'portalHeroPoints' : 'heroPoints'
+    const v = config.value[field]
+    const d = defaults[field]
+    const isDefault = v.length === d.length && v.every((p, i) => p === d[i])
     if (!isDefault) return v
-    const tr = tList('site.heroPoints')
+    const tr = tList(`site.${field}`)
     return tr.length ? tr : v
   }
 

@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { onMounted, ref } from 'vue'
 import { useAuth } from '@/stores/auth'
 import { fmtDateTime, fmtTime, tz } from '@/utils/time'
-import { money } from '@/utils/format'
+import { money, printMoney } from '@/utils/format'
 import DictTag from '@/components/DictTag.vue'
 import { portalApi } from '../api'
 import PortalSurface from './components/PortalSurface.vue'
@@ -103,7 +103,7 @@ onMounted(load)
                 <span>{{ p.fileName }}</span>
                 <DictTag dict="printStatuses" :value="p.status" />
               </div>
-              <div class="meta">{{ money(p.fee) }} · {{ tr('service.text.collectAfter', { time: fmtDateTime(p.readyAt) }) }}</div>
+              <div class="meta">{{ printMoney(p.fee) }} · {{ tr('service.text.collectAfter', { time: fmtDateTime(p.readyAt) }) }}</div>
             </div>
             <el-empty v-if="data && !data.prints.length" :description="tr('service.text.noPrintedMaterialsAwaitingCollection')" :image-size="60" />
           </section>

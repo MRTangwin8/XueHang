@@ -49,6 +49,7 @@ export default {
     "recycleBin": "Papelera",
     "other": "Otros"
   },
+  "search": { "placeholder": "Buscar páginas, ajustes, estudiantes (Ctrl+K)", "student": "Estudiante" },
   "menu": {
     "home": "Centro de información",
     "teacher": "Área docente",
@@ -117,7 +118,7 @@ export default {
       "campusName": "Nombre del campus",
       "campusCode": "Código del campus",
     "timezone": "Zona horaria", "requiredFields": "Completa los campos obligatorios", "adminTitle": "Crear administrador",
-    "emailOptional": "Correo electrónico (opcional)", "demoData": "Importar datos de demostración", "preset": "Plantilla del sector", "presetHint": "Preconfigura tipos de examen, plantillas de calificaciones, campos del expediente y opciones según su tipo de centro. Podrá cambiarlo o reimportarlo después en Configuración del sistema → Calificaciones y expediente.", "start": "Iniciar instalación",
+    "emailOptional": "Correo electrónico (opcional)", "demoData": "Importar datos de demostración", "preset": "Plantilla del sector", "presetHint": "Preconfigura tipos de examen, plantillas de calificaciones, campos del expediente y opciones según su tipo de centro. Podrá cambiarlo o reimportarlo después en Configuración del sistema → Calificaciones y expediente.", "existingTables": "La base de datos ya tiene {n} tablas (versión anterior u otro sistema). Deben eliminarse antes de instalar.", "resetExisting": "Eliminar las {n} tablas existentes en esta base de datos (no se puede deshacer)", "resetRequired": "La base de datos no está vacía: marque «Eliminar las tablas existentes» o use una base vacía", "hostHint": "Si Xuehang se ejecuta en Docker, 127.0.0.1 es el propio contenedor. Indique la IP local del servidor de base de datos; si la base también está en Docker (p. ej. 1Panel), una Xuehang a la misma red Docker y use el nombre del contenedor (consulte la guía de despliegue).", "keepDemoPasswords": "Mantener las contraseñas públicas de demostración (123456 para jw01, t01…; solo lectura demo / demo123456)", "keepDemoHint": "Solo para un sitio de demostración público. Si no, estas cuentas reciben contraseñas aleatorias que un administrador puede restablecer.", "start": "Iniciar instalación",
     "runningTitle": "Instalando", "doneTitle": "Instalación completada", "failedTitle": "Error de instalación",
     "waitingLog": "Esperando los registros…", "goLogin": "Ir al inicio de sesión", "requestFailed": "La solicitud falló. Inténtalo más tarde.",
     "defaults": { "siteName": "Xuehang", "campusName": "Campus principal", "adminName": "Administrador del sistema" }
@@ -178,7 +179,7 @@ export default {
     ],
     "footerText": "© Xuehang · Gestión educativa",
     "portalTitle": "Portal del alumno",
-    "portalLoginSubtitle": "Consulte sus horas, reserve entrevistas, entregue documentos y solicite impresiones"
+    "portalLoginSubtitle": "Inicie sesión con su número de estudiante y contraseña", "portalHeroTitle": "Su horario, calificaciones y solicitudes\nen un solo lugar", "portalHeroPoints": ["Vea su horario y confirme las clases terminadas", "Consulte sus notas y su progreso cuando quiera", "Reserve entrevistas y envíe documentos e impresiones en línea"]
   }
 }
 

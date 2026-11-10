@@ -50,6 +50,7 @@ export default {
     today: 'Today',
     recycleBin: 'Recycle bin',
   },
+  search: { placeholder: "Search pages, settings, students (Ctrl+K)", student: "Student" },
   menu: {
     home: 'Home',
     teacher: 'Teacher Center',
@@ -110,7 +111,7 @@ export default {
     dbRequired: 'Enter the host and database name', testConnection: 'Test connection', dbConnected: 'Database connection succeeded',
     testFirst: 'Test the database connection first', next: 'Next', siteTitle: 'Site and first campus', siteName: 'Site name',
     campusName: 'Campus name', campusCode: 'Campus code', timezone: 'Time zone', requiredFields: 'Complete all required fields',
-    adminTitle: 'Create administrator', emailOptional: 'Email (optional)', demoData: 'Import demo data', preset: 'Industry preset', presetHint: 'Presets exam types, grade templates, profile fields and dropdown options for your kind of institution. You can change or re-import them later under System settings → Grades & profile settings.', start: 'Start installation',
+    adminTitle: 'Create administrator', emailOptional: 'Email (optional)', demoData: 'Import demo data', preset: 'Industry preset', presetHint: 'Presets exam types, grade templates, profile fields and dropdown options for your kind of institution. You can change or re-import them later under System settings → Grades & profile settings.', existingTables: "The database already contains {n} tables (an older version or another system). They must be removed before installing.", resetExisting: "Delete the {n} existing tables in this database (cannot be undone)", resetRequired: "The database is not empty. Tick \"Delete the existing tables\" or use an empty database.", hostHint: "When Xuehang runs in Docker, 127.0.0.1 means the container itself. Use the database server’s LAN IP; if the database also runs in Docker (e.g. 1Panel), join Xuehang to the same Docker network and use the container name — see the deployment guide.", keepDemoPasswords: "Keep the public demo passwords (123456 for jw01, t01 …; read-only demo / demo123456)", keepDemoHint: "Only for a public demo site. Otherwise these accounts get random passwords; an administrator can reset them under Staff accounts.", start: 'Start installation',
     runningTitle: 'Installing', doneTitle: 'Installation complete', failedTitle: 'Installation failed',
     waitingLog: 'Waiting for installation logs…', goLogin: 'Go to sign in', requestFailed: 'Request failed. Please try again later.',
     defaults: { siteName: 'Xuehang', campusName: 'Main Campus', adminName: 'System Administrator' },
@@ -171,6 +172,6 @@ export default {
     ],
     footerText: '© Xuehang · Education Management',
     portalTitle: 'Student portal',
-    portalLoginSubtitle: 'Check lesson hours, book interviews, submit essays and print requests',
+    portalLoginSubtitle: "Sign in with your student ID and password", portalHeroTitle: "Your timetable, grades and requests\nin one place", portalHeroPoints: ["See your timetable and confirm finished lessons", "Check exam results and your progress anytime", "Book consultations, submit essays and print requests online"],
   },
 }

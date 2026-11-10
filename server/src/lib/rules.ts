@@ -31,6 +31,8 @@ export const rulesSchema = z
     printCutoff: HM,
     printReadyTime: HM,
     printGuideText: z.string().trim().max(3000),
+    printCurrency: z.string().trim().min(1, '请选择货币').max(12, '货币文字最多 12 个字'),
+    wageCurrency: z.string().trim().min(1, '请选择货币').max(12, '货币文字最多 12 个字'),
     maxAdmissions: int(1, 20),
     boardStartHour: int(0, 23),
     boardEndHour: int(1, 24),
@@ -43,6 +45,7 @@ export const rulesSchema = z
     loginIpMaxFailures: int(5, 200),
     loginLockMinutes: int(1, 1440),
     sessionDays: int(1, 30),
+    readOnlyCanSchedule: z.boolean(),
   })
   .refine((r) => r.boardEndHour > r.boardStartHour, { message: '看板结束时刻必须晚于开始时刻', path: ['boardEndHour'] })
 

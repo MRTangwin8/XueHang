@@ -13,7 +13,7 @@ export default {
       uploadFiles: "Upload files",
       uploadFilesDirectlyToTheSystemInPdfOr: "Upload files directly to the system in PDF or JPG format only. There is no need to email them.",
       printingFees: "Printing fees",
-      singleSidedBlackAndWhite10PerSheetSingle: "Single-sided black and white: ¥{bw} per sheet; single-sided color: ¥{color} per sheet.",
+      singleSidedBlackAndWhite10PerSheetSingle: "Single-sided black and white: {bw} per sheet; single-sided color: {color} per sheet.",
       collectionTime: "Collection time",
       requestsSubmittedBefore1200CanBeCollectedAfter:
         "Requests submitted before {cutoff} can be collected after {ready} the same day. Requests submitted after " +

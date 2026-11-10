@@ -48,7 +48,11 @@ http.interceptors.response.use(
     const status = err.response?.status
     const msg = err.response?.data?.message || err.message || '请求失败'
     const silent = (err.config as { silent?: boolean } | undefined)?.silent
-    if (status === 401) {
+    // 登录 / 找回密码等认证接口返回 401 时是「账号或密码错误」之类的业务提示，直接显示，不当作登录过期
+    const authCall = /\/auth\/(login|student-login|forgot|reset|change-password)$/.test(err.config?.url ?? '')
+    if (status === 401 && authCall) {
+      if (!silent) ElMessage.error(msg)
+    } else if (status === 401) {
       setToken(null)
       const portal = location.pathname.startsWith('/portal')
       const target = portal ? '/portal/login' : '/login'

@@ -49,6 +49,7 @@ export default {
     "recycleBin": "Corbeille",
     "other": "Autre"
   },
+  "search": { "placeholder": "Rechercher pages, paramètres, élèves (Ctrl+K)", "student": "Élève" },
   "menu": {
     "home": "Centre d’information",
     "teacher": "Espace enseignant",
@@ -116,7 +117,7 @@ export default {
       "testFirst": "Testez d’abord la connexion",
     "next": "Suivant", "siteTitle": "Site et premier campus", "siteName": "Nom du site", "campusName": "Nom du campus", "campusCode": "Code du campus",
     "timezone": "Fuseau horaire", "requiredFields": "Renseignez les champs obligatoires", "adminTitle": "Créer l’administrateur",
-    "emailOptional": "E-mail (facultatif)", "demoData": "Importer les données de démonstration", "preset": "Modèle sectoriel", "presetHint": "Préconfigure les types d'examens, modèles de notes, champs du dossier et listes de choix selon votre type d'établissement. Modifiable ou réimportable ensuite dans Paramètres système → Notes et dossier.", "start": "Lancer l’installation",
+    "emailOptional": "E-mail (facultatif)", "demoData": "Importer les données de démonstration", "preset": "Modèle sectoriel", "presetHint": "Préconfigure les types d'examens, modèles de notes, champs du dossier et listes de choix selon votre type d'établissement. Modifiable ou réimportable ensuite dans Paramètres système → Notes et dossier.", "existingTables": "La base contient déjà {n} tables (ancienne version ou autre système). Elles doivent être supprimées avant l’installation.", "resetExisting": "Supprimer les {n} tables existantes de cette base (irréversible)", "resetRequired": "La base n’est pas vide : cochez « Supprimer les tables existantes » ou utilisez une base vide", "hostHint": "Quand Xuehang tourne dans Docker, 127.0.0.1 désigne le conteneur lui-même. Indiquez l’IP locale du serveur de base de données ; si la base tourne aussi dans Docker (ex. 1Panel), rattachez Xuehang au même réseau Docker et utilisez le nom du conteneur (voir le guide de déploiement).", "keepDemoPasswords": "Conserver les mots de passe publics de démonstration (123456 pour jw01, t01… ; lecture seule demo / demo123456)", "keepDemoHint": "Uniquement pour un site de démonstration public. Sinon, ces comptes reçoivent des mots de passe aléatoires, réinitialisables par un administrateur.", "start": "Lancer l’installation",
     "runningTitle": "Installation en cours", "doneTitle": "Installation terminée", "failedTitle": "Échec de l’installation",
     "waitingLog": "En attente des journaux…", "goLogin": "Accéder à la connexion", "requestFailed": "La requête a échoué. Réessayez plus tard.",
     "defaults": { "siteName": "Xuehang", "campusName": "Campus principal", "adminName": "Administrateur système" }
@@ -177,7 +178,7 @@ export default {
     ],
     "footerText": "© Xuehang · Gestion pédagogique",
     "portalTitle": "Espace élève",
-    "portalLoginSubtitle": "Consultez vos heures, réservez un entretien, déposez vos dossiers et demandes d’impression"
+    "portalLoginSubtitle": "Connectez-vous avec votre numéro d’élève et votre mot de passe", "portalHeroTitle": "Emploi du temps, notes et demandes\nau même endroit", "portalHeroPoints": ["Consultez votre emploi du temps et confirmez les cours terminés", "Suivez vos résultats et votre progression", "Réservez un entretien, déposez dossiers et demandes d’impression en ligne"]
   }
 }
 

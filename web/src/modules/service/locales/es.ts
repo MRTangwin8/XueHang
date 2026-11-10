@@ -13,7 +13,7 @@ export default {
       uploadFiles: "Carga de archivos",
       uploadFilesDirectlyToTheSystemInPdfOr: "Cargue los archivos directamente en el sistema, solo en formato PDF o JPG. No es necesario enviarlos por correo.",
       printingFees: "Tarifas de impresión",
-      singleSidedBlackAndWhite10PerSheetSingle: "Impresión a una cara: {bw} ¥ por hoja en blanco y negro; {color} ¥ en color.",
+      singleSidedBlackAndWhite10PerSheetSingle: "Impresión a una cara: {bw} por hoja en blanco y negro; {color} en color.",
       collectionTime: "Hora de recogida",
       requestsSubmittedBefore1200CanBeCollectedAfter:
         "Las solicitudes enviadas antes de las {cutoff} se pueden recoger después de las {ready} del mismo día; " +

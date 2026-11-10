@@ -17,6 +17,8 @@ interface Payload {
   campus: { name: string; code: string; timezone: string }
   admin: { staffNo: string; name: string; password: string; email?: string }
   demoData?: boolean
+  /** 演示账号保留公开的演示密码（只用于公开演示站） */
+  keepDemoPasswords?: boolean
   /** 行业模板 id（见 src/lib/presets.ts），默认日本升学私塾 */
   preset?: string
 }
@@ -43,12 +45,19 @@ if (p.demoData) {
     where: { id: demoAdmin.id },
     data: { staffNo: p.admin.staffNo, name: p.admin.name, email: p.admin.email || null, passwordHash },
   })
-  // 演示账号的密码是公开的（123456 等）：全部换成随机密码并停用，需要时由管理员解锁并重置密码
-  const scrambled = await hashPassword(randomBytes(24).toString('base64url'))
-  await prisma.user.updateMany({ where: { id: { not: demoAdmin.id } }, data: { passwordHash: scrambled, status: 'LOCKED' } })
-  await prisma.student.updateMany({ data: { portalPasswordHash: scrambled, portalEnabled: false } })
-  console.log('已写入演示数据。演示用的教职工账号（jw01、t01、demo 等）已锁定、学生端账号已停用：')
-  console.log('需要使用时，请在「工号账户管理」中解锁并重置密码；学生在学员详情中「重置学生端密码」。')
+  if (p.keepDemoPasswords) {
+    // 公开演示站：允许只读账号 demo 试用排课（可在「业务规则 → 演示」关闭）
+    const value = JSON.stringify({ readOnlyCanSchedule: true })
+    await prisma.setting.upsert({ where: { key: 'rules' }, create: { key: 'rules', value }, update: { value } })
+    console.log('已写入演示数据，演示账号保留公开密码（jw01、t01 等 123456，只读账号 demo / demo123456）。只用于公开演示站！')
+  } else {
+    // 演示账号的密码是公开的（123456 等）：全部换成随机密码。账号保持启用，老师仍会出现在排课、班课等下拉里；
+    // 需要登录时由管理员在「工号账户管理」重置密码；学生在学员详情中「重置学生端密码」
+    const scrambled = await hashPassword(randomBytes(24).toString('base64url'))
+    await prisma.user.updateMany({ where: { id: { not: demoAdmin.id } }, data: { passwordHash: scrambled } })
+    await prisma.student.updateMany({ data: { portalPasswordHash: scrambled } })
+    console.log('已写入演示数据。演示账号（jw01、t01、demo 等）的密码已改为随机值，需要登录时请在「工号账户管理」重置密码。')
+  }
 } else {
   await prisma.$transaction(async (tx) => {
     const roles = await createDefaults(tx, preset.subjects)

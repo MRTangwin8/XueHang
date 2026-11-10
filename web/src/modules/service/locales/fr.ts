@@ -19,7 +19,7 @@ export default {
         "Déposez directement vos fichiers dans le système, au format PDF ou JPG uniquement. Aucun envoi par " +
         "e-mail n’est nécessaire.",
       printingFees: "Tarifs d’impression",
-      singleSidedBlackAndWhite10PerSheetSingle: "Impression recto : {bw} ¥ par feuille en noir et blanc ; {color} ¥ en couleur.",
+      singleSidedBlackAndWhite10PerSheetSingle: "Impression recto : {bw} par feuille en noir et blanc ; {color} en couleur.",
       collectionTime: "Horaire de retrait",
       requestsSubmittedBefore1200CanBeCollectedAfter:
         "Les demandes envoyées avant {cutoff} peuvent être retirées après {ready} le jour même. Celles envoyées " +

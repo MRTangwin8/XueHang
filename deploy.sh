@@ -8,6 +8,8 @@
 #   DOMAIN=crm.example.com ./deploy.sh
 #                               同时启动自动申请 HTTPS 证书的反向代理（域名需已解析到本机，放行 80/443）
 #   WITH_MYSQL=1 ./deploy.sh    镜像内预装 MySQL / MariaDB 驱动（不预装也可以，选择 MySQL 时会联网按需安装）
+#   DB_NETWORK=1panel-network ./deploy.sh
+#                               数据库也在 Docker 里（如 1Panel）时，把学航加入它的 Docker 网络，安装向导里就能直接填数据库容器名
 #
 #   ./deploy.sh token           查看安装码
 #   ./deploy.sh logs            查看运行日志
@@ -37,6 +39,7 @@ PORT="${PORT:-$(get PORT)}"; PORT="${PORT:-8080}"
 DOMAIN="${DOMAIN-$(get DOMAIN)}"
 WITH_MYSQL="${WITH_MYSQL:-$(get WITH_MYSQL)}"; WITH_MYSQL="${WITH_MYSQL:-0}"
 TZ_VALUE="${TZ:-$(get TZ)}"; TZ_VALUE="${TZ_VALUE:-Asia/Shanghai}"
+DB_NETWORK="${DB_NETWORK-$(get DB_NETWORK)}"
 DIRECT="${DIRECT:-$(get DIRECT)}"; DIRECT="${DIRECT:-0}"
 # 三种对外方式：DOMAIN=自带 Caddy 自动 HTTPS；DIRECT=1 直接开放端口；默认 = 只监听本机，交给你自己的反向代理
 if [ -n "$DOMAIN" ]; then TRUST_PROXY=1; BIND=127.0.0.1; DIRECT=0; PROFILE=(--profile https)
@@ -51,6 +54,7 @@ DOMAIN=$DOMAIN
 DIRECT=$DIRECT
 TRUST_PROXY=$TRUST_PROXY
 WITH_MYSQL=$WITH_MYSQL
+DB_NETWORK=$DB_NETWORK
 TZ=$TZ_VALUE
 EOF
 }
@@ -70,6 +74,23 @@ show_token() {
 case "${1:-up}" in
   up|install|start)
     save_env
+    # 加入外部 Docker 网络（如 1Panel 的 1panel-network）：生成 docker-compose.override.yml，compose 会自动合并
+    if [ -n "$DB_NETWORK" ]; then
+      docker network inspect "$DB_NETWORK" >/dev/null 2>&1 || die "找不到 Docker 网络 $DB_NETWORK（用 docker network ls 查看实际名称）"
+      cat > docker-compose.override.yml <<EOF
+# 由 deploy.sh 生成：把学航加入外部网络 $DB_NETWORK，安装向导中可直接填写数据库容器名
+services:
+  app:
+    networks: [default, dbnet]
+networks:
+  dbnet:
+    external: true
+    name: $DB_NETWORK
+EOF
+      say "已加入 Docker 网络 $DB_NETWORK：安装向导的数据库主机可以直接填数据库容器名"
+    else
+      rm -f docker-compose.override.yml
+    fi
     mkdir -p data
     say "构建镜像并启动（首次需要几分钟）…"
     "${DC[@]}" ${PROFILE[@]+"${PROFILE[@]}"} up -d --build --remove-orphans

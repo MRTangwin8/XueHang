@@ -5,7 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import FileUpload, { type UploadedFile } from '@/components/FileUpload.vue'
 import DictTag from '@/components/DictTag.vue'
 import { fmtDateTime } from '@/utils/time'
-import { money } from '@/utils/format'
+import { money, printMoney } from '@/utils/format'
 import { portalApi, printGuide, type PrintQuote, type PrintReq } from '../api'
 import PortalSurface from './components/PortalSurface.vue'
 
@@ -97,7 +97,7 @@ async function submit() {
   saving.value = true
   try {
     const result = await portalApi.submitPrint(payload())
-    ElMessage.success(tr('service.text.requestSubmittedFeeCollectAfter', { v0: money(result.fee), v1: fmtDateTime(result.readyAt) }))
+    ElMessage.success(tr('service.text.requestSubmittedFeeCollectAfter', { v0: printMoney(result.fee), v1: fmtDateTime(result.readyAt) }))
     Object.assign(form, {
       fileUrl: '',
       fileName: '',
@@ -181,7 +181,7 @@ onMounted(load)
             <template v-if="quote">
               <div class="row">
                 <span>{{ tr('service.text.estimatedFee') }}</span>
-                <strong class="fee">{{ money(quote.fee) }}</strong>
+                <strong class="fee">{{ printMoney(quote.fee) }}</strong>
               </div>
               <p>{{ tr('service.text.pagesCopiesPage', { pages: quote.pages, copies: form.copies, price: money(quote.unitPrice) }) }}</p>
               <p class="meta">
@@ -221,7 +221,7 @@ onMounted(load)
               {{ tr('service.text.pagesCopies2', { pages: p.pages, copies: p.copies }) }}
             </p>
             <p class="accent">{{ tr('service.text.fee') }}
-              {{ money(p.fee) }}</p>
+              {{ printMoney(p.fee) }}</p>
             <p>{{ tr('service.text.collectionAfter', { time: fmtDateTime(p.readyAt) }) }}</p>
             <p class="meta">{{ tr('service.text.submittedAt') }}
               {{ fmtDateTime(p.submittedAt) }}</p>

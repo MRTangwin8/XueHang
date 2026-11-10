@@ -53,7 +53,9 @@ export const LONG_TEXT_FIELDS: Record<string, string[]> = {
   SharedFile: ['description'],
   WageClaim: ['content', 'reviewNote'],
   Student: ['address', 'researchTheme', 'note'],
-  StudentExam: ['note'],
+  StudentExam: ['note', 'scores'],
+  Assessment: ['subjects', 'note'],
+  AssessmentScore: ['scores', 'comment'],
   StudentAdmission: ['note'],
 }
 

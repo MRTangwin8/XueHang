@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { currencyName, money } from '@/utils/format'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { useDict } from '@/stores/dict'
@@ -9,7 +11,9 @@ const { t } = useI18n()
 const dict = useDict()
 const loading = ref(false)
 const saving = ref(false)
-const active = ref('vip')
+const route = useRoute()
+const active = ref(String(route.query.tab || 'vip'))
+watch(() => route.query.tab, (v) => v && (active.value = String(v)))
 const defaults = ref<ExtendedRules | null>(null)
 const form = reactive<ExtendedRules>({} as ExtendedRules)
 const dicts = ref<(EditableDict & { savedValues: string[]; newValue: string })[]>([])
@@ -19,12 +23,14 @@ const groups = [
   { name: 'vip', fields: ['vipAutoConfirmEnabled', 'vipAutoConfirmHours', 'vipStudentConfirm'] },
   { name: 'interview', fields: ['interviewCancelLockHours', 'interviewConfirmText'] },
   { name: 'document', fields: ['documentEditHours', 'documentMaxEdits', 'documentReturnDays', 'documentRulesText'] },
-  { name: 'print', fields: ['printPriceBW', 'printPriceColor', 'printCutoff', 'printReadyTime', 'printGuideText'] },
+  { name: 'print', fields: ['printCurrency', 'printPriceBW', 'printPriceColor', 'printCutoff', 'printReadyTime', 'printGuideText'] },
+  { name: 'money', fields: ['wageCurrency'] },
   { name: 'student', fields: ['maxAdmissions'] },
   { name: 'board', fields: ['boardStartHour', 'boardEndHour'] },
   { name: 'customer', fields: ['customerRecycleEnabled', 'customerRecycleDays'] },
   { name: 'numbering', fields: ['studentNoPrefix', 'orderNoPrefix', 'uploadMaxMB'] },
   { name: 'login', fields: ['loginMaxFailures', 'loginIpMaxFailures', 'loginLockMinutes', 'sessionDays'] },
+  { name: 'demo', fields: ['readOnlyCanSchedule'] },
 ] as const
 
 const specs: Record<string, { min?: number; max?: number; kind?: string }> = {
@@ -38,9 +44,11 @@ const specs: Record<string, { min?: number; max?: number; kind?: string }> = {
   orderNoPrefix: { kind: 'prefix' }, uploadMaxMB: { min: 1, max: 100 },
   loginMaxFailures: { min: 3, max: 20 }, loginIpMaxFailures: { min: 5, max: 200 }, loginLockMinutes: { min: 1, max: 1440 },
   sessionDays: { min: 1, max: 30 },
+  printCurrency: { kind: 'currency' }, wageCurrency: { kind: 'currency' }, readOnlyCanSchedule: { kind: 'switch' },
 }
 
 const defaultText = (key: string) => {
+  if (specs[key]?.kind === 'currency') return currencyName(String(defaults.value?.[key as keyof ExtendedRules] ?? 'JPY'))
   const value = defaults.value?.[key as keyof ExtendedRules]
   if (Array.isArray(value)) return value.map((m) => t('system.rules.month', { n: m })).join(', ')
   if (typeof value === 'boolean') return t(value ? 'common.yes' : 'common.no')
@@ -58,7 +66,7 @@ const customDefault = (key: string) => {
 
 const ruleParams = computed(() => ({
   hours: form.documentEditHours, days: form.documentReturnDays, times: form.documentMaxEdits,
-  bw: form.printPriceBW, color: form.printPriceColor, cutoff: form.printCutoff, ready: form.printReadyTime,
+  bw: money(form.printPriceBW, form.printCurrency), color: money(form.printPriceColor, form.printCurrency), cutoff: form.printCutoff, ready: form.printReadyTime,
   cancelHours: form.interviewCancelLockHours,
 }))
 
@@ -158,6 +166,11 @@ onMounted(load)
               <el-input-number v-else-if="!specs[key].kind" v-model="(form as any)[key]" :min="specs[key].min" :max="specs[key].max"
                 :disabled="(key === 'vipAutoConfirmHours' && !form.vipAutoConfirmEnabled)
                   || (key === 'customerRecycleDays' && !form.customerRecycleEnabled)" />
+              <el-select v-else-if="specs[key].kind === 'currency'" v-model="(form as any)[key]" filterable allow-create default-first-option
+                :placeholder="t('system.rules.currencyPh')" style="width: 220px">
+                <el-option value="JPY" :label="currencyName('JPY')" />
+                <el-option value="CNY" :label="currencyName('CNY')" />
+              </el-select>
               <el-time-select v-else-if="specs[key].kind === 'time'" v-model="(form as any)[key]" start="00:00" step="00:15" end="23:45" />
               <el-checkbox-group v-else-if="specs[key].kind === 'months'" v-model="(form as any)[key]" class="month-grid">
                 <el-checkbox-button v-for="month in months" :key="month" :value="month">{{ t('system.rules.month', { n: month }) }}</el-checkbox-button>
@@ -174,6 +187,8 @@ onMounted(load)
               </div>
               <div class="default-value">{{ t('system.rules.defaultValue', { value: defaultText(key) }) }}</div>
               <div v-if="group.name === 'customer' && key === 'customerRecycleDays'" class="field-hint">{{ t('system.rules.customerRecycleHint') }}</div>
+              <div v-if="specs[key].kind === 'currency'" class="field-hint">{{ t('system.rules.currencyHint', { sample: money(1000, (form as any)[key]) }) }}</div>
+              <div v-if="key === 'readOnlyCanSchedule'" class="field-hint">{{ t('system.rules.readOnlyScheduleHint') }}</div>
               <div v-if="group.name === 'numbering' && key === 'orderNoPrefix'" class="field-hint">{{ t('system.rules.numberingHint') }}</div>
             </div>
           </div>

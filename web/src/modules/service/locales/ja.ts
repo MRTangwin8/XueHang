@@ -11,7 +11,7 @@ export default {
       uploadFiles: "資料のアップロード",
       uploadFilesDirectlyToTheSystemInPdfOr: "資料はシステムに直接アップロードしてください。PDF・JPG形式のみ対応しています。メールでの送付は不要です。",
       printingFees: "印刷料金",
-      singleSidedBlackAndWhite10PerSheetSingle: "白黒片面印刷：1枚{bw}円。カラー片面印刷：1枚{color}円。",
+      singleSidedBlackAndWhite10PerSheetSingle: "白黒片面印刷：1枚{bw}。カラー片面印刷：1枚{color}。",
       collectionTime: "受取時間",
       requestsSubmittedBefore1200CanBeCollectedAfter: "当日{cutoff}より前の申請は、当日{ready}以降に受け取れます。当日{cutoff}より後の申請は、翌日{ready}以降に受け取れます。",
       interview: "面接",

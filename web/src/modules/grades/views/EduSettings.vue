@@ -3,8 +3,9 @@
  * 系统设置 → 成绩与档案设置：
  *   行业模板（一键导入）/ 考试类型（学员档案成绩）/ 成绩模板（成绩管理新建考试）/ 档案字段（显示、必填、名称）
  */
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useDict } from '@/stores/dict'
 import { useDialogWidth } from '@/utils/format'
@@ -14,7 +15,9 @@ import { gradesApi, type PresetSummary } from '../api'
 
 const { t } = useI18n()
 const dict = useDict()
-const tab = ref('presets')
+const route = useRoute()
+const tab = ref(String(route.query.tab || 'presets'))
+watch(() => route.query.tab, (v) => v && (tab.value = String(v)))
 const conf = ref<EduConfig | null>(null)
 const defaults = ref<EduConfig | null>(null)
 const inUse = ref<string[]>([])

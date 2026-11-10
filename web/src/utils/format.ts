@@ -1,12 +1,30 @@
+import { useDict } from '@/stores/dict'
 import { onBeforeUnmount, onMounted, ref, computed } from 'vue'
 import { getToken } from '@/api/http'
 
 /** 金额显示：money(580000, 'JPY') → ¥580,000 / money(100,'CNY') → ￥100 */
+/**
+ * 金额显示：JPY → ¥1,000；CNY → ￥1,000；其他（后台自定义的货币文字，如「港币」）→ 1,000 港币
+ */
 export function money(v: number | null | undefined, currency = 'JPY'): string {
   if (v == null) return ''
-  const sym = currency === 'CNY' ? '￥' : '¥'
-  return `${sym}${Math.round(v).toLocaleString('en-US')}`
+  const n = Math.round(v).toLocaleString('en-US')
+  if (currency === 'JPY') return `¥${n}`
+  if (currency === 'CNY') return `￥${n}`
+  return `${n} ${currency}`
 }
+
+/** 货币的名称：JPY / CNY 按界面语言翻译，自定义文字原样返回 */
+export function currencyName(currency: string | null | undefined): string {
+  if (!currency) return ''
+  return useDict().label('currencies', currency)
+}
+
+/** 打印费金额（货币见「业务规则 → 货币 / 单位」） */
+export const printMoney = (v: number | null | undefined) => money(v, useDict().rules?.printCurrency || 'JPY')
+/** 工资金额（时薪、交通费、工资申报） */
+export const wageMoney = (v: number | null | undefined) => money(v, useDict().rules?.wageCurrency || 'JPY')
+export const wageCurrencyName = () => currencyName(useDict().rules?.wageCurrency || 'JPY')
 
 /** 课时显示：2 → 2h，1.5 → 1.5h */
 export const hours = (v: number | null | undefined) => (v == null ? '' : `${+v.toFixed(2)}h`)

@@ -11,7 +11,7 @@ export default {
       uploadFiles: "资料上传",
       uploadFilesDirectlyToTheSystemInPdfOr: "资料可直接上传至系统，仅限PDF、JPG格式文档，无需发送至邮箱。",
       printingFees: "打印费用",
-      singleSidedBlackAndWhite10PerSheetSingle: "黑白单面打印：{bw}日元/张；彩色单面打印：{color}日元/张。",
+      singleSidedBlackAndWhite10PerSheetSingle: "黑白单面打印：{bw}/张；彩色单面打印：{color}/张。",
       collectionTime: "领取时间",
       requestsSubmittedBefore1200CanBeCollectedAfter: "当日{cutoff}之前提交的申请，可于当天下午{ready}后领取；当日{cutoff}之后提交的申请，请于次日下午{ready}后领取。",
       interview: "面试",

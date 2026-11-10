@@ -11,7 +11,7 @@ import DictSelect from '@/components/DictSelect.vue'
 import DictTag from '@/components/DictTag.vue'
 import { useAuth } from '@/stores/auth'
 import { useDict } from '@/stores/dict'
-import { money, useDialogWidth, useIsMobile } from '@/utils/format'
+import { money, useDialogWidth, useIsMobile, wageMoney, wageCurrencyName } from '@/utils/format'
 import { fmtDateTime } from '@/utils/time'
 
 const { t } = useI18n()
@@ -440,7 +440,7 @@ const isSelf = (u: StaffUser) => u.id === auth.me?.id
         <el-row :gutter="12">
           <el-col :xs="24" :sm="12">
             <el-form-item :label="t('system.fields.hourlyWage')">
-              <el-input-number v-model="form.hourlyWage" :min="0" :step="100" :controls="false" :placeholder="t('system.fields.yen')" style="width: 100%" />
+              <el-input-number v-model="form.hourlyWage" :min="0" :step="100" :controls="false" :placeholder="wageCurrencyName()" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12">
@@ -450,7 +450,7 @@ const isSelf = (u: StaffUser) => u.id === auth.me?.id
                 :min="0"
                 :step="10"
                 :controls="false"
-                :placeholder="t('system.fields.oneWayYen')"
+                :placeholder="t('system.fields.oneWayUnit', { unit: wageCurrencyName() })"
                 style="width: 100%"
               />
             </el-form-item>
@@ -476,7 +476,7 @@ const isSelf = (u: StaffUser) => u.id === auth.me?.id
           }}{{
             editing.lastLoginIp ? `（${editing.lastLoginIp}）` : ''
           }}
-          <template v-if="editing.hourlyWage != null">{{ t('system.user.currentWage', { amount: money(editing.hourlyWage) }) }}</template>
+          <template v-if="editing.hourlyWage != null">{{ t('system.user.currentWage', { amount: wageMoney(editing.hourlyWage) }) }}</template>
         </div>
       </el-form>
       <template #footer>

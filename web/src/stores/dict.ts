@@ -38,6 +38,11 @@ export interface Rules {
   printReadyTime: string
   /** 自定义打印说明，空 = 默认说明 */
   printGuideText: string
+  /** 打印费 / 工资的货币：JPY / CNY / 自定义文字 */
+  printCurrency: string
+  wageCurrency: string
+  /** 只读（演示）账号可以排课 */
+  readOnlyCanSchedule: boolean
   maxAdmissions: number
   boardStartHour: number
   boardEndHour: number

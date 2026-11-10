@@ -174,6 +174,8 @@ function assertWritable(req: FastifyRequest, p: Principal) {
   if (p.type !== 'staff' || !p.readOnly || SAFE_METHODS.has(req.method)) return
   const url = req.url.split('?')[0]
   if (READ_ONLY_ALLOW.some((r) => r.test(url))) return
+  // 演示站可开启：只读账号允许排课 / 改课 / 取消课次（业务规则 → 演示）
+  if (RULES.readOnlyCanSchedule && /^\/api\/schedule\/sessions(\/|$)/.test(url)) return
   throw new AppError(403, '当前账号为只读（演示）账号，不能修改数据', 'READ_ONLY')
 }
 

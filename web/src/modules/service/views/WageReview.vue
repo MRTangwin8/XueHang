@@ -6,7 +6,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import UserSelect from '@/components/UserSelect.vue'
 import CampusSelect from '@/components/CampusSelect.vue'
 import DictTag from '@/components/DictTag.vue'
-import { money, useIsMobile, downloadFile } from '@/utils/format'
+import { wageMoney, useIsMobile, downloadFile } from '@/utils/format'
 import { tz } from '@/utils/time'
 import { wageApi, wageScopeApi, type WageClaim, type WageSummaryRow } from '../api'
 
@@ -137,7 +137,7 @@ onMounted(async () => {
         <el-table-column v-if="!mobile" :label="tr('service.text.category')" prop="category" />
         <el-table-column :label="tr('service.text.hoursWorked')" prop="hours" />
         <el-table-column :label="tr('service.text.total2')">
-          <template #default="{ row }: any">{{money(row.amount+row.transportFee)}}</template>
+          <template #default="{ row }: any">{{wageMoney(row.amount+row.transportFee)}}</template>
         </el-table-column>
         <el-table-column :label="tr('common.status')">
           <template #default="{ row }: any">
@@ -149,7 +149,7 @@ onMounted(async () => {
         </template>
         <template #append>
           <div class="table-total">{{ tr('service.text.total3') }}
-            {{money(sum.total||sum.amount)}}</div>
+            {{wageMoney(sum.total||sum.amount)}}</div>
         </template>
       </el-table>
       <el-table v-else :data="summary">
@@ -157,7 +157,7 @@ onMounted(async () => {
         <el-table-column :label="tr('service.text.claimCount')" prop="count" />
         <el-table-column :label="tr('service.text.hoursWorked')" prop="hours" />
         <el-table-column :label="tr('service.text.total2')">
-          <template #default="{ row }: any">{{money(row.total)}}</template>
+          <template #default="{ row }: any">{{wageMoney(row.total)}}</template>
         </el-table-column>
       </el-table>
     </div>

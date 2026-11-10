@@ -92,7 +92,7 @@ export const DEFAULT_RULES = {
   /** 自定义规则说明（空 = 使用默认说明） */
   documentRulesText: '',
   // ---- 资料打印 ----
-  /** 打印单价（日元/张） */
+  /** 打印单价（每张，单位见 printCurrency） */
   printPriceBW: 10,
   printPriceColor: 50,
   /** 截止时刻 / 可领取时刻（校区时区，HH:mm） */
@@ -100,6 +100,11 @@ export const DEFAULT_RULES = {
   printReadyTime: '17:00',
   /** 自定义打印使用说明（空 = 使用默认说明） */
   printGuideText: '',
+  // ---- 货币 / 单位 ----
+  /** 打印费的货币：JPY / CNY，或自定义文字（如「港币」「元」） */
+  printCurrency: 'JPY',
+  /** 工资（时薪、交通费、工资申报）的货币：JPY / CNY，或自定义文字 */
+  wageCurrency: 'JPY',
   // ---- 学员档案 ----
   /** 合格信息最多条数（考试类型、回数、考试月份见「成绩与档案设置」） */
   maxAdmissions: 5,
@@ -124,6 +129,9 @@ export const DEFAULT_RULES = {
   loginIpMaxFailures: 30,
   loginLockMinutes: 15,
   sessionDays: 3,
+  // ---- 演示 ----
+  /** 只读（演示）账号可以排课、改课、取消课次（公开演示站让访客试用排课；其他数据仍然只读） */
+  readOnlyCanSchedule: false,
 }
 export type Rules = typeof DEFAULT_RULES
 

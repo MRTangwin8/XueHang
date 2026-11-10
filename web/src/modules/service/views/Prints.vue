@@ -5,7 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import DictTag from '@/components/DictTag.vue'
 import { fmtDateTime } from '@/utils/time'
-import { money, useIsMobile } from '@/utils/format'
+import { money, printMoney, useIsMobile } from '@/utils/format'
 import { printApi, type PrintReq } from '../api'
 
 const { t: tr } = useI18n()
@@ -77,7 +77,7 @@ onMounted(load)
       <div class="stat-grid">
         <div class="stat">
           <div class="stat-label">{{ tr('service.text.totalAmount') }}</div>
-          <div class="stat-value">{{money(sum)}}</div>
+          <div class="stat-value">{{printMoney(sum)}}</div>
         </div>
       </div>
       <el-table v-loading="loading" :data="items">
@@ -94,7 +94,7 @@ onMounted(load)
             {{row.copies}}</template>
         </el-table-column>
         <el-table-column :label="tr('service.text.fee2')" width="100">
-          <template #default="{ row }: any">{{money(row.fee)}}</template>
+          <template #default="{ row }: any">{{printMoney(row.fee)}}</template>
         </el-table-column>
         <el-table-column v-if="!mobile" :label="tr('service.text.submittedAt2')">
           <template #default="{ row }: any">{{fmtDateTime(row.submittedAt)}}</template>

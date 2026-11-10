@@ -31,7 +31,7 @@ async function submit() {
 </script>
 
 <template>
-  <AuthShell :title="t('forgot.title')" :subtitle="site.text(type === 'student' ? 'portalLoginSubtitle' : 'loginSubtitle')">
+  <AuthShell :portal="type === 'student'" :title="t('forgot.title')" :subtitle="site.text(type === 'student' ? 'portalLoginSubtitle' : 'loginSubtitle')">
     <el-result v-if="sent" icon="success" :title="t('forgot.sent')">
       <template #extra>
         <router-link :to="type === 'student' ? '/portal/login' : '/login'">{{ t('forgot.backToLogin') }}</router-link>

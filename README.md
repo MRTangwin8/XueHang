@@ -53,6 +53,14 @@
 |---|---|
 | ![我的课表](docs/screenshots/portal-timetable.png) | ![学生端](docs/screenshots/portal-home.png) |
 
+| 课程表（班课 + VIP 同一日历） | 后台搜索（Ctrl+K） |
+|---|---|
+| ![课程表](docs/screenshots/timetable.png) | ![搜索](docs/screenshots/global-search.png) |
+
+| 业务规则：打印费 / 工资货币可选日元、人民币或自定义 | 可管理校区 |
+|---|---|
+| ![货币设置](docs/screenshots/rules-currency.png) | ![可管理校区](docs/screenshots/user-managed-campuses.png) |
+
 | 多语言（英语） | 多语言（日语） |
 |---|---|
 | ![English](docs/screenshots/en-grades-stats.png) | ![日本語](docs/screenshots/ja-settings-presets.png) |

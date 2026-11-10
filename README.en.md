@@ -42,6 +42,14 @@ Differences between industries are handled by **industry presets**. Exam types, 
 |---|---|
 | ![CRM](docs/screenshots/crm-customers.png) | ![Timetable](docs/screenshots/portal-timetable.png) |
 
+| Timetable (group classes + one-to-one) | Admin search (Ctrl+K) |
+|---|---|
+| ![Timetable](docs/screenshots/timetable.png) | ![Search](docs/screenshots/global-search.png) |
+
+| Print / wage currency: JPY, CNY or custom text | Managed campuses |
+|---|---|
+| ![Currency](docs/screenshots/rules-currency.png) | ![Managed campuses](docs/screenshots/user-managed-campuses.png) |
+
 <p align="center">
   <img src="docs/screenshots/mobile-portal-timetable.png" alt="Mobile: my timetable" width="260" />
   &nbsp;&nbsp;

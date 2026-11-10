@@ -19,7 +19,7 @@ export default {
         "Laden Sie die Dateien direkt im System hoch. Zulässig sind nur PDF und JPG; ein Versand per E-Mail " +
         "ist nicht erforderlich.",
       printingFees: "Druckkosten",
-      singleSidedBlackAndWhite10PerSheetSingle: "Einseitiger Druck: Schwarzweiß {bw} ¥ pro Blatt, Farbe {color} ¥ pro Blatt.",
+      singleSidedBlackAndWhite10PerSheetSingle: "Einseitiger Druck: Schwarzweiß {bw} pro Blatt, Farbe {color} pro Blatt.",
       collectionTime: "Abholzeit",
       requestsSubmittedBefore1200CanBeCollectedAfter:
         "Anträge vor {cutoff} Uhr können am selben Tag nach {ready} Uhr abgeholt werden. Anträge nach {cutoff} Uhr " +

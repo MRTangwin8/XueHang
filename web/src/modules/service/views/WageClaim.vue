@@ -6,7 +6,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import DictSelect from '@/components/DictSelect.vue'
 import DictTag from '@/components/DictTag.vue'
 import { fmtDate, fmtTime, toApi, tz } from '@/utils/time'
-import { hours, money, useDialogWidth, useIsMobile } from '@/utils/format'
+import { hours, wageMoney, useDialogWidth, useIsMobile } from '@/utils/format'
 import { wageApi, type WageClaim } from '../api'
 
 const { t: tr } = useI18n()
@@ -131,7 +131,7 @@ onMounted(load)
       <div class="stat-grid">
         <div class="stat">
           <div class="stat-label">{{ tr('service.text.claimsTotal') }}</div>
-          <div class="stat-value">{{ money(summary.total||summary.amount) }}</div>
+          <div class="stat-value">{{ wageMoney(summary.total||summary.amount) }}</div>
         </div>
         <div class="stat">
           <div class="stat-label">{{ tr('service.text.hoursWorked') }}</div>
@@ -139,7 +139,7 @@ onMounted(load)
         </div>
         <div class="stat">
           <div class="stat-label">{{ tr('service.text.travelExpenses') }}</div>
-          <div class="stat-value">{{ money(summary.transport) }}</div>
+          <div class="stat-value">{{ wageMoney(summary.transport) }}</div>
         </div>
       </div>
       <el-table v-loading="loading" :data="items">
@@ -155,7 +155,7 @@ onMounted(load)
           <template #default="{ row }: any">{{hours(row.hours)}}</template>
         </el-table-column>
         <el-table-column v-if="!mobile" :label="tr('service.text.amount')" width="110">
-          <template #default="{ row }: any">{{money(row.amount+row.transportFee)}}</template>
+          <template #default="{ row }: any">{{wageMoney(row.amount+row.transportFee)}}</template>
         </el-table-column>
         <el-table-column :label="tr('common.status')" width="100">
           <template #default="{ row }: any">

@@ -49,6 +49,7 @@ export default {
     "recycleBin": "Lixeira",
     "other": "Outros"
   },
+  "search": { "placeholder": "Buscar páginas, configurações, estudantes (Ctrl+K)", "student": "Estudante" },
   "menu": {
     "home": "Central de informações",
     "teacher": "Área do professor",
@@ -110,7 +111,7 @@ export default {
     "dbRequired": "Informe o host e o banco", "testConnection": "Testar conexão", "dbConnected": "Conexão realizada", "testFirst": "Teste a conexão primeiro",
     "next": "Próximo", "siteTitle": "Site e primeiro campus", "siteName": "Nome do site", "campusName": "Nome do campus", "campusCode": "Código do campus",
     "timezone": "Fuso horário", "requiredFields": "Preencha os campos obrigatórios", "adminTitle": "Criar administrador",
-    "emailOptional": "E-mail (opcional)", "demoData": "Importar dados de demonstração", "preset": "Modelo do setor", "presetHint": "Pré-configura tipos de exame, modelos de notas, campos da ficha e opções de seleção para o seu tipo de instituição. Pode alterar ou reimportar depois em Configurações do sistema → Notas e ficha.", "start": "Iniciar instalação",
+    "emailOptional": "E-mail (opcional)", "demoData": "Importar dados de demonstração", "preset": "Modelo do setor", "presetHint": "Pré-configura tipos de exame, modelos de notas, campos da ficha e opções de seleção para o seu tipo de instituição. Pode alterar ou reimportar depois em Configurações do sistema → Notas e ficha.", "existingTables": "O banco já possui {n} tabelas (versão anterior ou outro sistema). Elas precisam ser removidas antes da instalação.", "resetExisting": "Excluir as {n} tabelas existentes neste banco (não pode ser desfeito)", "resetRequired": "O banco não está vazio: marque «Excluir as tabelas existentes» ou use um banco vazio", "hostHint": "Quando o Xuehang roda no Docker, 127.0.0.1 é o próprio contêiner. Informe o IP local do servidor do banco; se o banco também estiver no Docker (ex.: 1Panel), conecte o Xuehang à mesma rede Docker e use o nome do contêiner (veja o guia de implantação).", "keepDemoPasswords": "Manter as senhas públicas de demonstração (123456 para jw01, t01…; somente leitura demo / demo123456)", "keepDemoHint": "Apenas para um site de demonstração público. Caso contrário, essas contas recebem senhas aleatórias que um administrador pode redefinir.", "start": "Iniciar instalação",
     "runningTitle": "Instalando", "doneTitle": "Instalação concluída", "failedTitle": "Falha na instalação",
     "waitingLog": "Aguardando os logs…", "goLogin": "Ir para o login", "requestFailed": "A solicitação falhou. Tente mais tarde.",
     "defaults": { "siteName": "Xuehang", "campusName": "Campus principal", "adminName": "Administrador do sistema" }
@@ -171,7 +172,7 @@ export default {
     ],
     "footerText": "© Xuehang · Gestão educacional",
     "portalTitle": "Portal do aluno",
-    "portalLoginSubtitle": "Consulte suas horas, agende entrevistas, envie documentos e solicite impressões"
+    "portalLoginSubtitle": "Entre com seu número de estudante e senha", "portalHeroTitle": "Sua grade, notas e solicitações\nem um só lugar", "portalHeroPoints": ["Veja sua grade e confirme as aulas concluídas", "Acompanhe notas e evolução a qualquer momento", "Agende entrevistas e envie documentos e impressões online"]
   }
 }
 

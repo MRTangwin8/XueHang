@@ -20,6 +20,9 @@ const siteSchema = z.object({
   footerText: text(60),
   portalTitle: text(20),
   portalLoginSubtitle: text(60),
+  /** 学生端登录页左侧的标题与要点（与教职工登录页分开设置） */
+  portalHeroTitle: text(60),
+  portalHeroPoints: z.array(text(40)).max(6),
 }).strict()
 
 const defaults: z.infer<typeof siteSchema> = {
@@ -38,7 +41,13 @@ const defaults: z.infer<typeof siteSchema> = {
   ],
   footerText: '© 学航 · 教学管理平台',
   portalTitle: '学生端',
-  portalLoginSubtitle: '查看课时、预约面谈、提交文书与打印',
+  portalLoginSubtitle: '使用学号和密码登录',
+  portalHeroTitle: '你的课表、成绩与申请\n都在这里',
+  portalHeroPoints: [
+    '课表一目了然，上完的课随手确认课时',
+    '考试成绩与进步趋势随时查看',
+    '在线预约面谈，提交文书与打印申请',
+  ],
 }
 
 async function readConfig() {

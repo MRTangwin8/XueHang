@@ -8,6 +8,7 @@ import { useIsMobile } from '@/utils/format'
 import NotificationBell from '@/components/NotificationBell.vue'
 import BrandLogo from '@/components/BrandLogo.vue'
 import LangSwitcher from '@/components/LangSwitcher.vue'
+import GlobalSearch from '@/components/GlobalSearch.vue'
 import { useI18n } from 'vue-i18n'
 import { tt } from '@/i18n'
 
@@ -97,6 +98,7 @@ function logout() {
           <span class="crumb-title">{{ tt(route.meta.title) }}</span>
         </div>
         <span class="spacer" />
+        <div v-if="!isMobile" class="topbar-search"><GlobalSearch /></div>
         <el-tag v-if="auth.me?.campusName && !isMobile" effect="plain" round class="campus">
           <el-icon style="vertical-align: -2px"><OfficeBuilding /></el-icon> {{ auth.me.campusName }}
         </el-tag>
@@ -134,6 +136,7 @@ function logout() {
 </template>
 
 <style scoped>
+.topbar-search { flex: 0 1 280px; min-width: 160px; }
 .layout { display: flex; height: 100%; }
 .sidebar { width: var(--xh-sidebar-w); background: var(--xh-sidebar-bg); border-right: 1px solid var(--xh-border); display: flex; flex-direction: column; flex-shrink: 0; }
 .sidebar.mobile { width: 100%; min-height: 100%; border: none; }
@@ -156,8 +159,8 @@ function logout() {
 .topbar { height: 64px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--xh-border); display: flex; align-items: center; padding: 0 20px; gap: 14px; flex-shrink: 0; position: sticky; top: 0; z-index: 5; }
 .icon-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--xh-border); background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #475569; }
 .icon-btn:hover { color: var(--xh-primary); border-color: var(--el-color-primary-light-7); }
-.crumb { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.crumb-group { color: var(--xh-text-2); }
+.crumb { display: flex; align-items: center; gap: 6px; min-width: 0; flex-shrink: 0; }
+.crumb-group { color: var(--xh-text-2); white-space: nowrap; }
 .crumb-sep { color: #cbd5e1; font-size: 12px; }
 .crumb-title { font-weight: 650; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .spacer { flex: 1; }

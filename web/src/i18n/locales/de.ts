@@ -49,6 +49,7 @@ export default {
     "recycleBin": "Papierkorb",
     "other": "Sonstige"
   },
+  "search": { "placeholder": "Seiten, Einstellungen, Schüler suchen (Strg+K)", "student": "Schüler" },
   "menu": {
     "home": "Informationszentrum",
     "teacher": "Lehrkräftebereich",
@@ -110,7 +111,7 @@ export default {
     "dbRequired": "Geben Sie Host und Datenbankname ein", "testConnection": "Verbindung testen", "dbConnected": "Verbindung erfolgreich",
     "testFirst": "Testen Sie zuerst die Verbindung", "next": "Weiter", "siteTitle": "Standort und erster Campus", "siteName": "Standortname",
     "campusName": "Campusname", "campusCode": "Campuscode", "timezone": "Zeitzone", "requiredFields": "Füllen Sie die Pflichtfelder aus",
-    "adminTitle": "Administrator erstellen", "emailOptional": "E-Mail (optional)", "demoData": "Demodaten importieren", "preset": "Branchenvorlage", "presetHint": "Legt Prüfungsarten, Notenvorlagen, Profilfelder und Auswahllisten passend zu Ihrer Einrichtung an. Später änderbar oder erneut importierbar unter Systemeinstellungen → Noten & Profil.", "start": "Installation starten",
+    "adminTitle": "Administrator erstellen", "emailOptional": "E-Mail (optional)", "demoData": "Demodaten importieren", "preset": "Branchenvorlage", "presetHint": "Legt Prüfungsarten, Notenvorlagen, Profilfelder und Auswahllisten passend zu Ihrer Einrichtung an. Später änderbar oder erneut importierbar unter Systemeinstellungen → Noten & Profil.", "existingTables": "Die Datenbank enthält bereits {n} Tabellen (ältere Version oder anderes System). Sie müssen vor der Installation entfernt werden.", "resetExisting": "Die {n} vorhandenen Tabellen dieser Datenbank löschen (nicht rückgängig zu machen)", "resetRequired": "Die Datenbank ist nicht leer: „Vorhandene Tabellen löschen“ ankreuzen oder eine leere Datenbank verwenden", "hostHint": "Läuft Xuehang in Docker, bezeichnet 127.0.0.1 den Container selbst. Geben Sie die LAN-IP des Datenbankservers an; läuft die Datenbank ebenfalls in Docker (z. B. 1Panel), Xuehang ins selbe Docker-Netzwerk aufnehmen und den Containernamen verwenden (siehe Bereitstellungsanleitung).", "keepDemoPasswords": "Öffentliche Demo-Passwörter behalten (123456 für jw01, t01 …; Nur-Lesen demo / demo123456)", "keepDemoHint": "Nur für eine öffentliche Demo-Website. Sonst erhalten diese Konten zufällige Passwörter, die ein Administrator zurücksetzen kann.", "start": "Installation starten",
     "runningTitle": "Installation läuft", "doneTitle": "Installation abgeschlossen", "failedTitle": "Installation fehlgeschlagen",
     "waitingLog": "Warten auf Installationsprotokolle…",
       "goLogin": "Zur Anmeldung",
@@ -173,7 +174,7 @@ export default {
     ],
     "footerText": "© Xuehang · Bildungsverwaltung",
     "portalTitle": "Schülerportal",
-    "portalLoginSubtitle": "Stunden einsehen, Beratung buchen, Unterlagen einreichen und Druckaufträge senden"
+    "portalLoginSubtitle": "Mit Schülernummer und Passwort anmelden", "portalHeroTitle": "Stundenplan, Noten und Anträge\nan einem Ort", "portalHeroPoints": ["Stundenplan im Blick, erledigte Stunden direkt bestätigen", "Prüfungsergebnisse und Fortschritt jederzeit ansehen", "Beratung buchen, Unterlagen und Druckaufträge online einreichen"]
   }
 }
 

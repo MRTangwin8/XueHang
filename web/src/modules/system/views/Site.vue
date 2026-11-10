@@ -9,11 +9,11 @@ import { defaultSite, useSite, type SiteConfig } from '@/stores/site'
 const { t } = useI18n()
 
 const site = useSite()
-const form = reactive<SiteConfig>({ ...defaultSite(), ...site.config, heroPoints: [...site.config.heroPoints] })
+const form = reactive<SiteConfig>({ ...defaultSite(), ...site.config, heroPoints: [...site.config.heroPoints], portalHeroPoints: [...(site.config.portalHeroPoints ?? [])] })
 const saving = ref(false)
 const colors = ['#4f46e5', '#0d9488', '#0284c7', '#db2777', '#ea580c', '#15803d']
 const heroLines = computed(() => form.heroTitle.split('\n'))
-watch(() => site.config, (config) => Object.assign(form, config, { heroPoints: [...config.heroPoints] }))
+watch(() => site.config, (config) => Object.assign(form, config, { heroPoints: [...config.heroPoints], portalHeroPoints: [...(config.portalHeroPoints ?? [])] }))
 
 function addPoint() {
   if (form.heroPoints.length < 6) form.heroPoints.push('')
@@ -30,7 +30,7 @@ function movePoint(index: number, offset: number) {
 async function save() {
   saving.value = true
   try {
-    await site.save({ ...form, heroPoints: form.heroPoints.map((point) => point.trim()) })
+    await site.save({ ...form, heroPoints: form.heroPoints.map((point) => point.trim()), portalHeroPoints: form.portalHeroPoints.map((point) => point.trim()).filter(Boolean) })
     ElMessage.success(t('system.site.saved'))
   } finally {
     saving.value = false
@@ -39,7 +39,7 @@ async function save() {
 async function reset() {
   await ElMessageBox.confirm(t('system.site.resetConfirm'), t('system.site.reset'), { type: 'warning' })
   await site.reset()
-  Object.assign(form, site.config, { heroPoints: [...site.config.heroPoints] })
+  Object.assign(form, site.config, { heroPoints: [...site.config.heroPoints], portalHeroPoints: [...(site.config.portalHeroPoints ?? [])] })
   ElMessage.success(t('system.site.resetDone'))
 }
 </script>
@@ -110,6 +110,13 @@ async function reset() {
         <div class="fields">
           <el-form-item :label="t('system.site.portalTitle')"><el-input v-model="form.portalTitle" maxlength="20" /></el-form-item>
           <el-form-item :label="t('system.site.loginSubtitle')"><el-input v-model="form.portalLoginSubtitle" maxlength="60" /></el-form-item>
+          <el-form-item :label="t('system.site.heroTitle')">
+            <el-input v-model="form.portalHeroTitle" type="textarea" :rows="2" maxlength="60" show-word-limit />
+          </el-form-item>
+          <el-form-item :label="t('system.site.heroPoints')">
+            <el-input :model-value="form.portalHeroPoints.join('\n')" type="textarea" :rows="3" :placeholder="t('system.site.portalPointsPh')"
+              @update:model-value="(v: string) => (form.portalHeroPoints = v.split('\n').slice(0, 6))" />
+          </el-form-item>
         </div>
         <div class="actions">
           <el-button @click="reset">{{ t('system.site.reset') }}</el-button>

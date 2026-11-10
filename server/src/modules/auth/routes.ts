@@ -5,7 +5,7 @@ import { parse } from '../../lib/http'
 import { badRequest, unauthorized } from '../../lib/errors'
 import { audit } from '../../lib/audit'
 import { hashPassword, needsRehash, verifyPassword, zStrongPassword } from '../../lib/password'
-import { assertNotLocked, recordFailure, recordSuccess } from '../../lib/rateLimit'
+import { assertNotLocked, recordFailure, releaseAttempt, reserveAttempt } from '../../lib/rateLimit'
 import { anyUser, clearFileCookie, invalidatePrincipal, setFileCookie, signToken, staffOnly } from '../../plugins/auth'
 import { PERMISSIONS } from '../../permissions'
 import { RULES } from '../../dict'
@@ -26,15 +26,14 @@ export default async function (app: FastifyInstance) {
   app.post('/login', async (req, reply) => {
     const body = parse(z.object({ staffNo: z.string().trim().min(1).max(50), password: z.string().min(1).max(128) }), req.body)
     const account = `staff:${body.staffNo.toLowerCase()}`
-    assertNotLocked(account, req.ip)
+    const left = reserveAttempt(account, req.ip) // 同步占名额，防并发猜密码
     const u = await prisma.user.findFirst({ where: { staffNo: body.staffNo, deletedAt: null } })
     if (!(await verifyPassword(body.password, u?.passwordHash))) {
-      const left = recordFailure(account, req.ip)
       await prisma.operationLog.create({ data: { userId: u?.id ?? null, action: 'login_failed', entity: 'User', entityId: body.staffNo, ip: req.ip } })
       throw loginFail(left)
     }
     if (u!.status !== 'ACTIVE') throw unauthorized('账号已锁定，请联系管理员')
-    recordSuccess(account)
+    releaseAttempt(account, req.ip)
     // 旧的低成本哈希在登录成功时自动升级
     const passwordHash = needsRehash(u!.passwordHash) ? await hashPassword(body.password) : u!.passwordHash
     await prisma.user.update({ where: { id: u!.id }, data: { lastLoginAt: new Date(), lastLoginIp: req.ip, passwordHash } })
@@ -50,15 +49,14 @@ export default async function (app: FastifyInstance) {
   app.post('/student-login', async (req, reply) => {
     const body = parse(z.object({ studentNo: z.string().trim().min(1).max(50), password: z.string().min(1).max(128) }), req.body)
     const account = `student:${body.studentNo.toLowerCase()}`
-    assertNotLocked(account, req.ip)
+    const left = reserveAttempt(account, req.ip) // 同步占名额，防并发猜密码
     const s = await prisma.student.findFirst({ where: { studentNo: body.studentNo, deletedAt: null } })
     if (!(await verifyPassword(body.password, s?.portalPasswordHash))) {
-      const left = recordFailure(account, req.ip)
       await prisma.operationLog.create({ data: { action: 'login_failed', entity: 'Student', entityId: body.studentNo, ip: req.ip } })
       throw loginFail(left)
     }
     if (!s!.portalEnabled) throw unauthorized('学生端账号未开通')
-    recordSuccess(account)
+    releaseAttempt(account, req.ip)
     let hash = s!.portalPasswordHash!
     if (needsRehash(hash)) {
       hash = await hashPassword(body.password)

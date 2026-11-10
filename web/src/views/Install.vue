@@ -32,6 +32,9 @@ const tokenLoading = ref(false)
 const dbTesting = ref(false)
 const dbTested = ref(false)
 const dbVersion = ref('')
+/** 目标库里已有的表数量；大于 0 时须确认清空才能继续 */
+const existingTables = ref(0)
+const resetExisting = ref(false)
 /** 连接失败的完整原因（常驻显示，便于排查） */
 const dbError = ref('')
 const installing = ref(false)
@@ -51,6 +54,7 @@ const setup = reactive({
   password: '',
   confirmPassword: '',
   demoData: false,
+  keepDemoPasswords: false,
   preset: 'jp-juku',
 })
 /** 行业模板（考试类型、成绩模板、档案字段、下拉选项、教授课程） */
@@ -112,9 +116,11 @@ async function testDatabase() {
   dbTested.value = false
   dbError.value = ''
   try {
-    const result = (await http.post<{ ok: boolean; version: string }>('/install/test-db', { token: token.value.trim(), db: dbPayload() }, longRequest)).data
+    const result = (await http.post<{ ok: boolean; version: string; existingTables?: number }>('/install/test-db', { token: token.value.trim(), db: dbPayload() }, longRequest)).data
     dbTested.value = result.ok
     dbVersion.value = result.version
+    existingTables.value = result.existingTables ?? 0
+    resetExisting.value = false
     ElMessage.success(t('install.dbConnected'))
   } catch (error) {
     dbError.value = errorMessage(error)
@@ -126,6 +132,7 @@ async function testDatabase() {
 
 function nextFromDatabase() {
   if (!dbTested.value) return ElMessage.warning(t('install.testFirst'))
+  if (existingTables.value > 0 && !resetExisting.value) return ElMessage.warning(t('install.resetRequired'))
   step.value = 2
 }
 
@@ -150,6 +157,8 @@ async function startInstall() {
       campus: { name: setup.campusName.trim(), code: setup.campusCode.trim(), timezone: setup.timezone },
       admin: { staffNo: setup.staffNo.trim(), name: setup.adminName.trim(), password: setup.password, email: setup.email.trim() },
       demoData: setup.demoData,
+      keepDemoPasswords: setup.demoData && setup.keepDemoPasswords,
+      resetExisting: resetExisting.value,
       preset: setup.preset,
     }, longRequest)
     step.value = 4
@@ -262,7 +271,10 @@ onBeforeUnmount(() => clearTimeout(pollTimer))
         <el-alert v-else-if="db.type === 'mysql'" :title="t('install.mysqlDriverHelp')" type="info" :closable="false" show-icon />
         <el-form v-if="databaseFieldsVisible" label-position="top" class="db-form">
           <div class="form-grid">
-            <el-form-item :label="t('install.host')"><el-input v-model="db.host" /></el-form-item>
+            <el-form-item :label="t('install.host')">
+              <el-input v-model="db.host" />
+              <div class="host-hint">{{ t('install.hostHint') }}</div>
+            </el-form-item>
             <el-form-item :label="t('install.port')"><el-input-number v-model="db.port" :min="1" :max="65535" controls-position="right" /></el-form-item>
             <el-form-item :label="t('install.dbUser')"><el-input v-model="db.user" autocomplete="username" /></el-form-item>
             <el-form-item :label="t('install.dbPassword')">
@@ -272,6 +284,10 @@ onBeforeUnmount(() => clearTimeout(pollTimer))
           </div>
         </el-form>
         <el-alert v-if="dbTested" :title="dbVersion" type="success" :closable="false" show-icon />
+        <el-alert v-if="dbTested && existingTables > 0" type="warning" :closable="false" show-icon class="db-existing"
+          :title="t('install.existingTables', { n: existingTables })">
+          <el-checkbox v-model="resetExisting" class="reset-check">{{ t('install.resetExisting', { n: existingTables }) }}</el-checkbox>
+        </el-alert>
         <el-alert v-else-if="dbError" :title="dbError" type="error" :closable="false" show-icon class="db-error" />
         <div class="actions split">
           <el-button @click="step = 0">{{ t('common.back') }}</el-button><span />
@@ -323,6 +339,10 @@ onBeforeUnmount(() => clearTimeout(pollTimer))
           </el-form-item>
         </div></el-form>
         <el-checkbox v-model="setup.demoData">{{ t('install.demoData') }}</el-checkbox>
+        <div v-if="setup.demoData" class="demo-opt">
+          <el-checkbox v-model="setup.keepDemoPasswords">{{ t('install.keepDemoPasswords') }}</el-checkbox>
+          <p class="hint">{{ t('install.keepDemoHint') }}</p>
+        </div>
         <div class="actions split">
           <el-button @click="step = 2">{{ t('common.back') }}</el-button><span />
           <el-button type="primary" :loading="installing" @click="startInstall">{{ t('install.start') }}</el-button>
@@ -353,6 +373,12 @@ h1 { margin: 0; font-size: 28px; }
 .steps { margin-bottom: 36px; }
 .step-body { max-width: 720px; margin: 0 auto; }
 .preset-title { margin: 8px 0 4px !important; }
+.db-existing { margin-top: 12px; }
+.reset-check { margin-top: 6px; white-space: normal; height: auto; align-items: flex-start; }
+.reset-check :deep(.el-checkbox__label) { white-space: normal; line-height: 1.5; color: var(--el-color-danger); font-weight: 600; }
+.demo-opt { margin: 4px 0 0 24px; }
+.demo-opt .hint { margin: 2px 0 0; font-size: 12px; }
+.host-hint { font-size: 12px; color: var(--xh-text-2); line-height: 1.5; margin-top: 4px; }
 .preset-list { display: grid; gap: 10px; width: 100%; margin-bottom: 8px; }
 .preset-item { height: auto !important; padding: 10px 14px !important; margin: 0 !important; align-items: flex-start; white-space: normal; }
 .preset-item :deep(.el-radio__label) { display: flex; flex-direction: column; gap: 2px; line-height: 1.5; }

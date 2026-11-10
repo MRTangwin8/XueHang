@@ -50,6 +50,7 @@ export default {
     today: '今天',
     recycleBin: '回收站',
   },
+  search: { placeholder: "搜索页面、设置、学员（Ctrl+K）", student: "学员" },
   menu: {
     home: '信息中心',
     teacher: '教师中心',
@@ -107,7 +108,7 @@ export default {
     host: '主机', port: '端口', dbUser: '用户名', dbPassword: '密码', dbName: '数据库名', dbRequired: '请填写主机和数据库名',
     testConnection: '测试连接', dbConnected: '数据库连接成功', testFirst: '请先测试数据库连接', next: '下一步',
     siteTitle: '站点与第一个校区', siteName: '站点名称', campusName: '校区名称', campusCode: '校区代码', timezone: '时区',
-    requiredFields: '请填写所有必填项', adminTitle: '创建管理员', emailOptional: '邮箱（可选）', demoData: '同时导入演示数据', preset: '行业模板', presetHint: '按机构类型预置考试类型、成绩模板、档案字段与下拉选项，安装后可在「系统设置 → 成绩与档案设置」中修改或重新导入。',
+    requiredFields: '请填写所有必填项', adminTitle: '创建管理员', emailOptional: '邮箱（可选）', demoData: '同时导入演示数据', preset: '行业模板', presetHint: '按机构类型预置考试类型、成绩模板、档案字段与下拉选项，安装后可在「系统设置 → 成绩与档案设置」中修改或重新导入。', existingTables: "数据库中已有 {n} 张表（可能是旧版本或其他系统的数据）。继续安装必须先清空它们。", resetExisting: "清空这个数据库中已有的 {n} 张表（数据无法恢复）", resetRequired: "目标数据库不是空的，请勾选「清空已有的表」或换一个空数据库", hostHint: "学航运行在 Docker 容器里时，127.0.0.1 指的是容器自己。请填数据库所在服务器的内网 IP；数据库也在 Docker 里（如 1Panel）时，可以把学航加入同一个 Docker 网络后填容器名，见部署指南。", keepDemoPasswords: "保留演示账号的公开密码（jw01、t01 等为 123456，只读账号 demo / demo123456）", keepDemoHint: "仅用于公开演示站。不勾选时这些账号会改成随机密码，需要时由管理员在「工号账户管理」重置。",
     start: '开始安装', runningTitle: '正在安装', doneTitle: '安装完成', failedTitle: '安装失败',
     waitingLog: '正在等待安装日志…', goLogin: '前往登录', requestFailed: '请求失败，请稍后重试',
     defaults: { siteName: '学航', campusName: '主校区', adminName: '系统管理员' },
@@ -165,6 +166,6 @@ export default {
     heroPoints: ['教室与课程统一排期，冲突实时提示', 'VIP 课时账本，待确认 48 小时自动确认', '客户跟进、报名缴费、出勤面谈一站管理'],
     footerText: '© 学航 · 教学管理平台',
     portalTitle: '学生端',
-    portalLoginSubtitle: '查看课时、预约面谈、提交文书与打印',
+    portalLoginSubtitle: "使用学号和密码登录", portalHeroTitle: "你的课表、成绩与申请\n都在这里", portalHeroPoints: ["课表一目了然，上完的课随手确认课时", "考试成绩与进步趋势随时查看", "在线预约面谈，提交文书与打印申请"],
   },
 }

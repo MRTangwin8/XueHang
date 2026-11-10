@@ -24,3 +24,4 @@ docs/tasks/
 # Docker 部署的数据目录与本机配置
 /data/
 /.env
+/docker-compose.override.yml

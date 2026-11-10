@@ -7,7 +7,7 @@
  */
 import Fastify from 'fastify'
 import { randomBytes, randomInt, timingSafeEqual } from 'node:crypto'
-import { accessSync, constants, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
+import { accessSync, constants, existsSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
 import { spawn } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -44,6 +44,10 @@ const installSchema = z.object({
     email: z.union([z.email(), z.literal('')]).optional(),
   }),
   demoData: z.boolean().default(false),
+  /** 演示数据的账号保留公开的演示密码（只用于公开演示站）；否则改为随机密码 */
+  keepDemoPasswords: z.boolean().default(false),
+  /** 数据库里已有表时，确认清空后再安装 */
+  resetExisting: z.boolean().default(false),
   preset: z.string().trim().max(30).default('jp-juku'),
 })
 
@@ -55,27 +59,22 @@ export function databaseUrl(db: DbInput): string {
   return `${db.type}://${auth}${db.host}:${port}/${db.database}`
 }
 
-/** 测试数据库连通性（不建表） */
-async function testConnection(db: DbInput, log: (s: string) => void): Promise<string> {
+type SqlConn = { query: (sql: string, params?: unknown[]) => Promise<Record<string, unknown>[]>; end: () => Promise<void> }
+
+/** 打开一个直连（不经 Prisma），用于测试连接、检查和清空已有表 */
+async function openConn(db: DbInput, log: (s: string) => void): Promise<{ conn: SqlConn; version: string; kind: 'mysql' | 'postgresql' }> {
   const url = databaseUrl(db)
-  const provider: DbProvider = providerOf(url)
-  if (provider === 'sqlite') {
-    accessSync(SQLITE_DIR, constants.W_OK)
-    return `SQLite：数据文件将保存在 ${DATA_DIR ? SQLITE_URL.slice(5) : 'server/prisma/data.db'}`
-  }
-  if (provider === 'postgresql') {
+  if (providerOf(url) === 'postgresql') {
     const { default: pg } = await import('pg')
     const c = new pg.Client({ connectionString: url, connectionTimeoutMillis: 8000 })
     await c.connect()
-    const r = await c.query('select version() as v')
-    await c.end()
-    return String(r.rows[0]?.v ?? 'PostgreSQL')
+    const conn: SqlConn = { query: async (sql, params) => (await c.query(sql, params as unknown[])).rows, end: () => c.end() }
+    const r = await conn.query('select version() as v')
+    return { conn, version: String(r[0]?.v ?? 'PostgreSQL'), kind: 'postgresql' }
   }
   await ensureDriver('mysql', log)
   const mod = 'mariadb'
-  const mariadb = (await import(/* @vite-ignore */ mod)) as {
-    createConnection: (o: object) => Promise<{ query: (s: string) => Promise<{ v: string }[]>; end: () => Promise<void> }>
-  }
+  const mariadb = (await import(/* @vite-ignore */ mod)) as { createConnection: (o: object) => Promise<SqlConn> }
   const conn = await mariadb.createConnection({
     host: db.host,
     port: db.port ?? 3306,
@@ -86,8 +85,58 @@ async function testConnection(db: DbInput, log: (s: string) => void): Promise<st
     allowPublicKeyRetrieval: true,
   })
   const rows = await conn.query('select version() as v')
-  await conn.end()
-  return `MySQL / MariaDB ${rows[0]?.v ?? ''}`
+  return { conn, version: `MySQL / MariaDB ${rows[0]?.v ?? ''}`, kind: 'mysql' }
+}
+
+async function listTables(conn: SqlConn, kind: 'mysql' | 'postgresql'): Promise<string[]> {
+  const rows = kind === 'mysql'
+    ? await conn.query("select table_name as t from information_schema.tables where table_schema = database() and table_type = 'BASE TABLE'")
+    : await conn.query("select tablename as t from pg_tables where schemaname = current_schema()")
+  return rows.map((r) => String(r.t ?? (r as { TABLE_NAME?: string }).TABLE_NAME))
+}
+
+/** 测试数据库连通性（不建表），并返回库里已有的表数量 */
+async function testConnection(db: DbInput, log: (s: string) => void): Promise<{ version: string; existingTables: number }> {
+  if (db.type === 'sqlite') {
+    accessSync(SQLITE_DIR, constants.W_OK)
+    const file = SQLITE_URL.slice(5)
+    const exists = existsSync(path.isAbsolute(file) ? file : path.join(SERVER_ROOT, file)) && statSync(path.isAbsolute(file) ? file : path.join(SERVER_ROOT, file)).size > 0
+    return { version: `SQLite：数据文件将保存在 ${DATA_DIR ? file : 'server/prisma/data.db'}`, existingTables: exists ? 1 : 0 }
+  }
+  const { conn, version, kind } = await openConn(db, log)
+  try {
+    return { version, existingTables: (await listTables(conn, kind)).length }
+  } finally {
+    await conn.end()
+  }
+}
+
+/** 清空目标库里已有的全部表（用户在安装向导里确认后才执行） */
+async function dropAllTables(db: DbInput, log: (s: string) => void) {
+  if (db.type === 'sqlite') {
+    const file = SQLITE_URL.slice(5)
+    const full = path.isAbsolute(file) ? file : path.join(SERVER_ROOT, file)
+    if (existsSync(full)) {
+      const backup = `${full}.bak-${Date.now()}`
+      renameSync(full, backup)
+      log(`已把原 SQLite 文件改名为 ${path.basename(backup)}\n`)
+    }
+    return
+  }
+  const { conn, kind } = await openConn(db, log)
+  try {
+    const tables = await listTables(conn, kind)
+    if (kind === 'mysql') {
+      await conn.query('SET FOREIGN_KEY_CHECKS = 0')
+      for (const t of tables) await conn.query(`DROP TABLE IF EXISTS \`${t.replace(/`/g, '``')}\``)
+      await conn.query('SET FOREIGN_KEY_CHECKS = 1')
+    } else {
+      for (const t of tables) await conn.query(`DROP TABLE IF EXISTS "${t.replace(/"/g, '""')}" CASCADE`)
+    }
+    log(`已清空数据库中原有的 ${tables.length} 张表\n`)
+  } finally {
+    await conn.end()
+  }
 }
 
 /** 写 server/.env：保留原有其他配置，设置 DATABASE_URL；JWT_SECRET 缺失或过弱时自动生成 */
@@ -185,8 +234,8 @@ export async function buildInstallApp(onInstalled: () => void) {
     if (!checkToken(b.data.token)) return reply.status(403).send({ code: 'BAD_TOKEN', message: '安装码不正确' })
     const logs: string[] = []
     try {
-      const version = await testConnection(b.data.db, (s) => logs.push(s))
-      return { ok: true, version }
+      const r = await testConnection(b.data.db, (s) => logs.push(s))
+      return { ok: true, version: r.version, existingTables: r.existingTables }
     } catch (e) {
       return reply.status(400).send({ code: 'DB_ERROR', message: `连接失败：${(e as Error).message}`, details: logs.join('') })
     }
@@ -208,10 +257,17 @@ export async function buildInstallApp(onInstalled: () => void) {
     void (async () => {
       try {
         const url = databaseUrl(b.db)
+        // 库里已有表（旧版本或其他系统的数据）：必须由用户确认清空，否则不安装
+        const { existingTables } = await testConnection(b.db, log)
+        if (existingTables > 0) {
+          if (!b.resetExisting) throw new Error(`目标数据库中已有 ${existingTables} 张表。请换一个空数据库，或在安装向导中勾选「清空已有的表」后重试`)
+          log('0/3 清空数据库中已有的表…\n')
+          await dropAllTables(b.db, log)
+        }
         log('1/3 初始化数据库…\n')
         await setupDatabase(url, log)
         log('2/3 写入基础数据…\n')
-        await runBootstrap({ siteName: b.siteName, campus: b.campus, admin: b.admin, demoData: b.demoData, preset: b.preset }, url, log)
+        await runBootstrap({ siteName: b.siteName, campus: b.campus, admin: b.admin, demoData: b.demoData, keepDemoPasswords: b.keepDemoPasswords, preset: b.preset }, url, log)
         log('3/3 保存配置…\n')
         writeEnv(url)
         try {

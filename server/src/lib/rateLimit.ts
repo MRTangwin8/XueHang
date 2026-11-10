@@ -52,6 +52,36 @@ export function recordFailure(account: string, ip: string): number {
   return Math.max(0, lim.account - a.count)
 }
 
+/**
+ * 登录前同步占用一次尝试名额（检查锁定 + 计数在同一个同步步骤里完成）。
+ * 不能「先检查、等密码比对完再记失败」：比对要花几百毫秒，期间并发进来的请求都会通过检查，
+ * 攻击者一次发出几十个并发猜测就绕过了次数限制。
+ * 返回本次之后剩余的尝试次数；名额用完时抛 429。成功登录后调用 releaseAttempt 归还名额。
+ */
+export function reserveAttempt(account: string, ip: string): number {
+  const now = Date.now()
+  const lim = LIMITS()
+  const a = get(`a:${account}`, now)
+  const i = get(`i:${ip}`, now)
+  for (const [e, max] of [[a, lim.account], [i, lim.ip]] as const) {
+    if (e.lockedUntil <= now && e.count >= max) e.lockedUntil = now + LOCK_MS()
+    if (e.lockedUntil > now) {
+      const min = Math.ceil((e.lockedUntil - now) / 60_000)
+      throw new AppError(429, `登录失败次数过多，请 ${min} 分钟后再试`, 'TOO_MANY_ATTEMPTS')
+    }
+  }
+  a.count++
+  i.count++
+  return Math.max(0, lim.account - a.count)
+}
+
+/** 登录成功：清除该账号的计数，并归还本次占用的 IP 名额 */
+export function releaseAttempt(account: string, ip: string) {
+  store.delete(`a:${account}`)
+  const i = store.get(`i:${ip}`)
+  if (i && i.count > 0) i.count--
+}
+
 /** 登录成功后清除该账号的失败计数 */
 export function recordSuccess(account: string) {
   store.delete(`a:${account}`)

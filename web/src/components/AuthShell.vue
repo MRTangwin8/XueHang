@@ -5,7 +5,8 @@ import LangSwitcher from './LangSwitcher.vue'
 import { useSite } from '@/stores/site'
 
 const site = useSite()
-defineProps<{ title: string; subtitle?: string }>()
+const props = defineProps<{ title: string; subtitle?: string; portal?: boolean }>()
+const heroTitle = () => site.text(props.portal ? 'portalHeroTitle' : 'heroTitle')
 </script>
 
 <template>
@@ -14,13 +15,13 @@ defineProps<{ title: string; subtitle?: string }>()
       <BrandLogo :size="44" light subtitle />
       <div class="hero-copy">
         <h2>
-          <template v-for="(line, index) in site.text('heroTitle').split('\n')" :key="index">
-            {{ line }}<br v-if="index < site.text('heroTitle').split('\n').length - 1" />
+          <template v-for="(line, index) in heroTitle().split('\n')" :key="index">
+            {{ line }}<br v-if="index < heroTitle().split('\n').length - 1" />
           </template>
         </h2>
-        <ul v-if="site.points().length">
-          <li v-for="(point, index) in site.points()" :key="index">
-            <el-icon><component :is="['Calendar', 'Clock', 'TrendCharts'][index % 3]" /></el-icon>{{ point }}
+        <ul v-if="site.points(portal).length">
+          <li v-for="(point, index) in site.points(portal)" :key="index">
+            <el-icon><component :is="(portal ? ['Calendar', 'TrendCharts', 'ChatDotRound'] : ['Calendar', 'Clock', 'TrendCharts'])[index % 3]" /></el-icon>{{ point }}
           </li>
         </ul>
       </div>

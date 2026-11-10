@@ -49,6 +49,7 @@ export default {
     "recycleBin": "ごみ箱",
     "other": "その他"
   },
+  "search": { "placeholder": "ページ・設定・学生を検索（Ctrl+K）", "student": "学生" },
   "menu": {
     "home": "情報センター",
     "teacher": "講師センター",
@@ -108,7 +109,7 @@ export default {
     "dbRequired": "ホストとデータベース名を入力してください", "testConnection": "接続テスト", "dbConnected": "接続しました",
     "testFirst": "先に接続テストを実行してください", "next": "次へ", "siteTitle": "拠点と最初の校舎", "siteName": "拠点名",
     "campusName": "校舎名", "campusCode": "校舎コード", "timezone": "タイムゾーン", "requiredFields": "必須項目を入力してください",
-    "adminTitle": "管理者アカウントの作成", "emailOptional": "メールアドレス（任意）", "demoData": "デモデータも登録する", "preset": "業種テンプレート", "presetHint": "教室の種類に合わせて試験の種類・成績テンプレート・学生情報の項目・選択肢を初期設定します。インストール後も「システム設定 → 成績・学生情報設定」で変更・再インポートできます。",
+    "adminTitle": "管理者アカウントの作成", "emailOptional": "メールアドレス（任意）", "demoData": "デモデータも登録する", "preset": "業種テンプレート", "presetHint": "教室の種類に合わせて試験の種類・成績テンプレート・学生情報の項目・選択肢を初期設定します。インストール後も「システム設定 → 成績・学生情報設定」で変更・再インポートできます。", "existingTables": "データベースにはすでに {n} 個のテーブルがあります（旧バージョンまたは他システムのデータ）。インストールするには先に削除が必要です。", "resetExisting": "このデータベースにある {n} 個のテーブルを削除する（元に戻せません）", "resetRequired": "データベースが空ではありません。「既存のテーブルを削除する」にチェックするか、空のデータベースを使ってください", "hostHint": "Docker で動かしている場合、127.0.0.1 はコンテナ自身を指します。データベースサーバーの LAN 内 IP を入力してください。データベースも Docker（1Panel など）の場合は、学航を同じ Docker ネットワークに参加させてコンテナ名を入力できます（デプロイガイド参照）。", "keepDemoPasswords": "デモアカウントの公開パスワードを残す（jw01・t01 などは 123456、閲覧専用 demo / demo123456）", "keepDemoHint": "公開デモサイト専用です。チェックしない場合はランダムなパスワードになり、必要なときに管理者が「職員アカウント管理」でリセットします。",
     "start": "インストール開始", "runningTitle": "インストール中", "doneTitle": "インストール完了", "failedTitle": "インストール失敗",
     "waitingLog": "インストールログを待機しています…", "goLogin": "ログインへ", "requestFailed": "通信に失敗しました。後でもう一度お試しください。",
     "defaults": { "siteName": "学航", "campusName": "本校", "adminName": "システム管理者" }
@@ -169,7 +170,7 @@ export default {
     ],
     "footerText": "© 学航 · 教務管理プラットフォーム",
     "portalTitle": "学生ポータル",
-    "portalLoginSubtitle": "授業の残りコマ数確認・面談予約・書類提出・印刷依頼"
+    "portalLoginSubtitle": "学籍番号とパスワードでログイン", "portalHeroTitle": "時間割・成績・各種申請を\nひとつの場所で", "portalHeroPoints": ["時間割をひと目で確認、受講後はその場でコマ数を確認", "試験の成績と伸びをいつでも確認", "面談予約・書類提出・印刷依頼をオンラインで"]
   }
 }
 

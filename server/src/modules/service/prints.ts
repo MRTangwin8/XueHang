@@ -1,3 +1,4 @@
+import { RULES } from '../../dict'
 import type { FastifyInstance } from 'fastify'
 import type { Prisma } from '../../generated/prisma/client'
 import { z } from 'zod'
@@ -9,6 +10,12 @@ import { notifyStudent } from '../../lib/notify'
 import { fmtZoned } from '../../lib/time'
 import { andCampus, assertCampus, perm, staff, scopeWhere } from '../../plugins/auth'
 import { dateFilter } from './util'
+
+/** 打印费文字：日元 / 人民币用符号，其他货币用「金额 + 自定义文字」 */
+const feeText = (n: number) => {
+  const c = RULES.printCurrency
+  return c === 'JPY' ? `¥${n}` : c === 'CNY' ? `￥${n}` : `${n} ${c}`
+}
 
 export default async function (app: FastifyInstance) {
   const guard = { preHandler: perm('print.manage') }
@@ -59,7 +66,7 @@ export default async function (app: FastifyInstance) {
     const r = await prisma.printRequest.update({ where: { id }, data: { status, handledById: me.id, handledAt: new Date() } })
     if (status === 'PRINTED') {
       await notifyStudent(p.studentId, `资料已打印，可于 ${fmtZoned(p.readyAt, 'MM月DD日 HH:mm')} 后领取`, {
-        content: `${p.fileName} · 费用 ¥${p.fee}`,
+        content: `${p.fileName} · 费用 ${feeText(p.fee)}`,
         link: '/portal/prints',
       })
     } else if (status === 'CANCELLED') {

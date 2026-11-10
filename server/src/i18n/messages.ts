@@ -1232,3 +1232,8 @@ add('只能指定自己可管理范围内的校区', 'You can only assign campus
   'Vous ne pouvez attribuer que des sites que vous gérez vous-même', 'Solo puede asignar sedes que usted mismo gestiona',
   'Можно назначать только филиалы, которыми вы управляете сами', 'Você só pode atribuir unidades que você mesmo gerencia',
   'Sie können nur Standorte zuweisen, die Sie selbst verwalten')
+
+// 货币 / 单位
+add('请选择货币', 'Please choose a currency', '通貨を選択してください', 'Veuillez choisir une devise', 'Elija una moneda', 'Выберите валюту', 'Escolha uma moeda', 'Bitte eine Währung wählen')
+add('货币文字最多 12 个字', 'The currency text can be at most 12 characters', '通貨の文字は 12 文字までです', 'Le texte de la devise est limité à 12 caractères',
+  'El texto de la moneda admite como máximo 12 caracteres', 'Текст валюты — не более 12 символов', 'O texto da moeda pode ter no máximo 12 caracteres', 'Der Währungstext darf höchstens 12 Zeichen lang sein')

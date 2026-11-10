@@ -40,7 +40,7 @@ async function submit() {
 </script>
 
 <template>
-  <AuthShell :title="site.text('portalTitle')" :subtitle="site.text('portalLoginSubtitle')">
+  <AuthShell portal :title="site.text('portalTitle')" :subtitle="site.text('portalLoginSubtitle')">
     <el-form size="large" @submit.prevent="submit">
       <el-form-item><el-input v-model="form.studentNo" :placeholder="t('auth.studentNo')" prefix-icon="User" autocomplete="username" /></el-form-item>
       <el-form-item><el-input

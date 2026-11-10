@@ -2,6 +2,7 @@ import { i18n, t as tr } from '@/i18n'
 import { useDict } from '@/stores/dict'
 /** 教学服务模块前端 API 与类型（后端前缀 /api/service） */
 import { api, type Paged } from '@/api/http'
+import { money } from '@/utils/format'
 
 export interface IdName { id: number; name: string }
 export interface StudentLite { id: number; name: string; studentNo: string }
@@ -405,8 +406,8 @@ const ruleValues = () => {
     hours: rules?.documentEditHours ?? 24,
     times: zh && (rules?.documentMaxEdits ?? 1) === 1 ? '\u4e00' : rules?.documentMaxEdits ?? 1,
     days: zh ? ((rules?.documentReturnDays ?? 7) === 7 ? '\u4e00\u5468' : `${rules?.documentReturnDays ?? 7}\u65e5`) : rules?.documentReturnDays ?? 7,
-    bw: rules?.printPriceBW ?? 10,
-    color: rules?.printPriceColor ?? 50,
+    bw: money(rules?.printPriceBW ?? 10, rules?.printCurrency || 'JPY'),
+    color: money(rules?.printPriceColor ?? 50, rules?.printCurrency || 'JPY'),
     cutoff: rules?.printCutoff ?? '12:00',
     ready: rules?.printReadyTime ?? '17:00',
   }

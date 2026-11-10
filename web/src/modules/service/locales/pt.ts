@@ -13,7 +13,7 @@ export default {
       uploadFiles: "Envio de arquivos",
       uploadFilesDirectlyToTheSystemInPdfOr: "Envie os arquivos diretamente pelo sistema, apenas em PDF ou JPG. Não é necessário enviá-los por e-mail.",
       printingFees: "Valores de impressão",
-      singleSidedBlackAndWhite10PerSheetSingle: "Impressão em um lado: ¥{bw} por folha em preto e branco; ¥{color} em cores.",
+      singleSidedBlackAndWhite10PerSheetSingle: "Impressão em um lado: {bw} por folha em preto e branco; {color} em cores.",
       collectionTime: "Horário de retirada",
       requestsSubmittedBefore1200CanBeCollectedAfter:
         "Solicitações enviadas antes das {cutoff} podem ser retiradas após as {ready} do mesmo dia. As enviadas após " +
