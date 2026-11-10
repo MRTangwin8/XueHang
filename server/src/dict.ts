@@ -68,6 +68,7 @@ export const DICTS = {
 export const PRINT_TYPE_EXTS: Record<string, string[]> = {
   pdf: ['.pdf'], jpg: ['.jpg', '.jpeg'], png: ['.png'], word: ['.doc', '.docx'], excel: ['.xls', '.xlsx'], ppt: ['.ppt', '.pptx'],
 }
+export const PORTAL_HOME_SECTIONS = ['today', 'grade', 'vip', 'notices', 'interviews', 'documents', 'prints'] as const
 export const PORTAL_MODULES = ['timetable', 'grades', 'vip', 'interviews', 'documents', 'prints'] as const
 
 export type DictKey = keyof typeof DICTS
@@ -144,6 +145,13 @@ export const DEFAULT_RULES = {
   // ---- 学生端 ----
   /** 学生端开放的功能（首页、通知、资料始终开放）：timetable 我的课表 / grades 我的成绩 / vip 我的课时 / interviews 面谈预约 / documents 文书修改 / prints 资料打印 */
   portalModules: ['timetable', 'grades', 'vip', 'interviews', 'documents', 'prints'] as string[],
+  /** 学生端首页显示的板块及先后顺序：today 今日课程 / grade 最近成绩 / vip 我的课时 / notices 通知 / interviews 面谈 / documents 文书 / prints 打印 */
+  portalHomeSections: ['today', 'grade', 'vip', 'notices', 'interviews', 'documents', 'prints'] as string[],
+  /** 学生端首页欢迎语（空 = 默认文案；可用 {name} 学生姓名） */
+  portalWelcomeTitle: '',
+  portalWelcomeText: '',
+  /** 首页欢迎卡片上是否显示「资料下载」按钮 */
+  portalHomeShowFiles: true,
   /** 学生端「我的成绩」是否显示名次 / 平均分 / 最好得分率 */
   portalGradeShowRank: true,
   portalGradeShowAverage: true,

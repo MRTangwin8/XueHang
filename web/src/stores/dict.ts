@@ -51,6 +51,11 @@ export interface Rules {
   loginLockEnabled: boolean
   /** 学生端开放的功能：timetable / grades / vip / interviews / documents / prints */
   portalModules: string[]
+  /** 学生端首页显示的板块（按顺序） */
+  portalHomeSections: string[]
+  portalWelcomeTitle: string
+  portalWelcomeText: string
+  portalHomeShowFiles: boolean
   portalGradeShowRank: boolean
   portalGradeShowAverage: boolean
   portalGradeShowBest: boolean

@@ -8,7 +8,7 @@ import { z } from 'zod'
 import { prisma } from './prisma'
 import { badRequest } from './errors'
 import { loadEdu } from './educonfig'
-import { DEFAULT_RULES, DICT_HIDDEN, DICTS, EDITABLE_DICTS, RULES, type EditableDictKey, type Rules, PORTAL_MODULES } from '../dict'
+import { DEFAULT_RULES, DICT_HIDDEN, DICTS, EDITABLE_DICTS, RULES, type EditableDictKey, type Rules, PORTAL_HOME_SECTIONS, PORTAL_MODULES } from '../dict'
 
 const HM = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, '时间格式应为 HH:mm')
 const int = (min: number, max: number) =>
@@ -50,6 +50,11 @@ export const rulesSchema = z
     sessionDays: int(1, 30),
     readOnlyCanSchedule: z.boolean(),
     portalModules: z.array(z.enum(PORTAL_MODULES)).max(PORTAL_MODULES.length),
+    portalHomeSections: z.array(z.enum(PORTAL_HOME_SECTIONS)).max(PORTAL_HOME_SECTIONS.length)
+      .refine((a) => new Set(a).size === a.length, '首页板块不能重复'),
+    portalWelcomeTitle: z.string().trim().max(60),
+    portalWelcomeText: z.string().trim().max(200),
+    portalHomeShowFiles: z.boolean(),
     portalGradeShowRank: z.boolean(),
     portalGradeShowAverage: z.boolean(),
     portalGradeShowBest: z.boolean(),

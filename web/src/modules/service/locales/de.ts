@@ -212,7 +212,7 @@ export default {
       printingInstructions: "Druckhinweise",
       submitPrintRequest: "Druckauftrag einreichen",
       fileToPrint: "Druckdatei",
-      pdfAndJpgOnly: "Nur PDF und JPG", allowedFormats: "Zulässige Formate: {types}", uploadFilesInFormats: "Laden Sie Dateien direkt im System hoch. Zulässige Formate: {types}.", imageCountsAs1Page: "Bilder zählen als 1 Seite", imageFixedAt1Page: "Bild: fest 1 Seite", officePagesHint: "Bei Word / Excel / PowerPoint kann die Seitenzahl nicht erkannt werden; bitte die zu druckende Seitenzahl angeben.",
+      pdfAndJpgOnly: "Nur PDF und JPG", allowedFormats: "Zulässige Formate: {types}", homeToday: "Heutige Stunden", homeNoLessonToday: "Heute keine Stunden", homeNextLesson: "Nächste", homeLatestGrade: "Letztes Ergebnis", homeNoGrades: "Noch keine veröffentlichten Ergebnisse", homeVipHours: "Meine Stunden", homeNoVip: "Keine VIP-Pakete", homeRemaining: "{n} Std. übrig", homePending: "{n} Std. ausstehend", uploadFilesInFormats: "Laden Sie Dateien direkt im System hoch. Zulässige Formate: {types}.", imageCountsAs1Page: "Bilder zählen als 1 Seite", imageFixedAt1Page: "Bild: fest 1 Seite", officePagesHint: "Bei Word / Excel / PowerPoint kann die Seitenzahl nicht erkannt werden; bitte die zu druckende Seitenzahl angeben.",
       printMode: "Druckmodus",
       blackAndWhite: "Schwarzweiß",
       color: "Farbe",

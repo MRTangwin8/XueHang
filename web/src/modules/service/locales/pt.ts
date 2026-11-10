@@ -206,7 +206,7 @@ export default {
       printingInstructions: "Instruções de impressão",
       submitPrintRequest: "Solicitar impressão",
       fileToPrint: "Arquivo para impressão",
-      pdfAndJpgOnly: "Apenas PDF e JPG", allowedFormats: "Formatos aceitos: {types}", uploadFilesInFormats: "Envie os arquivos diretamente pelo sistema. Formatos aceitos: {types}.", imageCountsAs1Page: "Imagens contam como 1 página", imageFixedAt1Page: "Imagem: 1 página fixa", officePagesHint: "Não é possível detectar as páginas de Word / Excel / PowerPoint; informe o número de páginas a imprimir.",
+      pdfAndJpgOnly: "Apenas PDF e JPG", allowedFormats: "Formatos aceitos: {types}", homeToday: "Aulas de hoje", homeNoLessonToday: "Hoje não há aulas", homeNextLesson: "Próxima", homeLatestGrade: "Último resultado", homeNoGrades: "Ainda não há resultados publicados", homeVipHours: "Minhas horas", homeNoVip: "Nenhum pacote VIP", homeRemaining: "Restam {n} h", homePending: "{n} h pendentes", uploadFilesInFormats: "Envie os arquivos diretamente pelo sistema. Formatos aceitos: {types}.", imageCountsAs1Page: "Imagens contam como 1 página", imageFixedAt1Page: "Imagem: 1 página fixa", officePagesHint: "Não é possível detectar as páginas de Word / Excel / PowerPoint; informe o número de páginas a imprimir.",
       printMode: "Modo de impressão",
       blackAndWhite: "Preto e branco",
       color: "Colorido",

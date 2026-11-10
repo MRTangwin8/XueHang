@@ -42,7 +42,7 @@ const RULE_GROUPS: Record<string, string[]> = {
   customer: ['customerRecycleEnabled', 'customerRecycleDays'],
   numbering: ['studentNoPrefix', 'orderNoPrefix', 'uploadMaxMB'],
   login: ['loginLockEnabled', 'loginMaxFailures', 'loginIpMaxFailures', 'loginLockMinutes', 'sessionDays'],
-  portal: ['portalModules', 'portalGradeShowRank', 'portalGradeShowAverage', 'portalGradeShowBest'],
+  portal: ['portalModules', 'portalHomeSections', 'portalWelcomeTitle', 'portalWelcomeText', 'portalHomeShowFiles', 'portalGradeShowRank', 'portalGradeShowAverage', 'portalGradeShowBest'],
   timetable: ['timetableExportTitle', 'timetableExportFooter', 'timetableExportShowTeacher', 'timetableExportShowRoom'],
   demo: ['readOnlyCanSchedule'],
   dicts: [],

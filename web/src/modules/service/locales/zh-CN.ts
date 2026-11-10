@@ -200,7 +200,7 @@ export default {
       printingInstructions: "资料打印使用说明",
       submitPrintRequest: "提交打印申请",
       fileToPrint: "打印文件",
-      pdfAndJpgOnly: "仅支持 PDF、JPG 格式", allowedFormats: "支持格式：{types}", uploadFilesInFormats: "资料可直接上传至系统，支持 {types} 格式。", imageCountsAs1Page: "图片按 1 页计算", imageFixedAt1Page: "图片固定 1 页", officePagesHint: "Word / Excel / PowerPoint 无法自动识别页数，请按实际打印页数填写。",
+      pdfAndJpgOnly: "仅支持 PDF、JPG 格式", allowedFormats: "支持格式：{types}", homeToday: "今日课程", homeNoLessonToday: "今天没有课程", homeNextLesson: "下一节", homeLatestGrade: "最近一次成绩", homeNoGrades: "暂无已发布的成绩", homeVipHours: "我的课时", homeNoVip: "暂无 VIP 课时包", homeRemaining: "剩余 {n} 课时", homePending: "待确认 {n} 课时", uploadFilesInFormats: "资料可直接上传至系统，支持 {types} 格式。", imageCountsAs1Page: "图片按 1 页计算", imageFixedAt1Page: "图片固定 1 页", officePagesHint: "Word / Excel / PowerPoint 无法自动识别页数，请按实际打印页数填写。",
       printMode: "打印方式",
       blackAndWhite: "黑白",
       color: "彩色",

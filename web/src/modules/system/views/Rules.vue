@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PORTAL_MODULES, PRINT_TYPE_LABEL } from '@/utils/portal'
+import { HOME_SECTIONS, PORTAL_MODULES, PRINT_TYPE_LABEL } from '@/utils/portal'
 import { useVersion, versionText } from '@/utils/version'
 import { useRoute } from 'vue-router'
 import { currencyName, money } from '@/utils/format'
@@ -32,7 +32,7 @@ const groups = [
   { name: 'customer', fields: ['customerRecycleEnabled', 'customerRecycleDays'] },
   { name: 'numbering', fields: ['studentNoPrefix', 'orderNoPrefix', 'uploadMaxMB'] },
   { name: 'login', fields: ['loginLockEnabled', 'loginMaxFailures', 'loginIpMaxFailures', 'loginLockMinutes', 'sessionDays'] },
-  { name: 'portal', fields: ['portalModules', 'portalGradeShowRank', 'portalGradeShowAverage', 'portalGradeShowBest'] },
+  { name: 'portal', fields: ['portalModules', 'portalHomeSections', 'portalWelcomeTitle', 'portalWelcomeText', 'portalHomeShowFiles', 'portalGradeShowRank', 'portalGradeShowAverage', 'portalGradeShowBest'] },
   { name: 'timetable', fields: ['timetableExportTitle', 'timetableExportFooter', 'timetableExportShowTeacher', 'timetableExportShowRoom'] },
   { name: 'demo', fields: ['readOnlyCanSchedule'] },
 ] as const
@@ -49,6 +49,7 @@ const specs: Record<string, { min?: number; max?: number; kind?: string }> = {
   loginMaxFailures: { min: 3, max: 20 }, loginIpMaxFailures: { min: 5, max: 200 }, loginLockMinutes: { min: 1, max: 1440 },
   sessionDays: { min: 1, max: 30 },
   printCurrency: { kind: 'currency' }, wageCurrency: { kind: 'currency' }, readOnlyCanSchedule: { kind: 'switch' },
+  portalHomeSections: { kind: 'sections' }, portalWelcomeTitle: { kind: 'line', max: 60 }, portalWelcomeText: { kind: 'line', max: 200 }, portalHomeShowFiles: { kind: 'switch' },
   portalModules: { kind: 'checks' }, printFileTypes: { kind: 'checks' }, portalGradeShowRank: { kind: 'switch' }, portalGradeShowAverage: { kind: 'switch' },
   portalGradeShowBest: { kind: 'switch' }, timetableExportTitle: { kind: 'line', max: 60 }, timetableExportFooter: { kind: 'line', max: 120 },
   timetableExportShowTeacher: { kind: 'switch' }, timetableExportShowRoom: { kind: 'switch' },
@@ -58,11 +59,30 @@ const specs: Record<string, { min?: number; max?: number; kind?: string }> = {
 const defaultText = (key: string) => {
   if (specs[key]?.kind === 'currency') return currencyName(String(defaults.value?.[key as keyof ExtendedRules] ?? 'JPY'))
   const value = defaults.value?.[key as keyof ExtendedRules]
+  if (specs[key]?.kind === 'sections') return (value as unknown as string[] | undefined ?? []).map((v) => t(sectionTitle(v))).join(' → ')
   if (specs[key]?.kind === 'checks') return ((value as unknown as string[] | undefined) ?? []).map((v) => checkLabel(key, v)).join(' / ')
   if (Array.isArray(value)) return value.map((m) => t('system.rules.month', { n: m })).join(', ')
   if (typeof value === 'boolean') return t(value ? 'common.yes' : 'common.no')
   if (value === '') return t('system.rules.useLocalizedDefault')
   return String(value ?? '')
+}
+
+/** 学生端首页板块：已开启的按顺序排在前面，可上下移动；关闭的排在后面 */
+const sectionTitle = (k: string) => HOME_SECTIONS.find((s) => s.key === k)?.title ?? k
+const homeOn = (k: string) => (form.portalHomeSections ?? []).includes(k)
+const homeEnabledCount = computed(() => (form.portalHomeSections ?? []).length)
+const homeOrder = computed(() => [...(form.portalHomeSections ?? []), ...HOME_SECTIONS.map((s) => s.key).filter((k) => !homeOn(k))])
+function toggleHome(k: string, on: boolean) {
+  const cur = [...(form.portalHomeSections ?? [])]
+  form.portalHomeSections = on ? [...cur, k] : cur.filter((x) => x !== k)
+}
+function moveHome(k: string, step: number) {
+  const list = [...(form.portalHomeSections ?? [])]
+  const i = list.indexOf(k)
+  const j = i + step
+  if (i < 0 || j < 0 || j >= list.length) return
+  ;[list[i], list[j]] = [list[j], list[i]]
+  form.portalHomeSections = list
 }
 
 /** 多选项规则：学生端功能、打印文件类型 */
@@ -197,6 +217,15 @@ const version = useVersion()
                 @update:model-value="(form as any)[key] = $event">
                 <el-checkbox v-for="v in checkOptions(key)" :key="v" :value="v">{{ checkLabel(key, v) }}</el-checkbox>
               </el-checkbox-group>
+              <div v-else-if="specs[key].kind === 'sections'" class="sec-list">
+                <div v-for="(k, i) in homeOrder" :key="k" class="sec-row" :class="{ off: !homeOn(k) }">
+                  <el-checkbox :model-value="homeOn(k)" @update:model-value="toggleHome(k, $event as boolean)">{{ t(sectionTitle(k)) }}</el-checkbox>
+                  <span class="sec-move">
+                    <el-button link icon="ArrowUp" :disabled="!homeOn(k) || i === 0" @click="moveHome(k, -1)" />
+                    <el-button link icon="ArrowDown" :disabled="!homeOn(k) || i === homeEnabledCount - 1" @click="moveHome(k, 1)" />
+                  </span>
+                </div>
+              </div>
               <el-input v-else-if="specs[key].kind === 'line'" v-model="(form as any)[key]" :maxlength="specs[key].max" show-word-limit clearable
                 :placeholder="t('system.rules.useLocalizedDefault')" />
               <el-time-select v-else-if="specs[key].kind === 'time'" v-model="(form as any)[key]" start="00:00" step="00:15" end="23:45" />
@@ -217,7 +246,7 @@ const version = useVersion()
               <div v-if="group.name === 'customer' && key === 'customerRecycleDays'" class="field-hint">{{ t('system.rules.customerRecycleHint') }}</div>
               <div v-if="specs[key].kind === 'currency'" class="field-hint">{{ t('system.rules.currencyHint', { sample: money(1000, (form as any)[key]) }) }}</div>
               <div v-if="key === 'readOnlyCanSchedule'" class="field-hint">{{ t('system.rules.readOnlyScheduleHint') }}</div>
-              <div v-if="['portalModules', 'printFileTypes', 'timetableExportTitle', 'timetableExportFooter'].includes(key)" class="field-hint">{{ t(`system.rules.${key}Hint`, PLACEHOLDERS) }}</div>
+              <div v-if="['portalModules', 'portalHomeSections', 'portalWelcomeTitle', 'portalWelcomeText', 'printFileTypes', 'timetableExportTitle', 'timetableExportFooter'].includes(key)" class="field-hint">{{ t(`system.rules.${key}Hint`, PLACEHOLDERS) }}</div>
               <div v-if="key === 'loginLockEnabled'" class="field-hint">{{ t('system.rules.loginLockEnabledHint') }}</div>
               <div v-if="key === 'vipRecordRequired'" class="field-hint">{{ t('system.rules.vipRecordRequiredHint') }}</div>
               <div v-if="key === 'sessionRoomRequired'" class="field-hint">{{ t('system.rules.sessionRoomRequiredHint') }}</div>
@@ -268,6 +297,9 @@ const version = useVersion()
 .prefix-setting span, .field-hint { color: var(--xh-text-2); font-size: 12px; }
 .field-hint { margin-top: 8px; line-height: 1.6; }
 .ver-line { margin: 10px 0 0; font-size: 12px; color: var(--xh-text-2); }
+.sec-list { display: grid; gap: 4px; max-width: 360px; }
+.sec-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 8px; border: 1px solid var(--xh-border); border-radius: 8px; }
+.sec-row.off { opacity: 0.6; }
 .check-list { display: flex; flex-wrap: wrap; gap: 4px 18px; }
 .month-grid { display: flex; flex-wrap: wrap; }
 .dict-list { display: flex; flex-direction: column; gap: 16px; }

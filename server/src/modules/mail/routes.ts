@@ -4,18 +4,32 @@ import { z } from 'zod'
 import { parse } from '../../lib/http'
 import { audit } from '../../lib/audit'
 import { getSmtpPublic, saveSmtp, testSmtp } from '../../lib/mail'
-import { perm } from '../../plugins/auth'
+import { perm, staff } from '../../plugins/auth'
 
 export default async function (app: FastifyInstance) {
   const guard = { preHandler: perm('system.mail') }
 
-  app.get('/', guard, async () => getSmtpPublic())
+  app.get('/', guard, async (req) => {
+    const cfg = await getSmtpPublic()
+    // 只读（演示）账号看不到真实的服务器、账号、发件人和访问地址，一律显示为示例值
+    if (staff(req).readOnly) {
+      return {
+        ...cfg,
+        host: cfg.host ? 'smtp.example.com' : '',
+        user: cfg.user ? 'user@example.com' : '',
+        fromName: cfg.fromName ? 'Example' : '',
+        fromAddress: cfg.fromAddress ? 'noreply@example.com' : '',
+        siteUrl: cfg.siteUrl ? 'https://example.com' : '',
+      }
+    }
+    return cfg
+  })
 
   app.put('/', guard, async (req) => {
     const r = await saveSmtp(req.body)
-    // 日志中不记录密码
-    const { password: _p, ...logged } = (req.body ?? {}) as Record<string, unknown>
-    await audit(req, 'update', 'Smtp', 'smtp', logged)
+    // 操作日志只记开关类字段：不记录密码，也不记录服务器、账号、发件人等（日志可能被只读账号看到）
+    const body = (req.body ?? {}) as Record<string, unknown>
+    await audit(req, 'update', 'Smtp', 'smtp', { enabled: body.enabled, port: body.port, secure: body.secure, notifyByEmail: body.notifyByEmail })
     return r
   })
 
