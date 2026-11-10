@@ -83,7 +83,7 @@ export default {
     "password": "Пароль",
     "login": "Войти",
     "imStudent": "Вы учащийся?",
-    "toStudentLogin": "Вход для учащихся",
+    "toStudentLogin": "Вход для учащихся", "loginFailed": "Не удалось войти, попробуйте ещё раз",
     "imStaff": "Вы сотрудник?",
     "toStaffLogin": "Вход для сотрудников"
   },

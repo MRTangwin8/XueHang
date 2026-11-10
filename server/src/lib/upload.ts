@@ -1,4 +1,4 @@
-import { RULES } from '../dict'
+import { PRINT_TYPE_EXTS, RULES } from '../dict'
 import type { FastifyRequest } from 'fastify'
 import { createWriteStream, mkdirSync } from 'node:fs'
 import { open, stat, unlink } from 'node:fs/promises'
@@ -16,11 +16,14 @@ export const PUBLIC_DIR = 'public'
 /** 预设的上传类型 → 允许的扩展名 */
 export const UPLOAD_KINDS: Record<string, string[]> = {
   document: ['.txt'], // 文书修改：仅 txt
-  print: ['.pdf', '.jpg', '.jpeg'], // 资料打印：仅 PDF / JPG
+  print: ['.pdf', '.jpg', '.jpeg'], // 资料打印：默认 PDF / JPG，实际以业务规则 printFileTypes 为准
   image: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
   logo: ['.png', '.jpg', '.jpeg', '.webp'], // 站点 Logo：存公开目录 uploads/public，仅 system.site 可上传
   file: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.jpg', '.jpeg', '.png', '.zip'],
 }
+
+/** 资料打印当前允许的扩展名 */
+export const printExts = () => RULES.printFileTypes.flatMap((t) => PRINT_TYPE_EXTS[t] ?? [])
 
 export interface SavedFile {
   url: string
@@ -32,7 +35,8 @@ export interface SavedFile {
 
 /** 读取 multipart 中的单个文件并保存到 uploads/YYYYMM/ */
 export async function saveUpload(req: FastifyRequest, kind: string): Promise<SavedFile> {
-  const allow = UPLOAD_KINDS[kind]
+  // 资料打印允许的格式来自「业务规则 → 资料打印」
+  const allow = kind === 'print' ? printExts() : UPLOAD_KINDS[kind]
   if (!allow) throw badRequest(`未知上传类型 ${kind}`)
   const file = await req.file({ limits: { fileSize: RULES.uploadMaxMB * 1024 * 1024 } })
   if (!file) throw badRequest('没有收到文件')

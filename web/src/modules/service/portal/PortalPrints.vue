@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { PRINT_TYPE_EXTS, PRINT_TYPE_LABEL } from '@/utils/portal'
+import { useDict } from '@/stores/dict'
 import { useI18n } from 'vue-i18n'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -28,7 +30,12 @@ const saving = ref(false)
 const cancelling = ref<number | null>(null)
 const quoteError = ref('')
 const uploadKey = ref(0)
-const isImage = computed(() => /\.jpe?g$/i.test(form.fileName))
+const isImage = computed(() => /\.(jpe?g|png)$/i.test(form.fileName))
+const isPdf = computed(() => /\.pdf$/i.test(form.fileName))
+/** 允许的文件格式来自「业务规则 → 资料打印」 */
+const printTypes = computed(() => useDict().rules?.printFileTypes ?? ['pdf', 'jpg'])
+const printAccept = computed(() => printTypes.value.flatMap((k) => PRINT_TYPE_EXTS[k] ?? []).join(','))
+const printTypeText = computed(() => printTypes.value.map((k) => PRINT_TYPE_LABEL[k] ?? k).join(' / '))
 let sequence = 0
 let timer: ReturnType<typeof setTimeout> | undefined
 onBeforeUnmount(() => {
@@ -150,7 +157,7 @@ onMounted(load)
         <h3 class="page-title">{{ tr('service.text.submitPrintRequest') }}</h3>
         <el-form label-position="top" size="large" @submit.prevent="submit">
           <el-form-item :label="tr('service.text.fileToPrint')" required>
-            <FileUpload :key="uploadKey" kind="print" :tip="tr('service.text.pdfAndJpgOnly')" @uploaded="uploaded" />
+            <FileUpload :key="uploadKey" kind="print" :accept="printAccept" :tip="tr('service.text.allowedFormats', { types: printTypeText })" @uploaded="uploaded" />
           </el-form-item>
           <el-form-item :label="tr('service.text.printMode')" required>
             <el-radio-group v-model="form.colorMode" :disabled="saving">
@@ -166,9 +173,9 @@ onMounted(load)
                 :max="2000"
                 :precision="0"
                 :disabled="isImage || saving"
-                :placeholder="tr('service.text.autoDetectPdfPages')"
+                :placeholder="isPdf || !form.fileName ? tr('service.text.autoDetectPdfPages') : tr('service.text.pages')"
               />
-              <p class="meta">{{ isImage ? tr('service.text.jpgCountsAs1Page') : tr('service.text.pdfPagesAreDetectedAutomaticallyWhenPossibleEnterThe') }}</p>
+              <p class="meta">{{ isImage ? tr('service.text.imageCountsAs1Page') : isPdf || !form.fileName ? tr('service.text.pdfPagesAreDetectedAutomaticallyWhenPossibleEnterThe') : tr('service.text.officePagesHint') }}</p>
             </div>
           </el-form-item>
           <el-form-item :label="tr('service.text.copies')" required>
@@ -186,7 +193,7 @@ onMounted(load)
               <p>{{ tr('service.text.pagesCopiesPage', { pages: quote.pages, copies: form.copies, price: money(quote.unitPrice) }) }}</p>
               <p class="meta">
                 {{ tr('service.text.pageCountSource') }}
-                {{ isImage ? tr('service.text.jpgFixedAt1Page')
+                {{ isImage ? tr('service.text.imageFixedAt1Page')
                   : quote.detected ? tr('service.text.autoDetected') : tr('service.text.enteredManuallyNotAutoDetected') }}
               </p>
               <p>{{ tr('service.text.availableForCollectionAfter', { time: fmtDateTime(quote.readyAt) }) }}</p>

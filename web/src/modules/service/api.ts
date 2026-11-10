@@ -3,6 +3,7 @@ import { useDict } from '@/stores/dict'
 /** 教学服务模块前端 API 与类型（后端前缀 /api/service） */
 import { api, type Paged } from '@/api/http'
 import { money } from '@/utils/format'
+import { PRINT_TYPE_LABEL } from '@/utils/portal'
 
 export interface IdName { id: number; name: string }
 export interface StudentLite { id: number; name: string; studentNo: string }
@@ -431,8 +432,11 @@ export const printGuide = () => {
   const rules = useDict().rules
   if (rules?.printGuideText.trim()) return lines(rules.printGuideText).map((text) => ({ label: '', text }))
   const values = ruleValues()
+  const types = rules?.printFileTypes ?? ['pdf', 'jpg']
   return [
-  { label: tr('service.text.uploadFiles'), text: tr('service.text.uploadFilesDirectlyToTheSystemInPdfOr2') },
+  // 允许的格式改过（业务规则 → 资料打印）时按实际格式显示；默认 PDF / JPG 时保留原文
+  { label: tr('service.text.uploadFiles'), text: types.join() === 'pdf,jpg' ? tr('service.text.uploadFilesDirectlyToTheSystemInPdfOr2')
+    : tr('service.text.uploadFilesInFormats', { types: types.map((k) => PRINT_TYPE_LABEL[k] ?? k).join(' / ') }) },
   { label: tr('service.text.printingFees'), text: tr('service.text.singleSidedBlackAndWhite10PerSheetSingle', values) },
   { label: tr('service.text.collectionTime'), text: tr('service.text.requestsSubmittedBefore1200CanBeCollectedAfter', values) },
   ]

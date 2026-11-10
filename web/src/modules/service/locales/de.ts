@@ -212,7 +212,7 @@ export default {
       printingInstructions: "Druckhinweise",
       submitPrintRequest: "Druckauftrag einreichen",
       fileToPrint: "Druckdatei",
-      pdfAndJpgOnly: "Nur PDF und JPG",
+      pdfAndJpgOnly: "Nur PDF und JPG", allowedFormats: "Zulässige Formate: {types}", uploadFilesInFormats: "Laden Sie Dateien direkt im System hoch. Zulässige Formate: {types}.", imageCountsAs1Page: "Bilder zählen als 1 Seite", imageFixedAt1Page: "Bild: fest 1 Seite", officePagesHint: "Bei Word / Excel / PowerPoint kann die Seitenzahl nicht erkannt werden; bitte die zu druckende Seitenzahl angeben.",
       printMode: "Druckmodus",
       blackAndWhite: "Schwarzweiß",
       color: "Farbe",

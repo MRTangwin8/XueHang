@@ -86,7 +86,7 @@ export default {
     "password": "Mot de passe",
     "login": "Connexion",
     "imStudent": "Vous êtes élève ?",
-    "toStudentLogin": "Connexion des élèves",
+    "toStudentLogin": "Connexion des élèves", "loginFailed": "Échec de la connexion, veuillez réessayer",
     "imStaff": "Vous faites partie du personnel ?",
     "toStaffLogin": "Connexion du personnel"
   },

@@ -83,7 +83,7 @@ export default {
     "password": "Contraseña",
     "login": "Iniciar sesión",
     "imStudent": "¿Es alumno?",
-    "toStudentLogin": "Acceso de alumnos",
+    "toStudentLogin": "Acceso de alumnos", "loginFailed": "Error al iniciar sesión, inténtelo de nuevo",
     "imStaff": "¿Es miembro del personal?",
     "toStaffLogin": "Acceso del personal"
   },

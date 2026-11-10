@@ -83,7 +83,7 @@ export default {
     "password": "パスワード",
     "login": "ログイン",
     "imStudent": "学生の方はこちら",
-    "toStudentLogin": "学生ログインへ",
+    "toStudentLogin": "学生ログインへ", "loginFailed": "ログインに失敗しました。もう一度お試しください",
     "imStaff": "教職員の方はこちら",
     "toStaffLogin": "管理画面のログインへ"
   },

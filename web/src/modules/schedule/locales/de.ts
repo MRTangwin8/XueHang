@@ -72,7 +72,7 @@ export default {
     pleaseSelectADateRange: "Bitte Zeitraum wählen",
     pleaseSelectTheTeachingDays: "Bitte Unterrichtstage wählen",
     endTimeMustBeLaterThanStart: "Endzeit muss nach der Startzeit liegen",
-    pleaseSelectAtLeastARoomOr: "Bitte mindestens Raum oder Lehrkraft wählen",
+    pleaseSelectAtLeastARoomOr: "Bitte mindestens Raum oder Lehrkraft wählen", pleaseSelectARoom: "Bitte einen Raum auswählen", exportImage: "Als Bild exportieren", exportDefaultTitle: "Stundenplan {name}", studentTimetableTab: "Stundenplan", awaitingRecord: "Warten auf das Unterrichtsprotokoll der Lehrkraft",
     noSessionsCanBeCreated: "Keine Termine erstellbar",
     insufficientHoursHRequiredHRemaining: "Nicht genügend Stunden: {p0}h benötigt, {p1}h verfügbar",
     skippingConflictingDates: ", {p0} Konflikttage werden übersprungen",

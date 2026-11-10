@@ -9,7 +9,7 @@ import { audit } from '../../lib/audit'
 import { notifyStudent } from '../../lib/notify'
 import { fmtZoned } from '../../lib/time'
 import { workbookBuffer } from '../../lib/excel'
-import { DICTS } from '../../dict'
+import { DICTS, RULES } from '../../dict'
 import { EDU, TOTAL_MODES, cleanScores, computeTotal, defaultEdu, examCodesInUse, parseScores, saveEdu, subjectSchema } from '../../lib/educonfig'
 import { PRESET_PARTS, applyPreset, presetSummaries } from '../../lib/presets'
 import { andCampus, hasPerm, perm, staff, student, studentOnly } from '../../plugins/auth'
@@ -418,6 +418,12 @@ export default async function (app: FastifyInstance) {
   // ==================================================================
   app.get('/portal/mine', { preHandler: studentOnly }, async (req) => {
     const me = student(req)
-    return studentHistory(me.id, { published: true })
+    const rows = await studentHistory(me.id, { published: true })
+    // 业务规则 → 学生端：可以不向学生显示名次 / 平均分
+    return rows.map((r) => ({
+      ...r,
+      ...(RULES.portalGradeShowRank ? {} : { rank: null, ranked: null }),
+      ...(RULES.portalGradeShowAverage ? {} : { avg: null, subjectAvg: {} }),
+    }))
   })
 }

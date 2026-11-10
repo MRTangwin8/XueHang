@@ -72,7 +72,7 @@ export default {
     pleaseSelectADateRange: "请选择日期区间",
     pleaseSelectTheTeachingDays: "请选择上课星期",
     endTimeMustBeLaterThanStart: "结束时刻必须晚于开始时刻",
-    pleaseSelectAtLeastARoomOr: "请至少选择教室或老师",
+    pleaseSelectAtLeastARoomOr: "请至少选择教室或老师", pleaseSelectARoom: "请选择教室", exportImage: "导出图片", exportDefaultTitle: "{name} 课表", studentTimetableTab: "课表", awaitingRecord: "等待老师填写课堂记录",
     noSessionsCanBeCreated: "没有可创建的课次",
     insufficientHoursHRequiredHRemaining: "剩余课时不足：需要 {p0}h，剩余 {p1}h",
     skippingConflictingDates: "，跳过 {p0} 个冲突日期",

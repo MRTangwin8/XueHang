@@ -13,6 +13,7 @@ import CampusSelect from '@/components/CampusSelect.vue'
 import RoomSelect from '@/components/RoomSelect.vue'
 import UserSelect from '@/components/UserSelect.vue'
 import { useAuth } from '@/stores/auth'
+import { useDict } from '@/stores/dict'
 import { useDialogWidth } from '@/utils/format'
 import { fmtTime, fmtDate, toApi, today } from '@/utils/time'
 import { scheduleApi, type SessionPreset, type ClassGroup, type ConflictInfo, type EditScope, type SessionDetail, type SessionItem, type SessionKind,
@@ -30,6 +31,8 @@ const visible = defineModel<boolean>({ default: false })
 const emit = defineEmits<{ saved: [] }>()
 
 const auth = useAuth()
+/** 业务规则「排课必须选择教室」（默认开启） */
+const roomRequired = computed(() => useDict().rules?.sessionRoomRequired !== false)
 const width = useDialogWidth('620px')
 const canEditAll = computed(() => auth.can('schedule.edit'))
 const ownOnly = computed(() => !canEditAll.value && auth.can('schedule.own'))
@@ -163,6 +166,7 @@ function validate(): string | null {
   if (form.kind === 'CLASS' && !form.classGroupId) return t('schedule.pleaseSelectAGroupClass')
   if (form.kind === 'VIP' && !form.vipPackageId) return t('schedule.pleaseSelectAVipLessonPackage')
   if (form.kind === 'OTHER' && !form.title.trim()) return t('schedule.pleaseEnterTheBookingPurpose')
+  if (roomRequired.value && !form.roomId && !confirmed.value) return t('schedule.pleaseSelectARoom')
   if (!form.date) return t('schedule.pleaseSelectADate')
   if (timeInvalid.value) return t('schedule.endTimeMustBeLaterThanStart')
   if (form.kind === 'VIP' && !(form.hours > 0)) return t('schedule.vipLessonHoursMustBeGreaterThan')
@@ -250,7 +254,7 @@ const title = computed(() => (editing.value ? (confirmed.value ? t('schedule.ses
           :placeholder="form.kind === 'OTHER' ? t('schedule.eGTeachingStaffMeetingMockInterview') : t('schedule.defaultsToClassNameVipStudentName')"
         />
       </el-form-item>
-      <el-form-item :label="t('schedule.room')">
+      <el-form-item :label="t('schedule.room')" :required="roomRequired">
         <RoomSelect v-model="form.roomId" :campus-id="form.campusId" :vip-only="form.kind === 'VIP'" :disabled="confirmed" style="width: 100%" />
       </el-form-item>
       <el-form-item :label="t('schedule.teacher')">

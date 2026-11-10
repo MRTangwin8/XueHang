@@ -8,6 +8,7 @@ import { notifyUser } from '../../lib/notify'
 import { dayjs, fmtZoned } from '../../lib/time'
 import { student, studentOnly } from '../../plugins/auth'
 import { RULES } from '../../dict'
+import { printExts } from '../../lib/upload'
 import { assertUploadUrl, campusTz, computePrintReadyAt, countPdfPages, extOf, printUnitPrice } from './util'
 import { kindLabel } from './interviews'
 import { noticeSelect, studentVisible } from './notices'
@@ -51,7 +52,8 @@ const printInput = z.object({
 async function quotePrint(b: z.infer<typeof printInput>, campusId: number, at = new Date()) {
   assertUploadUrl(b.fileUrl)
   const ext = extOf(b.fileName)
-  if (!['.pdf', '.jpg', '.jpeg'].includes(ext) || !['.pdf', '.jpg', '.jpeg'].includes(extOf(b.fileUrl))) throw badRequest('仅限 PDF、JPG 格式文档')
+  const allow = printExts()
+  if (!allow.includes(ext) || extOf(b.fileUrl) !== ext) throw badRequest(`仅支持 ${allow.join(' / ')} 格式`)
   let pages: number
   let detected = false
   if (ext === '.pdf') {
@@ -61,7 +63,9 @@ async function quotePrint(b: z.infer<typeof printInput>, campusId: number, at = 
       detected = true
     } else if (b.pages) pages = b.pages
     else throw badRequest('无法自动识别 PDF 页数，请填写页数')
-  } else pages = 1
+  } else if (['.jpg', '.jpeg', '.png'].includes(ext)) pages = 1
+  else if (b.pages) pages = b.pages // Word / Excel / PPT：无法识别页数，由学生填写
+  else throw badRequest('请填写打印页数')
   const unit = printUnitPrice(b.colorMode)
   const tz = await campusTz(campusId)
   return { pages, detected, unitPrice: unit, fee: pages * b.copies * unit, readyAt: computePrintReadyAt(at, tz) }

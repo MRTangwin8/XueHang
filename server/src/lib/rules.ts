@@ -8,7 +8,7 @@ import { z } from 'zod'
 import { prisma } from './prisma'
 import { badRequest } from './errors'
 import { loadEdu } from './educonfig'
-import { DEFAULT_RULES, DICT_HIDDEN, DICTS, EDITABLE_DICTS, RULES, type EditableDictKey, type Rules } from '../dict'
+import { DEFAULT_RULES, DICT_HIDDEN, DICTS, EDITABLE_DICTS, RULES, type EditableDictKey, type Rules, PORTAL_MODULES } from '../dict'
 
 const HM = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, '时间格式应为 HH:mm')
 const int = (min: number, max: number) =>
@@ -20,6 +20,8 @@ export const rulesSchema = z
     vipAutoConfirmEnabled: z.boolean(),
     vipAutoConfirmHours: int(1, 720),
     vipStudentConfirm: z.boolean(),
+    vipRecordRequired: z.boolean(),
+    sessionRoomRequired: z.boolean(),
     interviewCancelLockHours: int(0, 168),
     interviewConfirmText: z.string().trim().max(200),
     documentEditHours: int(0, 720),
@@ -41,11 +43,21 @@ export const rulesSchema = z
     studentNoPrefix: z.string().trim().regex(/^[A-Za-z0-9-]{0,10}$/, '前缀只能包含字母、数字和短横线，最多 10 位'),
     orderNoPrefix: z.string().trim().regex(/^[A-Za-z0-9-]{0,10}$/, '前缀只能包含字母、数字和短横线，最多 10 位'),
     uploadMaxMB: int(1, 100),
+    loginLockEnabled: z.boolean(),
     loginMaxFailures: int(3, 20),
     loginIpMaxFailures: int(5, 200),
     loginLockMinutes: int(1, 1440),
     sessionDays: int(1, 30),
     readOnlyCanSchedule: z.boolean(),
+    portalModules: z.array(z.enum(PORTAL_MODULES)).max(PORTAL_MODULES.length),
+    portalGradeShowRank: z.boolean(),
+    portalGradeShowAverage: z.boolean(),
+    portalGradeShowBest: z.boolean(),
+    printFileTypes: z.array(z.enum(['pdf', 'jpg', 'png', 'word', 'excel', 'ppt'])).min(1, '至少选择一种文件格式'),
+    timetableExportTitle: z.string().trim().max(60),
+    timetableExportFooter: z.string().trim().max(120),
+    timetableExportShowTeacher: z.boolean(),
+    timetableExportShowRoom: z.boolean(),
   })
   .refine((r) => r.boardEndHour > r.boardStartHour, { message: '看板结束时刻必须晚于开始时刻', path: ['boardEndHour'] })
 

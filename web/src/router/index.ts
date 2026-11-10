@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuth } from '@/stores/auth'
+import { useDict } from '@/stores/dict'
+import { portalOn } from '@/utils/portal'
 import { updateTitle } from '@/utils/title'
 import { http } from '@/api/http'
 
@@ -70,6 +72,13 @@ router.beforeEach(async (to) => {
     }
   }
   if (isPortal && auth.me?.type !== 'student') return '/'
+  // 学生端：后台关闭的功能（业务规则 → 学生端）直接回首页
+  if (isPortal) {
+    const dict = useDict()
+    await dict.load().catch(() => undefined)
+    const key = to.path.split('/')[2] ?? ''
+    if (!portalOn(key)) return '/portal/home'
+  }
   if (!isPortal && auth.me?.type === 'student') return '/portal'
   if (!isPortal && to.meta.perm && !auth.can(to.meta.perm)) return '/403'
   return true

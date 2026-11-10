@@ -7,6 +7,7 @@ import { parse, zId, zIdParam } from '../../lib/http'
 import { badRequest, conflict, forbidden, notFound } from '../../lib/errors'
 import { assertCampus, hasPerm, perm, staff, type StaffPrincipal } from '../../plugins/auth'
 import { audit } from '../../lib/audit'
+import { RULES } from '../../dict'
 import {
   adjustHours, assertRange, campusTz, canEditSession, cancelSession, confirmSession, durationHours, expandDates,
   findConflicts, isOwnOnly, loadBookablePackage, localParts, remainingOf, reserveHours, round2, zHHmm, zYmd, zoned,
@@ -111,6 +112,7 @@ async function resolveInput(tx: Tx, me: StaffPrincipal, b: SessionBase, duration
     if (b.kind === 'VIP' && !room.allowVip) throw badRequest(`教室「${room.name}」不可用于 VIP 课`)
     campusId = room.campusId
   }
+  else if (RULES.sessionRoomRequired) throw badRequest('请选择教室')
   campusId ??= fallbackCampus
   if (!campusId) throw badRequest('请选择校区')
   if (teacherId) {
@@ -414,6 +416,9 @@ export default async function (app: FastifyInstance) {
         const teacherId = b.teacherId !== undefined ? b.teacherId : t.teacherId
         const hours = t.kind === 'OTHER' ? 0 : round2(b.hours ?? t.hours)
         if (t.kind === 'VIP' && hours <= 0) throw badRequest('VIP 课时必须大于 0')
+        // 规则「排课必须选择教室」：把教室清空，或移动一节没有教室的课次时都要求补上教室（只改标题 / 备注不受影响）
+        if (RULES.sessionRoomRequired && !roomId && (b.roomId !== undefined || timeTouched || (b.teacherId !== undefined && b.teacherId !== t.teacherId)))
+          throw badRequest('请选择教室')
         const moved = startAt.getTime() !== t.startAt.getTime() || endAt.getTime() !== t.endAt.getTime() || roomId !== t.roomId || teacherId !== t.teacherId
         plans.push({
           t, startAt, endAt, roomId, teacherId, hours, moved,
@@ -496,6 +501,8 @@ export default async function (app: FastifyInstance) {
       if (!s) throw notFound('课次不存在')
       if (!canEditSession(me, s)) throw forbidden('只能确认自己的课次')
       if (s.status !== 'SCHEDULED') throw badRequest(s.status === 'CONFIRMED' ? '该课次已确认' : '已取消的课次不能确认')
+      if (RULES.vipRecordRequired && s.kind === 'VIP' && !(await tx.lessonRecord.count({ where: { sessionId: id } })))
+        throw badRequest('请先填写课堂记录，再确认课时')
       if (!(await confirmSession(tx, id, 'STAFF'))) throw conflict('课次状态已变化，请刷新后重试')
     })
     await audit(req, 'confirm', 'Session', id)

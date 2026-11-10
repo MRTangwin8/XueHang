@@ -17,7 +17,8 @@ export async function autoConfirmVip(log?: FastifyInstance['log']): Promise<numb
   if (!RULES.vipAutoConfirmEnabled) return 0
   const deadline = new Date(Date.now() - RULES.vipAutoConfirmHours * 3_600_000)
   const due = await prisma.session.findMany({
-    where: { kind: 'VIP', status: 'SCHEDULED', endAt: { lte: deadline } },
+    // 规则「先填课堂记录才能确认」开启时，没有课堂记录的课次不自动确认
+    where: { kind: 'VIP', status: 'SCHEDULED', endAt: { lte: deadline }, ...(RULES.vipRecordRequired ? { lessonRecord: { isNot: null } } : {}) },
     select: { id: true, startAt: true, hours: true, title: true, campus: { select: { timezone: true } }, vipPackage: { select: { studentId: true, name: true } } },
     orderBy: { endAt: 'asc' },
     take: 500,

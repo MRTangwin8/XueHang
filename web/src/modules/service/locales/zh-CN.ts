@@ -200,7 +200,7 @@ export default {
       printingInstructions: "资料打印使用说明",
       submitPrintRequest: "提交打印申请",
       fileToPrint: "打印文件",
-      pdfAndJpgOnly: "仅支持 PDF、JPG 格式",
+      pdfAndJpgOnly: "仅支持 PDF、JPG 格式", allowedFormats: "支持格式：{types}", uploadFilesInFormats: "资料可直接上传至系统，支持 {types} 格式。", imageCountsAs1Page: "图片按 1 页计算", imageFixedAt1Page: "图片固定 1 页", officePagesHint: "Word / Excel / PowerPoint 无法自动识别页数，请按实际打印页数填写。",
       printMode: "打印方式",
       blackAndWhite: "黑白",
       color: "彩色",

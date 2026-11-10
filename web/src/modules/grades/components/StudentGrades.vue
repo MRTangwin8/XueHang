@@ -18,6 +18,12 @@ const dict = useDict()
 const isMobile = useIsMobile()
 const list = ref<HistoryRow[]>([])
 const loading = ref(false)
+/** 学生端按「业务规则 → 学生端」决定是否显示名次 / 平均分 / 最好得分率；后台始终显示 */
+const show = computed(() => ({
+  rank: !props.portal || dict.rules?.portalGradeShowRank !== false,
+  avg: !props.portal || dict.rules?.portalGradeShowAverage !== false,
+  best: !props.portal || dict.rules?.portalGradeShowBest !== false,
+}))
 
 onMounted(async () => {
   dict.load()
@@ -34,7 +40,7 @@ const points = computed(() =>
   list.value.map((r) => ({
     label: fmtDate(r.examDate).slice(5),
     value: r.absent ? null : pct(r.total, r.fullMark),
-    avg: pct(r.avg, r.fullMark),
+    avg: show.value.avg ? pct(r.avg, r.fullMark) : null,
     title: `${r.name}：${r.absent ? t('grades.detail.absent') : (r.total ?? '—')} / ${r.fullMark}`,
   })),
 )
@@ -59,11 +65,11 @@ const low = (r: HistoryRow, key: string) => {
           <div class="stat-label">{{ t('grades.student.latest') }}</div>
           <div class="stat-value">{{ latest ? `${latest.total} / ${latest.fullMark}` : '—' }}</div>
         </div>
-        <div class="stat">
+        <div v-if="show.rank" class="stat">
           <div class="stat-label">{{ t('grades.student.latestRank') }}</div>
           <div class="stat-value">{{ latest?.rank ? `${latest.rank} / ${latest.ranked}` : '—' }}</div>
         </div>
-        <div class="stat">
+        <div v-if="show.best" class="stat">
           <div class="stat-label">{{ t('grades.student.best') }}</div>
           <div class="stat-value">{{ best ? `${pct(best.total, best.fullMark)}%` : '—' }}</div>
         </div>
@@ -81,8 +87,9 @@ const low = (r: HistoryRow, key: string) => {
             <div v-else class="h-total">
               <b>{{ r.total ?? '—' }}</b><span class="muted"> / {{ r.fullMark }}</span>
               <div class="muted small">
-                <template v-if="r.rank">{{ t('grades.student.rankOf', { p1: r.rank, p2: r.ranked }) }} · </template>
-                {{ t('grades.stats.avg') }} {{ r.avg ?? '—' }}
+                <template v-if="show.rank && r.rank">{{ t('grades.student.rankOf', { p1: r.rank, p2: r.ranked }) }}</template>
+                <template v-if="show.rank && r.rank && show.avg"> · </template>
+                <template v-if="show.avg">{{ t('grades.stats.avg') }} {{ r.avg ?? '—' }}</template>
               </div>
             </div>
           </div>
@@ -90,7 +97,7 @@ const low = (r: HistoryRow, key: string) => {
             <div v-for="s in r.conf.subjects" :key="s.key" class="sub">
               <span class="muted">{{ s.name }}</span>
               <b :class="low(r, s.key) && 'low'">{{ r.scores[s.key] ?? '—' }}</b>
-              <span class="muted small">/ {{ s.max }}<template v-if="!isMobile && r.subjectAvg[s.key] != null"> · {{ t('grades.stats.avg') }} {{ r.subjectAvg[s.key] }}</template></span>
+              <span class="muted small">/ {{ s.max }}<template v-if="show.avg && !isMobile && r.subjectAvg[s.key] != null"> · {{ t('grades.stats.avg') }} {{ r.subjectAvg[s.key] }}</template></span>
             </div>
           </div>
           <div v-if="r.comment" class="comment"><el-icon><ChatLineRound /></el-icon>{{ r.comment }}</div>

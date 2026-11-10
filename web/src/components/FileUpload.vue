@@ -13,7 +13,7 @@ import { http } from '@/api/http'
 const { t } = useI18n()
 
 export interface UploadedFile { url: string; name: string; size: number }
-const props = defineProps<{ kind: 'document' | 'print' | 'image' | 'file' | 'logo'; tip?: string; buttonText?: string }>()
+const props = defineProps<{ kind: 'document' | 'print' | 'image' | 'file' | 'logo'; tip?: string; buttonText?: string; accept?: string }>()
 const emit = defineEmits<{ uploaded: [file: UploadedFile] }>()
 const current = ref<UploadedFile | null>(null)
 
@@ -31,7 +31,7 @@ async function upload(opt: UploadRequestOptions) {
 
 <template>
   <div>
-    <el-upload :show-file-list="false" :http-request="upload" :accept="ACCEPT[kind]">
+    <el-upload :show-file-list="false" :http-request="upload" :accept="accept ?? ACCEPT[kind]">
       <el-button type="primary" plain icon="Upload">{{ buttonText ?? t('upload.choose') }}</el-button>
     </el-upload>
     <div v-if="current" class="muted" style="margin-top: 4px">{{ t('upload.uploaded', { name: current.name }) }}</div>

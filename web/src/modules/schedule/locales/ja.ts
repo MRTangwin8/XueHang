@@ -72,7 +72,7 @@ export default {
     pleaseSelectADateRange: "期間を選択してください",
     pleaseSelectTheTeachingDays: "授業の曜日を選択してください",
     endTimeMustBeLaterThanStart: "終了時刻は開始時刻より後にしてください",
-    pleaseSelectAtLeastARoomOr: "教室または講師を選択してください",
+    pleaseSelectAtLeastARoomOr: "教室または講師を選択してください", pleaseSelectARoom: "教室を選択してください", exportImage: "画像で書き出し", exportDefaultTitle: "{name} 時間割", studentTimetableTab: "時間割", awaitingRecord: "講師の授業記録待ち",
     noSessionsCanBeCreated: "登録できる授業がありません",
     insufficientHoursHRequiredHRemaining: "残り時間が不足しています：必要 {p0}h、残り {p1}h",
     skippingConflictingDates: "、重複する {p0} 日分をスキップ",

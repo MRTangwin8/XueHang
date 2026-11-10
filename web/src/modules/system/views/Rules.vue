@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { PORTAL_MODULES, PRINT_TYPE_LABEL } from '@/utils/portal'
 import { useRoute } from 'vue-router'
 import { currencyName, money } from '@/utils/format'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
@@ -20,16 +21,18 @@ const dicts = ref<(EditableDict & { savedValues: string[]; newValue: string })[]
 const months = Array.from({ length: 12 }, (_, i) => i + 1)
 
 const groups = [
-  { name: 'vip', fields: ['vipAutoConfirmEnabled', 'vipAutoConfirmHours', 'vipStudentConfirm'] },
+  { name: 'vip', fields: ['vipAutoConfirmEnabled', 'vipAutoConfirmHours', 'vipStudentConfirm', 'vipRecordRequired'] },
   { name: 'interview', fields: ['interviewCancelLockHours', 'interviewConfirmText'] },
   { name: 'document', fields: ['documentEditHours', 'documentMaxEdits', 'documentReturnDays', 'documentRulesText'] },
-  { name: 'print', fields: ['printCurrency', 'printPriceBW', 'printPriceColor', 'printCutoff', 'printReadyTime', 'printGuideText'] },
+  { name: 'print', fields: ['printFileTypes', 'printCurrency', 'printPriceBW', 'printPriceColor', 'printCutoff', 'printReadyTime', 'printGuideText'] },
   { name: 'money', fields: ['wageCurrency'] },
   { name: 'student', fields: ['maxAdmissions'] },
-  { name: 'board', fields: ['boardStartHour', 'boardEndHour'] },
+  { name: 'board', fields: ['sessionRoomRequired', 'boardStartHour', 'boardEndHour'] },
   { name: 'customer', fields: ['customerRecycleEnabled', 'customerRecycleDays'] },
   { name: 'numbering', fields: ['studentNoPrefix', 'orderNoPrefix', 'uploadMaxMB'] },
-  { name: 'login', fields: ['loginMaxFailures', 'loginIpMaxFailures', 'loginLockMinutes', 'sessionDays'] },
+  { name: 'login', fields: ['loginLockEnabled', 'loginMaxFailures', 'loginIpMaxFailures', 'loginLockMinutes', 'sessionDays'] },
+  { name: 'portal', fields: ['portalModules', 'portalGradeShowRank', 'portalGradeShowAverage', 'portalGradeShowBest'] },
+  { name: 'timetable', fields: ['timetableExportTitle', 'timetableExportFooter', 'timetableExportShowTeacher', 'timetableExportShowRoom'] },
   { name: 'demo', fields: ['readOnlyCanSchedule'] },
 ] as const
 
@@ -45,16 +48,32 @@ const specs: Record<string, { min?: number; max?: number; kind?: string }> = {
   loginMaxFailures: { min: 3, max: 20 }, loginIpMaxFailures: { min: 5, max: 200 }, loginLockMinutes: { min: 1, max: 1440 },
   sessionDays: { min: 1, max: 30 },
   printCurrency: { kind: 'currency' }, wageCurrency: { kind: 'currency' }, readOnlyCanSchedule: { kind: 'switch' },
+  portalModules: { kind: 'checks' }, printFileTypes: { kind: 'checks' }, portalGradeShowRank: { kind: 'switch' }, portalGradeShowAverage: { kind: 'switch' },
+  portalGradeShowBest: { kind: 'switch' }, timetableExportTitle: { kind: 'line', max: 60 }, timetableExportFooter: { kind: 'line', max: 120 },
+  timetableExportShowTeacher: { kind: 'switch' }, timetableExportShowRoom: { kind: 'switch' },
+  loginLockEnabled: { kind: 'switch' }, vipRecordRequired: { kind: 'switch' }, sessionRoomRequired: { kind: 'switch' },
 }
 
 const defaultText = (key: string) => {
   if (specs[key]?.kind === 'currency') return currencyName(String(defaults.value?.[key as keyof ExtendedRules] ?? 'JPY'))
   const value = defaults.value?.[key as keyof ExtendedRules]
+  if (specs[key]?.kind === 'checks') return ((value as unknown as string[] | undefined) ?? []).map((v) => checkLabel(key, v)).join(' / ')
   if (Array.isArray(value)) return value.map((m) => t('system.rules.month', { n: m })).join(', ')
   if (typeof value === 'boolean') return t(value ? 'common.yes' : 'common.no')
   if (value === '') return t('system.rules.useLocalizedDefault')
   return String(value ?? '')
 }
+
+/** 多选项规则：学生端功能、打印文件类型 */
+const PORTAL_TITLES: Record<string, string> = {
+  timetable: 'schedule.menu.myTimetable', grades: 'grades.menu.myGrades', vip: 'schedule.menu.myHours',
+  interviews: 'service.text.consultationBookings', documents: 'service.text.documentRevision', prints: 'service.text.printing',
+}
+const checkOptions = (key: string): string[] => (key === 'portalModules' ? [...PORTAL_MODULES] : Object.keys(PRINT_TYPE_LABEL))
+const checkLabel = (key: string, v: string) => (key === 'portalModules' ? t(PORTAL_TITLES[v] ?? v) : PRINT_TYPE_LABEL[v] ?? v)
+
+/** 提示文字里要原样显示的占位符（否则会被 i18n 当成变量吃掉） */
+const PLACEHOLDERS = { name: '{name}', studentNo: '{studentNo}', from: '{from}', to: '{to}', site: '{site}' }
 
 const customDefault = (key: string) => {
   const map: Record<string, string> = {
@@ -171,6 +190,12 @@ onMounted(load)
                 <el-option value="JPY" :label="currencyName('JPY')" />
                 <el-option value="CNY" :label="currencyName('CNY')" />
               </el-select>
+              <el-checkbox-group v-else-if="specs[key].kind === 'checks'" :model-value="(form as any)[key] ?? []" class="check-list"
+                @update:model-value="(form as any)[key] = $event">
+                <el-checkbox v-for="v in checkOptions(key)" :key="v" :value="v">{{ checkLabel(key, v) }}</el-checkbox>
+              </el-checkbox-group>
+              <el-input v-else-if="specs[key].kind === 'line'" v-model="(form as any)[key]" :maxlength="specs[key].max" show-word-limit clearable
+                :placeholder="t('system.rules.useLocalizedDefault')" />
               <el-time-select v-else-if="specs[key].kind === 'time'" v-model="(form as any)[key]" start="00:00" step="00:15" end="23:45" />
               <el-checkbox-group v-else-if="specs[key].kind === 'months'" v-model="(form as any)[key]" class="month-grid">
                 <el-checkbox-button v-for="month in months" :key="month" :value="month">{{ t('system.rules.month', { n: month }) }}</el-checkbox-button>
@@ -189,6 +214,10 @@ onMounted(load)
               <div v-if="group.name === 'customer' && key === 'customerRecycleDays'" class="field-hint">{{ t('system.rules.customerRecycleHint') }}</div>
               <div v-if="specs[key].kind === 'currency'" class="field-hint">{{ t('system.rules.currencyHint', { sample: money(1000, (form as any)[key]) }) }}</div>
               <div v-if="key === 'readOnlyCanSchedule'" class="field-hint">{{ t('system.rules.readOnlyScheduleHint') }}</div>
+              <div v-if="['portalModules', 'printFileTypes', 'timetableExportTitle', 'timetableExportFooter'].includes(key)" class="field-hint">{{ t(`system.rules.${key}Hint`, PLACEHOLDERS) }}</div>
+              <div v-if="key === 'loginLockEnabled'" class="field-hint">{{ t('system.rules.loginLockEnabledHint') }}</div>
+              <div v-if="key === 'vipRecordRequired'" class="field-hint">{{ t('system.rules.vipRecordRequiredHint') }}</div>
+              <div v-if="key === 'sessionRoomRequired'" class="field-hint">{{ t('system.rules.sessionRoomRequiredHint') }}</div>
               <div v-if="group.name === 'numbering' && key === 'orderNoPrefix'" class="field-hint">{{ t('system.rules.numberingHint') }}</div>
             </div>
           </div>
@@ -235,6 +264,7 @@ onMounted(load)
 .prefix-setting .el-input { max-width: 220px; }
 .prefix-setting span, .field-hint { color: var(--xh-text-2); font-size: 12px; }
 .field-hint { margin-top: 8px; line-height: 1.6; }
+.check-list { display: flex; flex-wrap: wrap; gap: 4px 18px; }
 .month-grid { display: flex; flex-wrap: wrap; }
 .dict-list { display: flex; flex-direction: column; gap: 16px; }
 .dict-item { border-bottom: 1px solid var(--xh-border); padding-bottom: 16px; }

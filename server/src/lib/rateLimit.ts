@@ -18,6 +18,15 @@ interface Entry {
 }
 const store = new Map<string, Entry>()
 
+/** 「业务规则 → 登录安全」关闭了失败锁定：不计数、不锁定，并清掉已有的锁定记录 */
+function disabled(): boolean {
+  if (RULES.loginLockEnabled !== false) return false
+  if (store.size) store.clear()
+  return true
+}
+/** 锁定关闭时返回的「剩余次数」：足够大，登录失败提示里不会出现「再错 N 次将锁定」 */
+const UNLIMITED = 9999
+
 function get(key: string, now: number): Entry {
   let e = store.get(key)
   if (!e || (now - e.first > WINDOW_MS() && e.lockedUntil < now)) {
@@ -29,6 +38,7 @@ function get(key: string, now: number): Entry {
 
 /** 登录前调用：若账号或 IP 处于锁定期则抛 429 */
 export function assertNotLocked(account: string, ip: string) {
+  if (disabled()) return
   const now = Date.now()
   for (const key of [`a:${account}`, `i:${ip}`]) {
     const e = store.get(key)
@@ -41,6 +51,7 @@ export function assertNotLocked(account: string, ip: string) {
 
 /** 登录失败时调用；返回该账号剩余可尝试次数 */
 export function recordFailure(account: string, ip: string): number {
+  if (disabled()) return UNLIMITED
   const now = Date.now()
   const a = get(`a:${account}`, now)
   const i = get(`i:${ip}`, now)
@@ -59,6 +70,7 @@ export function recordFailure(account: string, ip: string): number {
  * 返回本次之后剩余的尝试次数；名额用完时抛 429。成功登录后调用 releaseAttempt 归还名额。
  */
 export function reserveAttempt(account: string, ip: string): number {
+  if (disabled()) return UNLIMITED
   const now = Date.now()
   const lim = LIMITS()
   const a = get(`a:${account}`, now)

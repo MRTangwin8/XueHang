@@ -44,7 +44,7 @@ async function confirm(s: PortalSession) {
 }
 const statusText = (s: PortalSession) =>
   s.status === 'CONFIRMED' ? CONFIRMED_BY[s.confirmedBy ?? ''] ?? t('schedule.confirmed') : !studentCanConfirm.value ?
-    t('schedule.teacherConfirmsHours') : s.canConfirm ? t('schedule.pendingConfirmation') : t('schedule.notStarted')
+    t('schedule.teacherConfirmsHours') : s.canConfirm ? t('schedule.pendingConfirmation') : s.awaitingRecord ? t('schedule.awaitingRecord') : t('schedule.notStarted')
 </script>
 
 <template>

@@ -2,6 +2,7 @@
 /**
  * 学生端 · 我的课表：所在班课的课次 + 本人一对一（VIP）课次，周视图 / 月视图。
  * 点击课次查看教室、老师、出勤、课堂记录；已上完的 VIP 课可直接确认课时。
+ * 传入 studentId 时是教职工查看某位学员的课表（内容相同，不能确认课时）。可导出当前周 / 月为图片。
  */
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -11,10 +12,17 @@ import DictTag from '@/components/DictTag.vue'
 import { useDict } from '@/stores/dict'
 import { useDialogWidth, useIsMobile } from '@/utils/format'
 import { dayjs, fmtTime, today, toApi } from '@/utils/time'
-import { portalApi, type TimetableItem } from '../../api'
+import { useAuth } from '@/stores/auth'
+import { useSite } from '@/stores/site'
+import { portalOn } from '@/utils/portal'
+import { portalApi, scheduleApi, type TimetableItem } from '../../api'
+import { downloadTimetable } from '../../exportTimetable'
 import { addDays, dateOf, kindStyle, KIND_LABEL, mondayOf, timeRange, weekdayLabel } from '../../utils'
 
+const props = defineProps<{ studentId?: number; studentName?: string; studentNo?: string }>()
 const { t } = useI18n()
+const auth = useAuth()
+const site = useSite()
 const router = useRouter()
 const dict = useDict()
 const isMobile = useIsMobile()
@@ -54,7 +62,8 @@ async function load() {
   loading.value = true
   try {
     // 往后多取 7 天，用于「下一节」提示
-    items.value = await portalApi.timetable(toApi(range.value.start), toApi(addDays(range.value.end, view.value === 'week' ? 7 : 0)))
+    const from = toApi(range.value.start), to = toApi(addDays(range.value.end, view.value === 'week' ? 7 : 0))
+    items.value = props.studentId ? await scheduleApi.studentTimetable(props.studentId, from, to) : await portalApi.timetable(from, to)
   } finally {
     loading.value = false
   }
@@ -124,6 +133,40 @@ async function confirm(s: TimetableItem) {
   load()
 }
 dict.load()
+
+// ---------- 导出图片 ----------
+const exporting = ref(false)
+async function exportImage() {
+  const r = dict.rules
+  const name = props.studentName ?? auth.me?.name ?? ''
+  const from = range.value.start, to = addDays(range.value.end, -1)
+  const vars: Record<string, string> = { name, studentNo: props.studentNo ?? auth.me?.studentNo ?? '', from, to, site: site.text('siteName') }
+  const fill = (tpl: string) => tpl.replace(/\{(\w+)\}/g, (m, k: string) => vars[k] ?? m)
+  const title = r?.timetableExportTitle ? fill(r.timetableExportTitle) : t('schedule.exportDefaultTitle', { name })
+  exporting.value = true
+  try {
+    await downloadTimetable({
+      title,
+      subtitle: view.value === 'month' ? monthOf.value : `${from} – ${to}`,
+      footer: r?.timetableExportFooter ? fill(r.timetableExportFooter) : '',
+      brand: site.text('siteName'),
+      days: days.value,
+      weekdayLabels: [1, 2, 3, 4, 5, 6, 7].map((n) => weekdayLabel(n)),
+      classLabel: KIND_LABEL.CLASS,
+      items: items.value.filter((s) => dateOf(s.startAt) >= range.value.start && dateOf(s.startAt) < range.value.end),
+      dateOf,
+      timeRange,
+      showTeacher: r?.timetableExportShowTeacher !== false,
+      showRoom: r?.timetableExportShowRoom !== false,
+      cancelledLabel: t('schedule.portalTimetable.cancelled'),
+      emptyLabel: '—',
+      month: view.value === 'month' ? monthOf.value : undefined,
+      fileName: `${title} ${view.value === 'month' ? monthOf.value : from}`,
+    })
+  } finally {
+    exporting.value = false
+  }
+}
 </script>
 
 <template>
@@ -156,6 +199,7 @@ dict.load()
           <span><i class="dot" :style="kindStyle('CLASS')" /> {{ KIND_LABEL.CLASS }}</span>
           <span><i class="dot" :style="kindStyle('VIP')" /> VIP</span>
         </span>
+        <el-button size="small" icon="Picture" :loading="exporting" @click="exportImage">{{ t('schedule.exportImage') }}</el-button>
         <el-radio-group v-model="view" size="small">
           <el-radio-button value="week">{{ t('schedule.portalTimetable.week') }}</el-radio-button>
           <el-radio-button value="month">{{ t('schedule.portalTimetable.month') }}</el-radio-button>
@@ -237,7 +281,7 @@ dict.load()
           <div v-if="!ofDay(selected).length" class="muted empty-row">{{ t('schedule.portalTimetable.dayEmpty') }}</div>
         </div>
       </template>
-      <p class="muted hint">{{ t('schedule.portalTimetable.hint') }}</p>
+      <p v-if="!props.studentId" class="muted hint">{{ t('schedule.portalTimetable.hint') }}</p>
     </div>
 
     <!-- 课次详情 -->
@@ -269,7 +313,7 @@ dict.load()
         </div>
       </template>
       <template #footer>
-        <el-button v-if="detail?.kind === 'VIP'" @click="router.push('/portal/vip')">{{ t('schedule.portalTimetable.goVip') }}</el-button>
+        <el-button v-if="detail?.kind === 'VIP' && !props.studentId && portalOn('vip')" @click="router.push('/portal/vip')">{{ t('schedule.portalTimetable.goVip') }}</el-button>
         <el-button v-if="detail?.canConfirm" type="primary" @click="confirm(detail!)">{{ t('schedule.confirmHours') }}</el-button>
         <el-button v-else @click="detail = null">{{ t('common.close') }}</el-button>
       </template>

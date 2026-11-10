@@ -84,7 +84,7 @@ export default {
     password: 'Password',
     login: 'Sign in',
     imStudent: 'Are you a student?',
-    toStudentLogin: 'Go to student sign-in',
+    toStudentLogin: 'Go to student sign-in', loginFailed: "Sign-in failed, please try again",
     imStaff: 'Staff member?',
     toStaffLogin: 'Go to staff sign-in',
   },

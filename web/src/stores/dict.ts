@@ -24,6 +24,8 @@ export interface Rules {
   vipAutoConfirmEnabled: boolean
   vipAutoConfirmHours: number
   vipStudentConfirm: boolean
+  vipRecordRequired: boolean
+  sessionRoomRequired: boolean
   interviewCancelLockHours: number
   /** 自定义预约确认提示，空 = 默认文案 */
   interviewConfirmText: string
@@ -46,6 +48,18 @@ export interface Rules {
   maxAdmissions: number
   boardStartHour: number
   boardEndHour: number
+  loginLockEnabled: boolean
+  /** 学生端开放的功能：timetable / grades / vip / interviews / documents / prints */
+  portalModules: string[]
+  portalGradeShowRank: boolean
+  portalGradeShowAverage: boolean
+  portalGradeShowBest: boolean
+  /** 资料打印可上传的文件类型：pdf / jpg / png / word / excel / ppt */
+  printFileTypes: string[]
+  timetableExportTitle: string
+  timetableExportFooter: string
+  timetableExportShowTeacher: boolean
+  timetableExportShowRoom: boolean
   loginMaxFailures: number
   loginIpMaxFailures: number
   loginLockMinutes: number

@@ -4,9 +4,53 @@ import { z } from 'zod'
 import { prisma } from '../../lib/prisma'
 import { parse, zIdParam } from '../../lib/http'
 import { badRequest, conflict, forbidden, notFound } from '../../lib/errors'
-import { student, studentOnly } from '../../plugins/auth'
+import { staff, staffOnly, student, studentOnly } from '../../plugins/auth'
+import { assertCanView, loadStudentOr404 } from '../students/service'
 import { RULES } from '../../dict'
 import { confirmSession, remainingOf } from './service'
+
+const zRange = z.object({ from: z.coerce.date(), to: z.coerce.date() })
+
+/** 学员课表：所在班课的课次 + 本人 VIP 课次。学生端与教职工查看学员课表共用 */
+async function studentTimetable(studentId: number, q: { from: Date; to: Date }, staffView = false) {
+  if (q.to <= q.from) throw badRequest('结束时间必须晚于开始时间')
+  if (q.to.getTime() - q.from.getTime() > 62 * 86_400_000) throw badRequest('查询范围最长 62 天')
+  const sessions = await prisma.session.findMany({
+    where: {
+      startAt: { gte: q.from, lt: q.to },
+      OR: [
+        { kind: 'CLASS', classGroup: { deletedAt: null, students: { some: { studentId: studentId } } } },
+        { kind: 'VIP', vipPackage: { studentId: studentId, deletedAt: null } },
+      ],
+    },
+    orderBy: { startAt: 'asc' },
+    include: {
+      room: { select: { id: true, name: true, building: true } },
+      teacher: { select: { id: true, name: true } },
+      classGroup: { select: { id: true, name: true } },
+      vipPackage: { select: { id: true, name: true } },
+      lessonRecord: { select: { content: true, homework: true, performance: true, studentVisible: true } },
+      attendances: { where: { studentId: studentId }, select: { status: true } },
+    },
+  })
+  const now = Date.now()
+  return sessions.map((s) => ({
+    id: s.id,
+    kind: s.kind,
+    title: s.title,
+    startAt: s.startAt,
+    endAt: s.endAt,
+    status: s.status,
+    hours: s.hours,
+    room: s.room,
+    teacher: s.teacher,
+    classGroup: s.classGroup,
+    vipPackage: s.vipPackage,
+    attendance: s.attendances[0]?.status ?? null,
+    record: s.lessonRecord?.studentVisible ? { content: s.lessonRecord.content, homework: s.lessonRecord.homework, performance: s.lessonRecord.performance } : null,
+    canConfirm: !staffView && s.kind === 'VIP' && RULES.vipStudentConfirm && s.status === 'SCHEDULED' && s.startAt.getTime() <= now && (!RULES.vipRecordRequired || !!s.lessonRecord),
+  }))
+}
 
 export default async function (app: FastifyInstance) {
   /**
@@ -15,44 +59,15 @@ export default async function (app: FastifyInstance) {
    */
   app.get('/portal/timetable', { preHandler: studentOnly }, async (req) => {
     const me = student(req)
-    const q = parse(z.object({ from: z.coerce.date(), to: z.coerce.date() }), req.query)
-    if (q.to <= q.from) throw badRequest('结束时间必须晚于开始时间')
-    if (q.to.getTime() - q.from.getTime() > 62 * 86_400_000) throw badRequest('查询范围最长 62 天')
-    const sessions = await prisma.session.findMany({
-      where: {
-        startAt: { gte: q.from, lt: q.to },
-        OR: [
-          { kind: 'CLASS', classGroup: { deletedAt: null, students: { some: { studentId: me.id } } } },
-          { kind: 'VIP', vipPackage: { studentId: me.id, deletedAt: null } },
-        ],
-      },
-      orderBy: { startAt: 'asc' },
-      include: {
-        room: { select: { id: true, name: true, building: true } },
-        teacher: { select: { id: true, name: true } },
-        classGroup: { select: { id: true, name: true } },
-        vipPackage: { select: { id: true, name: true } },
-        lessonRecord: { select: { content: true, homework: true, performance: true, studentVisible: true } },
-        attendances: { where: { studentId: me.id }, select: { status: true } },
-      },
-    })
-    const now = Date.now()
-    return sessions.map((s) => ({
-      id: s.id,
-      kind: s.kind,
-      title: s.title,
-      startAt: s.startAt,
-      endAt: s.endAt,
-      status: s.status,
-      hours: s.hours,
-      room: s.room,
-      teacher: s.teacher,
-      classGroup: s.classGroup,
-      vipPackage: s.vipPackage,
-      attendance: s.attendances[0]?.status ?? null,
-      record: s.lessonRecord?.studentVisible ? { content: s.lessonRecord.content, homework: s.lessonRecord.homework, performance: s.lessonRecord.performance } : null,
-      canConfirm: s.kind === 'VIP' && RULES.vipStudentConfirm && s.status === 'SCHEDULED' && s.startAt.getTime() <= now,
-    }))
+    return studentTimetable(me.id, parse(zRange, req.query))
+  })
+
+  /** 教职工查看某位学员的课表（内容与学生端「我的课表」一致，用于核对排课、导出课表图片） */
+  app.get('/students/:id/timetable', { preHandler: staffOnly }, async (req) => {
+    const me = staff(req)
+    const { id } = parse(zIdParam, req.params)
+    assertCanView(me, await loadStudentOr404(id))
+    return studentTimetable(id, parse(zRange, req.query), true)
   })
 
   app.get('/portal/vip', { preHandler: studentOnly }, async (req) => {
@@ -87,8 +102,10 @@ export default async function (app: FastifyInstance) {
           id: s.id, title: s.title, startAt: s.startAt, endAt: s.endAt, hours: s.hours, status: s.status,
           confirmedAt: s.confirmedAt, confirmedBy: s.confirmedBy, room: s.room, teacher: s.teacher,
           record: lessonRecord?.studentVisible ? { content: lessonRecord.content, homework: lessonRecord.homework, performance: lessonRecord.performance } : null,
-          canConfirm: RULES.vipStudentConfirm && s.status === 'SCHEDULED' && s.startAt.getTime() <= now,
-          autoConfirmAt: RULES.vipAutoConfirmEnabled ? new Date(s.endAt.getTime() + autoMs) : null,
+          canConfirm: RULES.vipStudentConfirm && s.status === 'SCHEDULED' && s.startAt.getTime() <= now && (!RULES.vipRecordRequired || !!lessonRecord),
+          /** 已开课但老师还没填课堂记录（规则要求先填记录才能确认） */
+          awaitingRecord: RULES.vipRecordRequired && s.status === 'SCHEDULED' && s.startAt.getTime() <= now && !lessonRecord,
+          autoConfirmAt: RULES.vipAutoConfirmEnabled && (!RULES.vipRecordRequired || !!lessonRecord) ? new Date(s.endAt.getTime() + autoMs) : null,
         })),
       })),
     }
@@ -104,6 +121,8 @@ export default async function (app: FastifyInstance) {
       if (s.status === 'CONFIRMED') throw badRequest('该课次已确认')
       if (s.status !== 'SCHEDULED') throw badRequest('该课次已取消')
       if (s.startAt.getTime() > Date.now()) throw badRequest('课程尚未开始，不能确认')
+      if (RULES.vipRecordRequired && !(await tx.lessonRecord.count({ where: { sessionId: id } })))
+        throw badRequest('老师还没有填写课堂记录，暂时不能确认，请联系老师')
       if (!(await confirmSession(tx, id, 'STUDENT'))) throw conflict('课次状态已变化，请刷新')
     })
     await prisma.operationLog.create({ data: { action: 'studentConfirm', entity: 'Session', entityId: String(id), detail: JSON.stringify({ studentId: me.id }), ip: req.ip } })

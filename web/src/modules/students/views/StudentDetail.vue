@@ -14,6 +14,7 @@ import OrderCreateDialog from '@/modules/orders/components/OrderCreateDialog.vue
 import OrderDrawer from '@/modules/orders/components/OrderDrawer.vue'
 import StudentForm from '../components/StudentForm.vue'
 import StudentGrades from '@/modules/grades/components/StudentGrades.vue'
+import MyTimetable from '@/modules/schedule/views/portal/MyTimetable.vue'
 import { computeTotal, localName, useEdu, type ExamTypeDef } from '@/utils/edu'
 import { examSessionLabel, studentFormFromDetail, studentPayload, studentsApi, type Exam, type StudentDetail, type StudentFormModel } from '../api'
 
@@ -341,6 +342,9 @@ function onMore(cmd: string) {
               </el-table-column>
               <template #empty><el-empty :description="t('students.messages.noOrders')" :image-size="60" /></template>
             </el-table>
+          </el-tab-pane>
+          <el-tab-pane :label="t('schedule.studentTimetableTab')" name="timetable" lazy>
+            <MyTimetable :student-id="s.id" :student-name="s.name" :student-no="s.studentNo" />
           </el-tab-pane>
           <!-- 班课与 VIP -->
           <el-tab-pane :label="t('students.messages.groupClassesVip')" name="classes">

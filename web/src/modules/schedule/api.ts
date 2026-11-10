@@ -196,6 +196,8 @@ const silent = { silent: true }
 const clean = <T extends object>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== '')) as Partial<T>
 
 export const scheduleApi = {
+  /** 某位学员的课表（与学生端「我的课表」一致） */
+  studentTimetable: (id: number, from: string, to: string) => api.get<TimetableItem[]>(`/schedule/students/${id}/timetable`, { from, to }),
   // 课次
   sessions: (q: SessionQuery) => api.get<SessionItem[]>('/schedule/sessions', clean(q)),
   session: (id: number) => api.get<SessionDetail>(`/schedule/sessions/${id}`),
@@ -249,6 +251,7 @@ export interface PortalSession {
   teacher: Ref | null
   record: { content: string; homework: string | null; performance: string | null } | null
   canConfirm: boolean
+  awaitingRecord?: boolean
   autoConfirmAt: string | null
 }
 export interface PortalPackage {

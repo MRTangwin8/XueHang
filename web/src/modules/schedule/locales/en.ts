@@ -72,7 +72,7 @@ export default {
     pleaseSelectADateRange: "Please select a date range",
     pleaseSelectTheTeachingDays: "Please select the teaching days",
     endTimeMustBeLaterThanStart: "End time must be later than start time",
-    pleaseSelectAtLeastARoomOr: "Please select at least a room or a teacher",
+    pleaseSelectAtLeastARoomOr: "Please select at least a room or a teacher", pleaseSelectARoom: "Please select a room", exportImage: "Export image", exportDefaultTitle: "{name} timetable", studentTimetableTab: "Timetable", awaitingRecord: "Waiting for the teacher’s lesson record",
     noSessionsCanBeCreated: "No sessions can be created",
     insufficientHoursHRequiredHRemaining: "Insufficient hours: {p0}h required, {p1}h remaining",
     skippingConflictingDates: ", skipping {p0} conflicting dates",

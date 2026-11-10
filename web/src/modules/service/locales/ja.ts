@@ -200,7 +200,7 @@ export default {
       printingInstructions: "資料印刷のご案内",
       submitPrintRequest: "印刷を申請",
       fileToPrint: "印刷ファイル",
-      pdfAndJpgOnly: "PDF・JPG形式のみ対応",
+      pdfAndJpgOnly: "PDF・JPG形式のみ対応", allowedFormats: "対応形式：{types}", uploadFilesInFormats: "資料はシステムに直接アップロードできます。対応形式：{types}。", imageCountsAs1Page: "画像は 1 ページとして計算します", imageFixedAt1Page: "画像は 1 ページ固定", officePagesHint: "Word / Excel / PowerPoint はページ数を自動認識できません。実際の印刷ページ数を入力してください。",
       printMode: "印刷方法",
       blackAndWhite: "白黒",
       color: "カラー",

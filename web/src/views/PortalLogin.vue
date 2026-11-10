@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/stores/auth'
 import AuthShell from '@/components/AuthShell.vue'
@@ -17,6 +17,8 @@ const router = useRouter()
 const route = useRoute()
 const form = reactive({ studentNo: '', password: '' })
 const loading = ref(false)
+/** 登录失败的提示：留在表单里不自动消失，重新输入时清除 */
+const error = ref('')
 const forgotEnabled = ref(false)
 
 onMounted(async () => {
@@ -30,13 +32,18 @@ onMounted(async () => {
 async function submit() {
   if (!form.studentNo || !form.password) return
   loading.value = true
+  error.value = ''
   try {
     await auth.studentLogin(form.studentNo, form.password)
     router.replace((route.query.redirect as string) || '/portal')
+  } catch (e) {
+    const err = e as { response?: { data?: { message?: string } }; message?: string }
+    error.value = err.response?.data?.message || err.message || t('auth.loginFailed')
   } finally {
     loading.value = false
   }
 }
+watch(() => [form.studentNo, form.password], () => (error.value = ''))
 </script>
 
 <template>
@@ -51,6 +58,7 @@ async function submit() {
         show-password
         autocomplete="current-password"
       /></el-form-item>
+      <el-alert v-if="error" class="login-error" :title="error" type="error" show-icon :closable="false" role="alert" />
       <div v-if="forgotEnabled" class="forgot"><router-link to="/forgot-password?type=student">{{ t('forgot.link') }}</router-link></div>
       <el-button type="primary" native-type="submit" :loading="loading" style="width: 100%">{{ t('auth.login') }}</el-button>
     </el-form>
@@ -62,5 +70,6 @@ async function submit() {
 .switch { margin-top: 20px; font-size: 13px; color: var(--xh-text-2); text-align: center; }
 .switch a { color: var(--xh-primary); text-decoration: none; font-weight: 500; }
 .forgot { margin: -8px 0 14px; text-align: right; font-size: 13px; }
+.login-error { margin: -4px 0 16px; }
 .forgot a { color: var(--xh-primary); text-decoration: none; }
 </style>

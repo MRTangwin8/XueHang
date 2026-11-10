@@ -72,7 +72,7 @@ export default {
     pleaseSelectADateRange: "Выберите период",
     pleaseSelectTheTeachingDays: "Выберите дни занятий",
     endTimeMustBeLaterThanStart: "Время окончания должно быть позже начала",
-    pleaseSelectAtLeastARoomOr: "Выберите хотя бы аудиторию или преподавателя",
+    pleaseSelectAtLeastARoomOr: "Выберите хотя бы аудиторию или преподавателя", pleaseSelectARoom: "Выберите аудиторию", exportImage: "Экспорт в изображение", exportDefaultTitle: "Расписание: {name}", studentTimetableTab: "Расписание", awaitingRecord: "Ожидается запись урока от преподавателя",
     noSessionsCanBeCreated: "Нет занятий для создания",
     insufficientHoursHRequiredHRemaining: "Недостаточно часов: требуется {p0}ч, осталось {p1}ч",
     skippingConflictingDates: ", пропустив {p0} дат с пересечениями",

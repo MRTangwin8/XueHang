@@ -83,7 +83,7 @@ export default {
     "password": "Senha",
     "login": "Entrar",
     "imStudent": "Você é aluno?",
-    "toStudentLogin": "Acesso do aluno",
+    "toStudentLogin": "Acesso do aluno", "loginFailed": "Falha no login, tente novamente",
     "imStaff": "Você é funcionário?",
     "toStaffLogin": "Acesso da equipe"
   },

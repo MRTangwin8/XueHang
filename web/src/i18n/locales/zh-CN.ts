@@ -84,7 +84,7 @@ export default {
     password: '密码',
     login: '登 录',
     imStudent: '我是学生？',
-    toStudentLogin: '前往学生端登录',
+    toStudentLogin: '前往学生端登录', loginFailed: "登录失败，请重试",
     imStaff: '教职工？',
     toStaffLogin: '前往后台登录',
   },

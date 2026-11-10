@@ -10,6 +10,8 @@ import BrandLogo from '@/components/BrandLogo.vue'
 import { useSite } from '@/stores/site'
 import LangSwitcher from '@/components/LangSwitcher.vue'
 import { tt } from '@/i18n'
+import { useDict } from '@/stores/dict'
+import { portalOn } from '@/utils/portal'
 
 const { t } = useI18n()
 
@@ -21,9 +23,11 @@ const router = useRouter()
 
 const nav = computed(() =>
   portalChildren
-    .filter((r) => r.meta?.portalNav)
+    .filter((r) => r.meta?.portalNav && portalOn(r.path))
     .map((r) => ({ path: '/portal/' + r.path, title: tt(r.meta?.title), icon: r.meta?.icon ?? 'Grid' })),
 )
+
+useDict().load()
 
 function logout() {
   auth.logout()

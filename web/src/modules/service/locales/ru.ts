@@ -204,7 +204,7 @@ export default {
       printingInstructions: "Инструкция по печати",
       submitPrintRequest: "Подать заявку на печать",
       fileToPrint: "Файл для печати",
-      pdfAndJpgOnly: "Только PDF и JPG",
+      pdfAndJpgOnly: "Только PDF и JPG", allowedFormats: "Допустимые форматы: {types}", uploadFilesInFormats: "Загрузите материалы прямо в систему. Допустимые форматы: {types}.", imageCountsAs1Page: "Изображение считается за 1 страницу", imageFixedAt1Page: "Изображение: всегда 1 страница", officePagesHint: "Для Word / Excel / PowerPoint число страниц не определяется; укажите количество страниц для печати.",
       printMode: "Режим печати",
       blackAndWhite: "Чёрно-белая",
       color: "Цветная",

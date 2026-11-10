@@ -32,16 +32,18 @@ const pages = computed<Item[]>(() =>
 
 /** 设置项：业务规则的分组与字段、成绩与档案设置、站点 / 邮件设置的要点 */
 const RULE_GROUPS: Record<string, string[]> = {
-  vip: ['vipAutoConfirmEnabled', 'vipAutoConfirmHours', 'vipStudentConfirm'],
+  vip: ['vipAutoConfirmEnabled', 'vipAutoConfirmHours', 'vipStudentConfirm', 'vipRecordRequired'],
   interview: ['interviewCancelLockHours', 'interviewConfirmText'],
   document: ['documentEditHours', 'documentMaxEdits', 'documentReturnDays', 'documentRulesText'],
-  print: ['printCurrency', 'printPriceBW', 'printPriceColor', 'printCutoff', 'printReadyTime', 'printGuideText'],
+  print: ['printFileTypes', 'printCurrency', 'printPriceBW', 'printPriceColor', 'printCutoff', 'printReadyTime', 'printGuideText'],
   money: ['wageCurrency'],
   student: ['maxAdmissions'],
-  board: ['boardStartHour', 'boardEndHour'],
+  board: ['sessionRoomRequired', 'boardStartHour', 'boardEndHour'],
   customer: ['customerRecycleEnabled', 'customerRecycleDays'],
   numbering: ['studentNoPrefix', 'orderNoPrefix', 'uploadMaxMB'],
-  login: ['loginMaxFailures', 'loginIpMaxFailures', 'loginLockMinutes', 'sessionDays'],
+  login: ['loginLockEnabled', 'loginMaxFailures', 'loginIpMaxFailures', 'loginLockMinutes', 'sessionDays'],
+  portal: ['portalModules', 'portalGradeShowRank', 'portalGradeShowAverage', 'portalGradeShowBest'],
+  timetable: ['timetableExportTitle', 'timetableExportFooter', 'timetableExportShowTeacher', 'timetableExportShowRoom'],
   demo: ['readOnlyCanSchedule'],
   dicts: [],
 }

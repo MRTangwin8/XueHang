@@ -11,6 +11,7 @@ import CampusSelect from '@/components/CampusSelect.vue'
 import RoomSelect from '@/components/RoomSelect.vue'
 import UserSelect from '@/components/UserSelect.vue'
 import { useAuth } from '@/stores/auth'
+import { useDict } from '@/stores/dict'
 import { useDialogWidth, useIsMobile } from '@/utils/format'
 import { dayjs, today } from '@/utils/time'
 import { scheduleApi, type SessionPreset, type BatchPayload, type BatchPreviewItem, type ClassGroup, type ConflictInfo, type SessionKind,
@@ -27,6 +28,8 @@ const visible = defineModel<boolean>({ default: false })
 const emit = defineEmits<{ saved: [] }>()
 
 const auth = useAuth()
+/** 业务规则「排课必须选择教室」（默认开启） */
+const roomRequired = computed(() => useDict().rules?.sessionRoomRequired !== false)
 const width = useDialogWidth('820px')
 const isMobile = useIsMobile()
 const canEditAll = computed(() => auth.can('schedule.edit'))
@@ -122,6 +125,7 @@ function validate(): string | null {
   if (!form.range?.[0] || !form.range?.[1]) return t('schedule.pleaseSelectADateRange')
   if (!form.weekdays.length) return t('schedule.pleaseSelectTheTeachingDays')
   if (!form.startTime || !form.endTime || form.endTime <= form.startTime) return t('schedule.endTimeMustBeLaterThanStart')
+  if (roomRequired.value && !form.roomId) return t('schedule.pleaseSelectARoom')
   if (!form.roomId && !form.teacherId) return t('schedule.pleaseSelectAtLeastARoomOr')
   return null
 }
@@ -212,7 +216,7 @@ async function submit(force = false) {
           </el-form-item>
         </el-col>
         <el-col :xs="24" :sm="12">
-          <el-form-item :label="t('schedule.room')">
+          <el-form-item :label="t('schedule.room')" :required="roomRequired">
             <RoomSelect v-model="form.roomId" :campus-id="form.campusId" :vip-only="form.kind === 'VIP'" style="width: 100%" />
           </el-form-item>
         </el-col>

@@ -64,6 +64,12 @@ export const DICTS = {
   wageStatuses: opts([['PENDING', '待审核', 'warning'], ['APPROVED', '已通过', 'success'], ['REJECTED', '未通过', 'danger']]),
 } as const
 
+/** 资料打印：文件类型 → 允许的扩展名 */
+export const PRINT_TYPE_EXTS: Record<string, string[]> = {
+  pdf: ['.pdf'], jpg: ['.jpg', '.jpeg'], png: ['.png'], word: ['.doc', '.docx'], excel: ['.xls', '.xlsx'], ppt: ['.ppt', '.pptx'],
+}
+export const PORTAL_MODULES = ['timetable', 'grades', 'vip', 'interviews', 'documents', 'prints'] as const
+
 export type DictKey = keyof typeof DICTS
 
 /** 业务常量 */
@@ -79,6 +85,8 @@ export const DEFAULT_RULES = {
   vipAutoConfirmHours: 48,
   /** 学生端能否自行确认课时 */
   vipStudentConfirm: true,
+  /** VIP 课次必须先填写课堂记录才能确认（教职工确认、学生确认、自动确认都受此限制） */
+  vipRecordRequired: false,
   // ---- 面谈 / 面试 ----
   /** 开始前多少小时内不可取消 */
   interviewCancelLockHours: 8,
@@ -111,6 +119,8 @@ export const DEFAULT_RULES = {
   // ---- 排课看板 ----
   boardStartHour: 8,
   boardEndHour: 22,
+  /** 排课时必须选择教室（关闭后允许不分配教室，如线上课、外出活动） */
+  sessionRoomRequired: true,
   // ---- 客户公海 ----
   /** 是否自动回收长期未跟进的客户到公海 */
   customerRecycleEnabled: false,
@@ -125,10 +135,28 @@ export const DEFAULT_RULES = {
   uploadMaxMB: 20,
   // ---- 登录安全 ----
   /** 同一账号连续失败多少次锁定；同一 IP 失败多少次锁定；锁定分钟数；登录有效天数 */
+  /** 是否启用登录失败锁定（关闭后不限制失败次数，并立即解除已有的锁定；只建议临时关闭） */
+  loginLockEnabled: true,
   loginMaxFailures: 5,
   loginIpMaxFailures: 30,
   loginLockMinutes: 15,
   sessionDays: 3,
+  // ---- 学生端 ----
+  /** 学生端开放的功能（首页、通知、资料始终开放）：timetable 我的课表 / grades 我的成绩 / vip 我的课时 / interviews 面谈预约 / documents 文书修改 / prints 资料打印 */
+  portalModules: ['timetable', 'grades', 'vip', 'interviews', 'documents', 'prints'] as string[],
+  /** 学生端「我的成绩」是否显示名次 / 平均分 / 最好得分率 */
+  portalGradeShowRank: true,
+  portalGradeShowAverage: true,
+  portalGradeShowBest: true,
+  // ---- 资料打印可上传的文件类型：pdf / jpg / png / word / excel / ppt ----
+  printFileTypes: ['pdf', 'jpg'] as string[],
+  // ---- 课表导出图片 ----
+  /** 标题（空 = 「{name} 课表」；可用 {name} {studentNo} {from} {to} {site}） */
+  timetableExportTitle: '',
+  /** 页脚说明（空 = 不显示） */
+  timetableExportFooter: '',
+  timetableExportShowTeacher: true,
+  timetableExportShowRoom: true,
   // ---- 演示 ----
   /** 只读（演示）账号可以排课、改课、取消课次（公开演示站让访客试用排课；其他数据仍然只读） */
   readOnlyCanSchedule: false,

@@ -72,7 +72,7 @@ export default {
     pleaseSelectADateRange: "Choisissez une période",
     pleaseSelectTheTeachingDays: "Choisissez les jours de cours",
     endTimeMustBeLaterThanStart: "La fin doit être postérieure au début",
-    pleaseSelectAtLeastARoomOr: "Choisissez au moins une salle ou un enseignant",
+    pleaseSelectAtLeastARoomOr: "Choisissez au moins une salle ou un enseignant", pleaseSelectARoom: "Veuillez choisir une salle", exportImage: "Exporter en image", exportDefaultTitle: "Emploi du temps de {name}", studentTimetableTab: "Emploi du temps", awaitingRecord: "En attente du compte rendu de l’enseignant",
     noSessionsCanBeCreated: "Aucune séance ne peut être créée",
     insufficientHoursHRequiredHRemaining: "Heures insuffisantes : {p0}h nécessaires, {p1}h restantes",
     skippingConflictingDates: ", {p0} dates en conflit ignorées",

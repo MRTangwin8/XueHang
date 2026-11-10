@@ -53,7 +53,7 @@ export const useAuth = defineStore('auth', () => {
   }
 
   async function login(staffNo: string, password: string) {
-    const r = await api.post<{ token: string; weakPassword?: boolean }>('/auth/login', { staffNo, password })
+    const r = await api.post<{ token: string; weakPassword?: boolean }>('/auth/login', { staffNo, password }, { silent: true })
     token.value = r.token
     setToken(r.token)
     setWeak(!!r.weakPassword)
@@ -61,7 +61,7 @@ export const useAuth = defineStore('auth', () => {
   }
 
   async function studentLogin(studentNo: string, password: string) {
-    const r = await api.post<{ token: string; weakPassword?: boolean }>('/auth/student-login', { studentNo, password })
+    const r = await api.post<{ token: string; weakPassword?: boolean }>('/auth/student-login', { studentNo, password }, { silent: true })
     token.value = r.token
     setToken(r.token)
     setWeak(!!r.weakPassword)

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { portalOn } from '@/utils/portal'
 import { useI18n } from 'vue-i18n'
 import { onMounted, ref } from 'vue'
 import { useAuth } from '@/stores/auth'
@@ -54,7 +55,7 @@ onMounted(load)
           </router-link>
           <el-empty v-if="data && !data.notices.length" :description="tr('service.text.noNotices')" :image-size="60" />
         </section>
-        <section class="page-card">
+        <section v-if="portalOn('interviews')" class="page-card">
           <div class="section-head">
             <h3 class="page-title">{{ tr('service.text.myConsultationsInterviews') }}</h3>
             <router-link to="/portal/interviews">{{ tr('service.text.viewBookings') }}</router-link>
@@ -77,7 +78,7 @@ onMounted(load)
           <el-empty v-if="data && !data.bookings.length" :description="tr('service.text.noUpcomingBookings')" :image-size="60" />
         </section>
         <div class="card-grid">
-          <section class="page-card">
+          <section v-if="portalOn('documents')" class="page-card">
             <div class="section-head">
               <h3 class="page-title">{{ tr('service.text.documentProgress') }}</h3>
               <router-link to="/portal/documents">{{ tr('service.text.more') }}</router-link>
@@ -93,7 +94,7 @@ onMounted(load)
             </div>
             <el-empty v-if="data && !data.documents.length" :description="tr('service.text.noDocumentRequests')" :image-size="60" />
           </section>
-          <section class="page-card">
+          <section v-if="portalOn('prints')" class="page-card">
             <div class="section-head">
               <h3 class="page-title">{{ tr('service.text.printProgress') }}</h3>
               <router-link to="/portal/prints">{{ tr('service.text.more') }}</router-link>

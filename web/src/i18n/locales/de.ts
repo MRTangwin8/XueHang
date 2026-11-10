@@ -83,7 +83,7 @@ export default {
     "password": "Passwort",
     "login": "Anmelden",
     "imStudent": "Sie sind Schüler?",
-    "toStudentLogin": "Zur Schüleranmeldung",
+    "toStudentLogin": "Zur Schüleranmeldung", "loginFailed": "Anmeldung fehlgeschlagen, bitte erneut versuchen",
     "imStaff": "Sie sind Mitarbeiter?",
     "toStaffLogin": "Zur Mitarbeiteranmeldung"
   },

@@ -194,6 +194,20 @@ export async function staffOnly(req: FastifyRequest, _reply: FastifyReply) {
 export async function studentOnly(req: FastifyRequest, _reply: FastifyReply) {
   await authenticate(req)
   if (req.user.type !== 'student') throw forbidden('仅限学生')
+  const mod = portalModuleOf(req.url)
+  if (mod && !RULES.portalModules.includes(mod)) throw forbidden('该功能暂未开放')
+}
+
+/** 学生端接口属于哪个可开关的功能（业务规则 → 学生端）；首页、通知、资料等不受开关控制 */
+function portalModuleOf(url: string): string | null {
+  const p = url.split('?')[0]
+  if (p.startsWith('/api/schedule/portal/timetable')) return 'timetable'
+  if (p.startsWith('/api/schedule/portal/vip')) return 'vip'
+  if (p.startsWith('/api/grades/portal/')) return 'grades'
+  if (p.startsWith('/api/service/portal/interview')) return 'interviews'
+  if (p.startsWith('/api/service/portal/documents')) return 'documents'
+  if (p.startsWith('/api/service/portal/prints')) return 'prints'
+  return null
 }
 
 /** preHandler 工厂：教职工且拥有任一权限点。例：{ preHandler: perm('crm.customer.view') } */

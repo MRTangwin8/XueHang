@@ -206,7 +206,7 @@ export default {
       printingInstructions: "Instrucciones de impresión",
       submitPrintRequest: "Solicitar impresión",
       fileToPrint: "Archivo para imprimir",
-      pdfAndJpgOnly: "Solo PDF y JPG",
+      pdfAndJpgOnly: "Solo PDF y JPG", allowedFormats: "Formatos aceptados: {types}", uploadFilesInFormats: "Cargue los archivos directamente en el sistema. Formatos aceptados: {types}.", imageCountsAs1Page: "Las imágenes cuentan como 1 página", imageFixedAt1Page: "Imagen: 1 página fija", officePagesHint: "No se pueden detectar las páginas de Word / Excel / PowerPoint; indique el número de páginas a imprimir.",
       printMode: "Modo de impresión",
       blackAndWhite: "Blanco y negro",
       color: "Color",
