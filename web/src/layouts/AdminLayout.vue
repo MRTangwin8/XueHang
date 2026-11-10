@@ -70,6 +70,7 @@ function logout() {
           </div>
         </nav>
       </el-scrollbar>
+      <div v-if="version" class="side-ver">{{ versionText(version) }}</div>
     </aside>
 
     <el-drawer v-if="isMobile" v-model="drawer" direction="ltr" size="260px" :with-header="false" class="xh-drawer">
@@ -116,7 +117,6 @@ function logout() {
             <el-dropdown-menu>
               <el-dropdown-item disabled>{{ auth.me?.roleNames?.join(' / ') }}</el-dropdown-item>
               <el-dropdown-item divided icon="User" @click="router.push('/profile')">{{ t('profile.title') }}</el-dropdown-item>
-              <el-dropdown-item v-if="version" disabled>{{ versionText(version) }}</el-dropdown-item>
               <el-dropdown-item icon="SwitchButton" @click="logout">{{ t('layout.logout') }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -142,6 +142,7 @@ function logout() {
 .topbar-search { flex: 0 1 280px; min-width: 160px; }
 .layout { display: flex; height: 100%; }
 .sidebar { width: var(--xh-sidebar-w); background: var(--xh-sidebar-bg); border-right: 1px solid var(--xh-border); display: flex; flex-direction: column; flex-shrink: 0; }
+.side-ver { padding: 8px 16px 12px; font-size: 11px; color: var(--xh-text-2); opacity: 0.6; text-align: center; user-select: all; }
 .sidebar.mobile { width: 100%; min-height: 100%; border: none; }
 .logo { height: 64px; display: flex; align-items: center; padding: 0 20px; cursor: pointer; flex-shrink: 0; border-bottom: 1px solid var(--xh-border); }
 .nav-scroll { flex: 1; }
