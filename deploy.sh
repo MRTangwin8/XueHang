@@ -4,6 +4,7 @@
 #   ./deploy.sh                 构建并启动（首次安装、升级都用这一条）
 #   IMAGE=ghcr.io/mrtangwin8/xuehang:latest ./deploy.sh
 #                               不在本机构建，直接拉取官方镜像（推荐：更快，升级只需 ./deploy.sh update）
+#                               Docker Hub 上的同一份镜像：IMAGE=mrtangwin8/xuehang:latest
 #                               默认只监听本机 127.0.0.1:8080，由前面的 Nginx / IIS 等反向代理对外提供 HTTPS
 #   PORT=9000 ./deploy.sh       换一个端口（默认 8080）
 #   DIRECT=1 ./deploy.sh        不经反向代理，直接对外开放端口（HTTP 明文，仅用于内网或临时试用）
@@ -145,5 +146,5 @@ EOF
     say "拉取最新代码…"
     git pull --ff-only
     exec "$0" up ;;
-  *) sed -n '2,23p' "$0"; exit 1 ;;
+  *) sed -n '2,24p' "$0"; exit 1 ;;
 esac
